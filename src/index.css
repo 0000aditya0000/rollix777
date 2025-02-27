@@ -37,3 +37,8 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
+
+/* Focus styles */
+input:focus {
+  @apply ring-2 ring-purple-500/30 ring-offset-0;
+}
