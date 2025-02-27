@@ -1,6 +1,11 @@
 import React from 'react';
 
-const games = [
+interface GameCarouselProps {
+  title: string;
+  type: 'featured' | 'popular';
+}
+
+const featuredGames = [
   {
     id: 1,
     title: "Space Warriors",
@@ -21,10 +26,39 @@ const games = [
   }
 ];
 
-const GameCarousel = () => {
+const popularGames = [
+  {
+    id: 1,
+    title: "Crypto Slots",
+    image: "https://images.unsplash.com/photo-1596451190630-186aff535bf2?w=400&h=300&fit=crop",
+    category: "Casino"
+  },
+  {
+    id: 2,
+    title: "Blackjack Pro",
+    image: "https://images.unsplash.com/photo-1511193311914-0346f16efe90?w=400&h=300&fit=crop",
+    category: "Cards"
+  },
+  {
+    id: 3,
+    title: "Lucky Roulette",
+    image: "https://images.unsplash.com/photo-1518893494013-481c1d8ed3fd?w=400&h=300&fit=crop",
+    category: "Casino"
+  },
+  {
+    id: 4,
+    title: "Poker Master",
+    image: "https://images.unsplash.com/photo-1541278107931-e006523892df?w=400&h=300&fit=crop",
+    category: "Cards"
+  }
+];
+
+const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
+  const games = type === 'featured' ? featuredGames : popularGames;
+  
   return (
-    <section className="py-12 px-4 bg-[#1A1A2E]">
-      <h2 className="text-2xl font-bold text-white mb-6">Popular Games</h2>
+    <section className="py-8 px-4 bg-[#1A1A2E]">
+      <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
       <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 snap-x hide-scrollbar">
         {games.map((game) => (
           <div

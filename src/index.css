@@ -38,6 +38,19 @@ body {
   animation: fadeIn 0.2s ease-out;
 }
 
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
 /* Focus styles */
 input:focus {
   @apply ring-2 ring-purple-500/30 ring-offset-0;

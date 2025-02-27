@@ -1,7 +1,11 @@
 import React from 'react';
 import { Gamepad2, Star, Users, Trophy } from 'lucide-react';
 
-const Hero = () => {
+interface HeroProps {
+  onLogin?: () => void;
+}
+
+const Hero: React.FC<HeroProps> = ({ onLogin }) => {
   return (
     <section className="pt-20 px-4 pb-12 bg-[#1A1A2E] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-purple-600/10 to-pink-600/10" />
@@ -45,7 +49,10 @@ const Hero = () => {
           </div>
         </div>
 
-        <button className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium text-lg hover:opacity-90 transition-opacity relative overflow-hidden">
+        <button 
+          onClick={onLogin}
+          className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium text-lg hover:opacity-90 transition-opacity relative overflow-hidden"
+        >
           <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 animate-pulse" />
           <span className="relative">Start Playing Now</span>
         </button>
