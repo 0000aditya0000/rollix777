@@ -1,5 +1,6 @@
 import React from 'react';
 import { Dices } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ColorGame = () => {
   return (
@@ -24,11 +25,13 @@ const ColorGame = () => {
         <div className="text-center">
           <p className="text-gray-300 mb-4">Choose your color and win big!</p>
           <button className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity">
-            Play Now
+             <Link to="/bigsmall">Play Now</Link> 
           </button>
         </div>
       </div>
     </section>
+    
+    
   );
 };
 
