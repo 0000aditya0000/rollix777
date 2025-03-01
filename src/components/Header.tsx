@@ -22,7 +22,7 @@ const Header = () => {
   return (
     <>
       <header className="fixed top-0 w-full max-w-[430px] z-50">
-        <div className="px-4 py-3 bg-[#1A1A2E]/95 backdrop-blur-lg border-b border-purple-500/10">
+        <div className="px-4 py-3  bg-[#1A1A2E]/95 backdrop-blur-lg border-b border-purple-500/10">
           <div className="flex items-center justify-between">
             <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               Rollix777

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Phone, Gift, Eye, EyeOff, Check } from 'lucide-react';
+import axios from 'axios';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -11,12 +12,39 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [username, setUsername] = useState(''); // add state
+const [password, setPassword] = useState(" ");
+const [error, setError] = useState<string | null>(null);
+const [loading, setLoading] = useState(false);
+
 
   if (!isOpen) return null;
 
   const toggleMode = () => {
     setMode(mode === 'login' ? 'register' : 'login');
   };
+  // fetching api
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault(); // Prevent page reload
+
+  setError(null); // Clear previous errors
+  setLoading(true); // Show loading indicator
+
+  try {
+    const response = await axios.post('https://your-api-url.com/login', {
+      username,
+      password,
+    });
+
+    console.log('Login successful:', response.data);
+
+    // Handle login success (e.g., store token, redirect user)
+  } catch (err: any) {
+    setError(err.response?.data?.message || 'Login failed. Please try again.');
+  } finally {
+    setLoading(false); // Hide loading indicator
+  }
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -41,7 +69,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
         {/* Body */}
         <div className="p-5">
           {mode === 'login' ? (
-            <form className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">Username</label>
                 <div className="relative">
@@ -52,6 +80,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                     type="text" 
                     className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
                     placeholder="Enter your username"
+                    value={username}
+                    onChange={(e)=>setUsername(e.target.value)}
                   />
                 </div>
               </div>
@@ -63,9 +93,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                     <Lock className="w-5 h-5 text-purple-400" />
                   </div>
                   <input 
-                    type={showPassword ? "text" : "password"} 
+                    type={showPassword ? "text" : "password"}
                     className="w-full py-3 pl-10 pr-10 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
                     placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) =>setPassword(e.target.value)}
                   />
                   <button 
                     type="button"
@@ -79,19 +111,23 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                   </button>
                 </div>
               </div>
-              
+              {/* Error Message */}
+             {error && <p className="text-red-500 text-sm">{error}</p>}
+
               <div className="flex justify-end">
                 <button type="button" className="text-sm text-purple-400 hover:text-purple-300">
                   Forgot Password?
                 </button>
               </div>
-              
-              <button 
-                type="submit"
-                className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity"
-              >
-                Login
-              </button>
+                 
+                   {/* Submit Button */}
+                   <button
+                     type="submit"
+                     className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                     disabled={loading}
+                   >
+                     {loading ? 'Logging in...' : 'Login'}
+                   </button>
             </form>
           ) : (
             <form className="space-y-4">

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react"; // Importing an icon for close button
+import Header from "./Header";
 
 const BigSmall = () => {
+    const path = window.location.pathname;
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 3;
   const [timeLeft, setTimeLeft] = useState(120); // Default 2 min
@@ -10,6 +12,7 @@ const BigSmall = () => {
   const [selectedNumber, setSelectedNumber] = useState(null);
   const [contractMoney, setContractMoney] = useState(null);
   const [agreed, setAgreed] = useState(false);
+  const [selected, setselected] = useState(1);
 
   useEffect(() => {
     if (!isRunning || timeLeft === 0) return;
@@ -22,7 +25,8 @@ const BigSmall = () => {
  const startTimer = (minutes: number) => {
   setTimeLeft(minutes * 60); // Convert to seconds
   setIsRunning(true);
-  setActiveTime(minutes); //  This updates the active button
+   setActiveTime(minutes); //  This updates the active button
+   setselected(minutes) // update recode table heading
 };
 
 
@@ -48,14 +52,21 @@ const BigSmall = () => {
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
+  const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord); 
   const totalPages = Math.ceil(records.length / recordsPerPage);
 
   return (
-    <div className="mt-0 px-2 ">
-      <div className="w-full max-w-md mx-auto bg-gray-900 text-white p-4 space-y-4 rounded-lg ">
+    <>
+    <div className="px-2 overflow-auto h-screen ">
+      <div className="w-full mx-auto max-w-[430px]  bg-[#1A1A2E]/95 text-white p-3 space-y-3  mt-14 ">
+      {path === "/bigsmall" && (
+  <div className="flex justify-center items-center ">
+    <Header />
+  </div>
+)}
+
         {/* Time Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 ">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
   {[1, 3, 5, 10].map((min) => (
     <button
       key={min}
@@ -91,19 +102,26 @@ const BigSmall = () => {
         {/* 0-9 Number Buttons */}
        <div className="p-2">
       {/* Number Buttons */}
-      <div className="grid grid-cols-5 gap-2">
-        {Array.from({ length: 10 }, (_, i) => (
-          <button
-            key={i}
-            onClick={() => setSelectedNumber(i)} // Open popup with selected number
-            className={`relative px-6 py-3 text-white font-bold rounded-lg ${
-              i === 0 ? "bg-purple-500" : i % 2 === 0 ? "bg-green-500" : "bg-red-500"
-            }`}
-          >
-            {i}
-          </button>
-        ))}
-      </div>
+    <div className="grid grid-cols-5 gap-2">
+  {Array.from({ length: 10 }, (_, i) => (
+    <button
+      key={i}
+      onClick={() => setSelectedNumber(i)}
+      disabled={timeLeft < 10} // Disable when time is less than 10 sec
+      className={`relative px-6 py-3 text-white font-bold rounded-lg ${
+        timeLeft < 10
+          ? "bg-gray-500 cursor-not-allowed" // Grey out when disabled
+          : i === 0
+          ? "bg-purple-500"
+          : i % 2 === 0
+          ? "bg-green-500"
+          : "bg-red-500"
+      }`}
+    >
+      {i}
+    </button>
+  ))}
+</div>
 
       {/* Popup */}
       {selectedNumber !== null && (
@@ -120,10 +138,12 @@ const BigSmall = () => {
             {/* Body */}
             <div className="p-5">
              <label className="block text-gray-900 font-semibold mb-2">Enter Contract Money</label>
-  <input
-    type="number"
-    value={contractMoney}
-    onChange={(e) => {
+                  <input min={10}
+                    step={10}
+         type="number"
+         placeholder="Enter amount Minimun(10₹)"
+        value={contractMoney}
+        onChange={(e) => {
       const value = Number(e.target.value);
       if (value > 100000) {
         setContractMoney(100000); // Reset to max limit
@@ -147,28 +167,25 @@ const BigSmall = () => {
 
 
               {/* Checkbox */}
-              <div className="flex items-center mt-3">
+      <div className="flex items-center mt-3">
   <input
     type="checkbox"
     checked={agreed}
-    onChange={() => {
-      if (contractMoney > 0 && contractMoney <= 100000) {
-        setAgreed(!agreed); // Only allow toggling when the condition is met
-      }
-    }}
+    onChange={() => setAgreed(!agreed)}
     className={`w-5 h-5 ${
-      contractMoney === 0 ||  contractMoney >100000  ? "cursor-not-allowed opacity-50" : "text-blue-600"
+      contractMoney < 10 || contractMoney > 100000 ? "cursor-not-allowed opacity-50" : "text-blue-600"
     }`}
-    disabled={contractMoney === 0 || contractMoney > 100000} // Disable checkbox when contractMoney is 0 or > 100000
+    // disabled={contractMoney < 10 || contractMoney > 100000} // Disable checkbox when < 10 or > 100000/
   />
   <label
-    className={`ml-2 text-gray-800 ${
-      contractMoney === 0 || contractMoney > 100000 ? "opacity-50 cursor-not-allowed" : "text-blue-600"
+    className={`ml-2 ${
+      contractMoney < 10 || contractMoney > 100000 ? "opacity-50 cursor-not-allowed" : "text-blue-600"
     }`}
   >
-    I agree <span className="text-red-500 font-bold"></span>
+    I agree
   </label>
 </div>
+
 
             </div>
 
@@ -202,7 +219,7 @@ const BigSmall = () => {
 
         {/* Record Table */}
         <div className="p-4 bg-gray-900 max-w-md mx-auto mb-8">
-          <h2 className="text-center text-lg font-bold text-white mb-0">🏆1 min Record</h2>
+          <h2 className="text-center text-lg font-bold text-white mb-0">🏆{selected} min Record</h2>
           <div className="overflow-x-auto">
             <table className="w-full border border-gray-700 text-white text-sm sm:text-base mb-0">
               <thead>
@@ -237,7 +254,8 @@ const BigSmall = () => {
         </div>
       </div>
     </div>
-  );
+      </>
+      );
 };
 
 export default BigSmall;
