@@ -1,57 +1,169 @@
 import React from 'react';
-
+import JDBGames from '../gamesData/gamesData.json';
+import axios from "axios";
+import CryptoJS from "crypto-js";
 interface GameCarouselProps {
   title: string;
   type: 'featured' | 'popular';
 }
 
-const featuredGames = [
-  {
-    id: 1,
-    title: "Space Warriors",
-    image: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=400&h=300&fit=crop",
-    category: "Action"
-  },
-  {
-    id: 2,
-    title: "Racing Legends",
-    image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop",
-    category: "Racing"
-  },
-  {
-    id: 3,
-    title: "Mystic Quest",
-    image: "https://images.unsplash.com/photo-1496096265110-f83ad7f96608?w=400&h=300&fit=crop",
-    category: "Adventure"
-  }
-];
+const aesKey = "b2a5ec5d13dd4248b330551d585440ba";
+const serverUrl = "https://api.workorder.icu/proxy";
 
-const popularGames = [
-  {
-    id: 1,
-    title: "Crypto Slots",
-    image: "https://images.unsplash.com/photo-1596451190630-186aff535bf2?w=400&h=300&fit=crop",
-    category: "Casino"
-  },
-  {
-    id: 2,
-    title: "Blackjack Pro",
-    image: "https://images.unsplash.com/photo-1511193311914-0346f16efe90?w=400&h=300&fit=crop",
-    category: "Cards"
-  },
-  {
-    id: 3,
-    title: "Lucky Roulette",
-    image: "https://images.unsplash.com/photo-1518893494013-481c1d8ed3fd?w=400&h=300&fit=crop",
-    category: "Casino"
-  },
-  {
-    id: 4,
-    title: "Poker Master",
-    image: "https://images.unsplash.com/photo-1541278107931-e006523892df?w=400&h=300&fit=crop",
-    category: "Cards"
+
+const encryptAES256 = (data: string, key: string) => {
+const key256 = CryptoJS.enc.Utf8.parse(key);
+const encrypted = CryptoJS.AES.encrypt(data, key256, {
+  mode: CryptoJS.mode.ECB,
+  padding: CryptoJS.pad.Pkcs7,
+});
+return encrypted.toString();
+};
+
+// Generate a random 10-digit number
+const generateRandom10Digits = () => {
+return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+};
+
+// Open JS Game Function
+const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
+console.log(`Game UID: ${game_uid}`);
+console.log(`Button element:`, element);
+
+const memberAccount = "h7bfd41234567890thala";
+const transferId = `${memberAccount}_${generateRandom10Digits()}`;
+const timestamp = Date.now();
+
+try {
+  // Step 1: Initialize the payload with a balance of 0
+  const initPayload = {
+    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    member_account: memberAccount,
+    timestamp,
+    credit_amount: "0", // Set balance to 0
+    currency_code: "BRL",
+    language: "en",
+    platform: "2",
+    home_url: "https://thalaclub.com",
+    transfer_id: transferId,
+  };
+
+  const initEncryptedPayload = encryptAES256(
+    JSON.stringify(initPayload),
+    aesKey
+  );
+
+  const initRequestPayload = {
+    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    timestamp,
+    payload: initEncryptedPayload,
+  };
+
+  // Send the initial request to the server
+  const initResponse = await axios.post(serverUrl, initRequestPayload);
+
+  if (initResponse.data.code !== 0) {
+    console.error("Initialization Error:", initResponse.data.msg);
+    alert("Failed to initialize game: " + initResponse.data.msg);
+    return;
   }
-];
+
+  console.log("Initialization successful:", initResponse.data);
+
+  // Get the amount to deduct from the user balance
+  const afterAmount = initResponse.data.payload.after_amount; // Amount to deduct
+
+  // Step 2: Deduct the user's balance
+  const deductPayload = {
+    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    member_account: memberAccount,
+    timestamp: Date.now(),
+    credit_amount: `-${afterAmount}`, // Deduct the current balance
+    currency_code: "BRL",
+    language: "en",
+    platform: "2",
+    home_url: "https://thalaclub.com",
+    transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
+  };
+
+  const deductEncryptedPayload = encryptAES256(
+    JSON.stringify(deductPayload),
+    aesKey
+  );
+
+  const deductRequestPayload = {
+    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    timestamp: Date.now(),
+    payload: deductEncryptedPayload,
+  };
+
+  const deductResponse = await axios.post(serverUrl, deductRequestPayload);
+
+  if (deductResponse.data.code !== 0) {
+    console.error("Deduct Error:", deductResponse.data.msg);
+    alert("Failed to deduct balance: " + deductResponse.data.msg);
+    return;
+  }
+
+  console.log("Deduct successful:", deductResponse.data);
+
+  // Step 3: Launch the game
+  const gamePayload = {
+    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    member_account: memberAccount,
+    game_uid: game_uid,
+    timestamp: Date.now(),
+    credit_amount: afterAmount.toString(),
+    currency_code: "BRL",
+    language: "en",
+    platform: "2",
+    home_url: "https://thalaclub.com",
+    transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
+  };
+
+  const gameEncryptedPayload = encryptAES256(
+    JSON.stringify(gamePayload),
+    aesKey
+  );
+
+  const gameRequestPayload = {
+    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    timestamp: Date.now(),
+    payload: gameEncryptedPayload,
+  };
+
+  const gameResponse = await axios.post(serverUrl, gameRequestPayload);
+
+  if (gameResponse.data.code !== 0) {
+    console.error("Game Launch Error:", gameResponse.data.msg);
+    alert("Failed to launch game: " + gameResponse.data.msg);
+    return;
+  }
+
+  // Fetch the game launch URL
+  const gameLaunchUrl = gameResponse.data.payload?.game_launch_url;
+
+  if (!gameLaunchUrl) {
+    console.error("Game Launch URL not found.");
+    alert("Game launch URL not found.");
+    return;
+  }
+
+  console.log("Game Launch URL:", gameLaunchUrl);
+
+  // Open the game launch URL in a new tab
+  window.open(gameLaunchUrl, "_blank");
+} catch (error) {
+  console.error("Error in game launch process:", error);
+  alert("An error occurred while launching the game.");
+}
+};
+
+
+const featuredGames = JDBGames;
+
+const popularGames = JDBGames;
+ 
 
 const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
   const games = type === 'featured' ? featuredGames : popularGames;
@@ -62,24 +174,24 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
       <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 snap-x hide-scrollbar">
         {games.map((game) => (
           <div
-            key={game.id}
+            key={game.game_uid}
             className="flex-none w-[280px] snap-start"
           >
             <div className="bg-[#252547] rounded-xl overflow-hidden border border-purple-500/10">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10" />
                 <img
-                  src={game.image}
-                  alt={game.title}
+                  src={game.icon}
+                  alt={game.game_name}
                   className="w-full h-40 object-cover"
                 />
                 <span className="absolute bottom-2 left-2 text-sm text-white z-20 bg-purple-500/20 px-2 py-1 rounded-full backdrop-blur-sm">
-                  {game.category}
+                  {game.game_type}
                 </span>
               </div>
               <div className="p-4">
-                <h3 className="text-white font-semibold text-lg">{game.title}</h3>
-                <button className="mt-3 w-full py-2 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity">
+                <h3 className="text-white font-semibold text-lg">{game.game_name}</h3>
+                <button  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)} className="mt-3 w-full py-2 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity">
                   Play Now
                 </button>
               </div>
