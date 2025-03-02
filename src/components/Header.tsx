@@ -9,7 +9,7 @@ import {
   Bell,
   LogOut,
 } from "lucide-react";
-import AuthModal from "./AuthModal";
+import AuthModal from "./AuthModal.tsx";
 import SideNav from "./SideNav.tsx";
 
 interface HeaderProps {
