@@ -191,7 +191,7 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
               </div>
               <div className="p-4">
                 <h3 className="text-white font-semibold text-lg">{game.game_name}</h3>
-                <button  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)} className="mt-3 w-full py-2 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity">
+                <button   onClick={(e) => openJsGame(game.game_uid, e.currentTarget)} className="mt-3 w-full py-2 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity">
                   Play Now
                 </button>
               </div>

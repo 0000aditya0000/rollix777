@@ -48,79 +48,32 @@ const AuthModal: React.FC<AuthModalProps> = ({
     setError("");
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (email.trim() === "" || password.trim() === "") {
+    setError("Please enter both email and password");
+    return;
+  }
 
-    // For testing purposes, allow any non-empty email and password
-    if (mode === "login") {
-      if (email.trim() === "" || password.trim() === "") {
-        setError("Please enter both email and password");
-        return;
-      }
-      const postData = async () => {
-        try {
-          const data = {
-            email,
-            password,
-          };
-          const response = await axios.post(
-            `${import.meta.env.VITE_SERVER_BASE_URL}/api/user/login`,
-            data
-          );
-          // Success - any non-empty values will work
-          if (onLoginSuccess) {
-            onLoginSuccess();
-          }
-          console.log("Response:", response.data);
-        } catch (error) {
-          console.error(error);
-        }
-      };
-      postData();
-    } else {
-      // Register validation
-      if (
-        username.trim() === "" ||
-        email.trim() === "" ||
-        password.trim() === ""
-      ) {
-        setError("Please fill in all required fields");
-        return;
-      }
+  try {
+    const data = { email, password };
+    const response = await axios.post(
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/user/login`,
+      data
+    );
 
-      if (!acceptTerms) {
-        setError("Please accept the terms and conditions");
-        return;
+    if (response.data.token) {
+      localStorage.setItem("userToken", response.data.token); // Save login token
+      if (onLoginSuccess) {
+        onLoginSuccess(); // Close modal after successful login
       }
-      const postData = async () => {
-        console.log("API is running");
-        try {
-          const data = {
-            name: username,
-            email,
-            password,
-            phoneNumber,
-            dob: "20-11-2000",
-            referalCode,
-          };
-          console.log("data", data);
-          const response = await axios.post(
-            `${import.meta.env.VITE_SERVER_BASE_URL}/api/user/register`,
-            data
-          );
-          // Success - register and then login
-          if (onLoginSuccess) {
-            onLoginSuccess();
-          }
-          console.log("Response:", response.data);
-        } catch (error) {
-          console.error(error);
-          setError("Something went wrong. Please try again");
-        }
-      };
-      postData();
     }
-  };
+  } catch (error) {
+    console.error("Login failed:", error);
+    setError("Invalid email or password");
+  }
+};
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
