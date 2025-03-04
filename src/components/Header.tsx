@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
   color: "bg-black",
   balance: "0", // Initially 0 until API fetches data
 });
-  // Ensure selected currency updates properly
+  // Ensure selected currency updates 
 const handleCurrencySelect = (crypto) => {
   setSelectedCurrency({
     name: crypto.name,
