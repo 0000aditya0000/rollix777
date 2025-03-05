@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import JDBGames from '../gamesData/gamesData.json';
 import axios from "axios";
 import CryptoJS from "crypto-js";
+import AuthModal from './AuthModal';
 interface GameCarouselProps {
   title: string;
   type: 'featured' | 'popular';
@@ -166,7 +167,19 @@ const popularGames = JDBGames;
  
 
 const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
-  const games = type === 'featured' ? featuredGames : popularGames;
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+
+  const handlePlayNow = () => {
+    const userToken = localStorage.getItem("userToken");
+
+    if (!userToken) {
+      setAuthModalOpen(true); // Open login modal if not logged in
+    } else {
+      console.log("Redirecting to game..."); 
+      // Implement redirection to the game page here
+    }
+  };
+  const games =  JDBGames.filter(game => game.game_category === "popular");
   
   return (
     <section className="py-8 px-4 bg-[#1A1A2E]">
@@ -191,14 +204,25 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
               </div>
               <div className="p-4">
                 <h3 className="text-white font-semibold text-lg">{game.game_name}</h3>
-                <button   onClick={(e) => openJsGame(game.game_uid, e.currentTarget)} className="mt-3 w-full py-2 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity">
+                                <button
+                  onClick={handlePlayNow}
+                  className="mt-2 w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                >
                   Play Now
                 </button>
+
               </div>
             </div>
           </div>
         ))}
       </div>
+       {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode="login"
+        onLoginSuccess={() => setAuthModalOpen(false)}
+      />
     </section>
   );
 };

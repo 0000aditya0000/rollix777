@@ -20,6 +20,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
+  console.log(onLogout);
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");

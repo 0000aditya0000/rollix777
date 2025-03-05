@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, ArrowLeft, Clock } from "lucide-react";
+import { X, ArrowLeft, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const BigSmall = () => {
@@ -14,6 +14,9 @@ const BigSmall = () => {
   const [selected, setSelected] = useState(1);
   const [records, setRecords] = useState<any[]>([]); // State to store fetched data
   const [shouldResetTimer, setShouldResetTimer] = useState(false);
+ 
+
+
 
   useEffect(() => {
     // Initialize with some data for 1 min timer
@@ -235,12 +238,12 @@ const BigSmall = () => {
                 {currentRecords.length > 0 ? (
                   currentRecords.map((record, index) => (
                     <tr key={index} className="border-b border-purple-500/10 text-white hover:bg-purple-500/5">
-                      <td className="py-4 px-6">{record.period}</td>
-                      <td className="py-4 px-6">{record.number}</td>
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-4">{record.period}</td>
+                      <td className="py-4 px-4">{record.number}</td>
+                      <td className="py-4 px-4">
                         {record.number === 0 ? "🟣" : record.color === "green" ? "🟢" : "🔴"}
                       </td>
-                      <td className="py-4 px-6">{record.small_big}</td>
+                      <td className="py-4 px-4">{record.small_big}</td>
                     </tr>
                   ))
                 ) : (

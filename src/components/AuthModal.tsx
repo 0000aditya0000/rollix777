@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -66,6 +67,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
       localStorage.setItem("userToken", response.data.token); // Save login token
       if (onLoginSuccess) {
         onLoginSuccess(); // Close modal after successful login
+        
       }
     }
   } catch (error) {

@@ -1,48 +1,71 @@
-import React from 'react';
-import { Flame } from 'lucide-react';
-
-const games = [
-  {
-    id: 1,
-    title: "Color Match",
-    players: "10.5K",
-    image: "https://images.unsplash.com/photo-1611996575749-79a3a250f948?w=400&h=300&fit=crop",
-    prize: "$5000"
-  },
-  {
-    id: 2,
-    title: "Lucky Draw",
-    players: "8.2K",
-    image: "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=400&h=300&fit=crop",
-    prize: "$3000"
-  }
-];
+import React, { useState } from "react";
+import { Flame } from "lucide-react";
+import GameData from "../gamesData/gamesData.json";
+import AuthModal from "./AuthModal"; // Import the modal component
 
 const TrendingGames = () => {
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  // Function to check if user is logged in
+  const isUserLoggedIn = () => localStorage.getItem("userToken");
+
+  const handlePlayNow = (gameId: string) => {
+    if (!isUserLoggedIn()) {
+      setAuthModalOpen(true); // Show login popup if user is not logged in
+      return;
+    }
+
+    // Launch game if user is logged in
+    console.log(`Launching game with ID: ${gameId}`);
+    // Redirect to game page or open game logic here
+  };
+  const trendingGames = GameData.filter(
+    (game) => game.game_category === "trending"
+  );
+
   return (
     <section className="py-8 px-4 bg-[#1A1A2E]">
       <div className="flex items-center gap-3 mb-6">
         <Flame className="w-6 h-6 text-orange-500" />
         <h2 className="text-2xl font-bold text-white">Trending Now</h2>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        {games.map((game) => (
-          <div key={game.id} className="bg-[#252547] rounded-xl overflow-hidden border border-purple-500/10">
-            <img
-              src={game.image}
-              alt={game.title}
-              className="w-full h-32 object-cover"
-            />
-            <div className="p-3">
-              <h3 className="text-white font-semibold">{game.title}</h3>
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-sm text-green-400">{game.players} playing</span>
-                <span className="text-sm text-purple-400">{game.prize}</span>
+
+      {/* Scrollable Container */}
+      <div className="flex gap-4 overflow-x-auto whitespace-nowrap hide-scrollbar px-1">
+        {trendingGames.length > 0 ? (
+          trendingGames.map((game) => (
+            <div
+              key={game.game_uid}
+              className="min-w-[150px] sm:min-w-[200px] md:min-w-[250px] bg-[#252547] rounded-xl hide-scrollbar border border-purple-500/10 shadow-lg"
+            >
+              <img
+                src={game.icon}
+                alt={game.game_name}
+                className="w-full h-32 object-cover"
+              />
+              <div className="p-3">
+                <h3 className="text-white font-semibold text-sm md:text-base">
+                  {game.game_name}
+                </h3>
+                <button
+                  onClick={handlePlayNow}
+                  className="mt-2 w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                >
+                  Play Now
+                </button>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p className="text-white">No trending games available.</p>
+        )}
       </div>
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode="login"
+        onLoginSuccess={() => setAuthModalOpen(false)}
+      />
     </section>
   );
 };
