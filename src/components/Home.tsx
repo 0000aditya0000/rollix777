@@ -14,7 +14,7 @@ const Home = () => {
       <div>
           <div className="fixed inset-0 bg-[#0F0F19] overflow-y-auto hide-scrollbar">
       <div className="mx-auto w-[100%] max-w-[430px] relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E]">
-        <Header />
+        <Header onLogout={"hiii"}/>
         <main>
           <Hero />
           <GameCarousel title="Featured Games" type="featured" />

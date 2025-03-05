@@ -8,6 +8,9 @@ interface SideNavProps {
 }
 
 const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
+
+  // console.log(onLogout);
+  
   if (!isOpen) return null;
 
   const menuItems = [
