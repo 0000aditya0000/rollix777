@@ -1,82 +1,85 @@
 import React, { useEffect, useState } from "react";
-import { X } from "lucide-react"; // Importing an icon for close button
-import Header from "./Header";
+import { X, ArrowLeft, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const BigSmall = () => {
-  const path = window.location.pathname;
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
   const [timeLeft, setTimeLeft] = useState(120); // Default 2 min
   const [isRunning, setIsRunning] = useState(false);
-  const [activeTime, setActiveTime] = useState<number | null>(null);
-  const [selectedNumber, setSelectedNumber] = useState(null);
-  const [contractMoney, setContractMoney] = useState(null);
+  const [activeTime, setActiveTime] = useState<number | null>(1); // Default to 1 min
+  const [selectedNumber, setSelectedNumber] = useState<any>(null);
+  const [contractMoney, setContractMoney] = useState<any>(null);
   const [agreed, setAgreed] = useState(false);
-  const [selected, setselected] = useState(1);
-    const [records, setRecords] = useState([]); // State to store fetched data
-
-  
+  const [selected, setSelected] = useState(1);
+  const [records, setRecords] = useState<any[]>([]); // State to store fetched data
+  const [shouldResetTimer, setShouldResetTimer] = useState(false);
 
   useEffect(() => {
-  if (!isRunning) return;
+    // Initialize with some data for 1 min timer
+    initializeData(1);
+    setIsRunning(true);
+  }, []);
 
-  if (timeLeft === 0) {
-    setTimeout(() => {
+  useEffect(() => {
+    if (!isRunning) return;
+
+    if (timeLeft === 0) {
+      // Timer completed, now reset with the active time
       if (activeTime) {
-        setTimeLeft(activeTime * 60); // Restart with the selected time
-        setIsRunning(true);
+        setTimeLeft(activeTime * 60);
+        // Generate new data when timer completes
+        generateMockData();
       }
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
     }, 1000);
-    return;
-  }
 
-  const timer = setInterval(() => {
-    setTimeLeft((prev) => prev - 1);
-  }, 1000);
+    return () => clearInterval(timer);
+  }, [isRunning, timeLeft, activeTime]);
 
-  return () => clearInterval(timer);
-}, [isRunning, timeLeft, activeTime]);
+  // Initialize data without resetting timer
+  const initializeData = (minutes: number) => {
+    setActiveTime(minutes);
+    setSelected(minutes);
+    setTimeLeft(minutes * 60);
+    generateMockData();
+  };
 
+  // Handle time selection without resetting the current timer
+  const handleTimeSelect = (minutes: number) => {
+    // Only update the active time, don't reset the current timer
+    setActiveTime(minutes);
+    setSelected(minutes);
+    
+    // Generate new data for the selected time period
+    generateMockData();
+  };
 
-  // 🔥 Click to restart timer
- const handleTimeSelect = async (minutes: number) => {
-    setIsRunning(false);
-    setTimeout(() => {
-      setTimeLeft(minutes * 60);
-      setIsRunning(true);
-      setActiveTime(minutes);
-    }, 0);
-
+  // Generate mock data for the game records
+  const generateMockData = () => {
     try {
-      const response = await fetch(`https://rollix777.com/api/color/result/${minutes}min`);
-      if (!response.ok) throw new Error("Failed to fetch data");
-      
-      const data = await response.json();
-      setRecords(data); // Assuming API returns an array of records
+      const mockData = Array.from({ length: 20 }, (_, i) => ({
+        period: `20250227${Math.floor(1000 + Math.random() * 9000)}`,
+        number: Math.floor(Math.random() * 10),
+        color: Math.random() > 0.5 ? "green" : "red",
+        small_big: Math.random() > 0.5 ? "Small" : "Big"
+      }));
+      setRecords(mockData);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error generating mock data:", error);
     }
   };
 
-  // ⏳ Format time as MM:SS
+  // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes}:${secs < 10 ? `0${secs}` : secs}`;
   };
-
-  // const records = [
-  //   { period: "202502277254", number: 1, result: "🔴", size: "Big" },
-  //   { period: "202502279535", number: 2, result: "🟢", size: "Small" },
-  //   { period: "202502272521", number: 3, result: "🔴", size: "Big" },
-  //   { period: "202502276207", number: 4, result: "🟢", size: "Small" },
-  //   { period: "202502279535", number: 5, result: "🔴", size: "Big" },
-  //   { period: "202502272521", number: 6, result: "🟢", size: "Small" },
-  //   { period: "202502276207", number: 7, result: "🔴", size: "Big" },
-  //   { period: "202502279535", number: 9, result: "🔴", size: "Big" },
-  //   { period: "202502272521", number: 8, result: "🟢", size: "Small" },
-  //   { period: "202502276207", number: 5, result: "🔴", size: "Big" },
-  // ];
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -84,248 +87,321 @@ const BigSmall = () => {
   const totalPages = Math.ceil(records.length / recordsPerPage);
 
   return (
-    <>
-      <div className="px-0 ">
-        <div className="w-full mx-auto   bg-[#1A1A2E]/95 text-white p-3 space-y-3  mt-14 ">
-          {path === "/bigsmall" && (
-            <div className="flex justify-center items-center ">
-              <Header />
-            </div>
-          )}
+    <div className="pt-16 pb-24 bg-[#0F0F19]">
+      <div className="w-full mx-auto bg-gradient-to-b from-[#252547] to-[#1A1A2E] text-white p-4 space-y-4 rounded-lg">
+        {/* Header with back button */}
+        <div className="flex items-center mb-4">
+          <Link to="/" className="p-2 rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors">
+            <ArrowLeft size={20} />
+          </Link>
+          <h1 className="text-xl font-bold text-white ml-4">Big & Small Game</h1>
+        </div>
 
-          {/* Time Buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {[1, 3, 5, 10].map((min) => (
+        {/* Time Buttons */}
+        <div className="grid grid-cols-4 gap-2">
+          {[1, 3, 5, 10].map((min) => (
+            <button
+              key={min}
+              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                activeTime === min 
+                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white" 
+                  : "bg-[#252547] border border-purple-500/20 text-gray-300 hover:bg-[#2f2f5a]"
+              }`}
+              onClick={() => handleTimeSelect(min)}
+            >
+              {min} min
+            </button>
+          ))}
+        </div>
+
+        {/* Period Display */}
+        <div className="flex items-center bg-gradient-to-r from-purple-900/50 to-pink-900/50 px-4 py-3 rounded-lg border border-purple-500/20">
+          <span className="mr-2">🏆</span>
+          <span className="font-bold">Period</span>
+          <span className="ml-auto">202502277602</span>
+        </div>
+
+        {/* Timer */}
+        <div className={`flex items-center justify-center gap-2 bg-[#252547] border border-purple-500/20 text-center py-3 px-4 rounded-lg ${timeLeft < 10 ? "bg-red-500/20 border-red-500/30" : ""}`}>
+          <Clock className={`w-5 h-5 ${timeLeft < 10 ? "text-red-400" : "text-purple-400"}`} />
+          <span className={`font-bold ${timeLeft < 10 ? "text-red-400" : "text-white"}`}>
+            Time Left: {formatTime(timeLeft)}
+          </span>
+        </div>
+
+        {/* Join Buttons */}
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10 
+                ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed" 
+                : "bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30"
+            }`}
+            disabled={timeLeft < 10}
+            onClick={() => timeLeft >= 10 && setSelectedNumber("Green")}
+          >
+            Join Green
+          </button>
+          
+          <button 
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10 
+                ? "bg-[#252547] border border-purple-500/20 text-gray-400 cursor-not-allowed" 
+                : "bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
+            }`}
+            disabled={timeLeft < 10}
+          >
+            Join Violet
+          </button>
+          
+          <button
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10 
+                ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed" 
+                : "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
+            }`}
+            disabled={timeLeft < 10}
+            onClick={() => timeLeft >= 10 && setSelectedNumber("Red")}
+          >
+            Join Red
+          </button>
+        </div>
+
+        {/* 0-9 Number Buttons */}
+        <div className="p-2 bg-[#1A1A2E] rounded-lg border border-purple-500/10">
+          <div className="grid grid-cols-5 gap-3">
+            {Array.from({ length: 10 }, (_, i) => (
               <button
-                key={min}
-                className={`px-4 py-2 rounded transition-colors duration-200 ${
-                  activeTime === min ? "bg-blue-700 text-white" : "bg-gray-700 hover:bg-gray-400"
+                key={i}
+                onClick={() => timeLeft >= 10 && setSelectedNumber(i)}
+                disabled={timeLeft < 10}
+                className={`relative px-0 py-3 text-white font-bold rounded-lg ${
+                  timeLeft < 10
+                    ? "bg-[#252547] border border-gray-600/20 text-gray-500 cursor-not-allowed"
+                    : i === 0
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
+                    : i % 2 === 0
+                    ? "bg-gradient-to-r from-green-600 to-green-500 hover:opacity-90"
+                    : "bg-gradient-to-r from-red-600 to-red-500 hover:opacity-90"
                 }`}
-                onClick={() => handleTimeSelect(min)}
               >
-                {min} min
+                {i}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Period Display */}
-          <div className="flex items-center bg-green-700 px-3 py-2 rounded">
-            <span className="mr-2">🏆</span>
-            <span className="font-bold">Period</span>
-            <span className="ml-auto">202502277602</span>
+        {/* Big & Small Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <button 
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10 
+                ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed" 
+                : "bg-gradient-to-r from-red-600 to-red-500 text-white hover:opacity-90"
+            }`}
+            disabled={timeLeft < 10}
+          >
+            Big
+          </button>
+          <button 
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10 
+                ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed" 
+                : "bg-gradient-to-r from-green-600 to-green-500 text-white hover:opacity-90"
+            }`}
+            disabled={timeLeft < 10}
+          >
+            Small
+          </button>
+        </div>
+
+        {/* Record Table */}
+        <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden mt-6">
+          <div className="p-4 border-b border-purple-500/10">
+            <h2 className="text-xl font-bold text-white">🏆 {selected} min Record</h2>
           </div>
-
-          {/* Timer */}
-          <div className={`bg-gray-700 text-center py-2 rounded ${timeLeft < 10 ? "bg-red-500" : ""}`}>
-            Time Left: {formatTime(timeLeft)}
-          </div>
-
-          {/* Join Buttons */}
-<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-  <button
-    className={`px-4 py-2 rounded ${
-      timeLeft < 10 ? "bg-gray-500 cursor-not-allowed" : "bg-green-500"
-    }`}
-    disabled={timeLeft < 10}
-    onClick={() => timeLeft >= 10 && setSelectedNumber("Green")} // Open popup only if time >= 10
-  >
-    Join Green
-  </button>
-    <button className="bg-purple-500 px-4 py-2 rounded">Join Violet</button>
-  
-  <button
-    className={`px-4 py-2 rounded ${
-      timeLeft < 10 ? "bg-gray-500 cursor-not-allowed" : "bg-red-500"
-    }`}
-    disabled={timeLeft < 10}
-    onClick={() => timeLeft >= 10 && setSelectedNumber("Red")} // Open popup only if time >= 10
-  >
-    Join Red
-  </button>
-</div>
-
-
-          {/* 0-9 Number Buttons */}
-          <div className="p-2">
-            {/* Number Buttons */}
-            <div className="grid grid-cols-5 gap-2">
-              {Array.from({ length: 10 }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedNumber(i)}
-                  disabled={timeLeft < 10} // Disable when time is less than 10 sec
-                  className={`relative px-6 py-3 text-white font-bold rounded-lg ${
-                    timeLeft < 10
-                      ? "bg-gray-500 cursor-not-allowed" // Grey out when disabled
-                      : i === 0
-                      ? "bg-purple-500"
-                      : i % 2 === 0
-                      ? "bg-green-500"
-                      : "bg-red-500"
-                  }`}
-                >
-                  {i}
-                </button>
-              ))}
-            </div>
-
-            {/* Popup */}
-            {selectedNumber !== null && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white w-[400px] rounded-lg shadow-lg">
-                  {/* Header */}
-                  <div className="bg-gradient-to-r from-purple-400 to-pink-400 text-white p-3 flex justify-between items-center rounded-t-lg">
-                    <span className="text-lg font-bold">Number {selectedNumber} Selected</span>
-                    <button onClick={() => setSelectedNumber(null)}>
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* Body */}
-                  <div className="p-5">
-                    <label className="block text-gray-900 font-semibold mb-2">Enter Contract Money</label>
-                    <input
-                      min={10}
-                      step={10}
-                      type="number"
-                      placeholder="Enter amount Minimun(10₹)"
-                      value={contractMoney}
-                      onChange={(e) => {
-                        const value = Number(e.target.value);
-                        if (value > 100000) {
-                          setContractMoney(100000); // Reset to max limit
-                        } else {
-                          setContractMoney(value);
-                        }
-                      }}
-                      className="w-full p-2 text-black border rounded"
-                    />
-
-                    {/* Error Message or Success Message */}
-                    {contractMoney >= 100000 ? (
-                      <p className="text-red-500 text-sm mt-1">
-                        Contract money cannot exceed ₹100,000
-                      </p>
-                    ) : (
-                      <p className="text-green-600 font-semibold mt-2">
-                        Total contract money is ₹{contractMoney}
-                      </p>
-                    )}
-
-                    {/* Checkbox */}
-                    <div className="flex items-center mt-3">
-                      <input
-                        type="checkbox"
-                        checked={agreed}
-                        onChange={() => setAgreed(!agreed)}
-                        className={`w-5 h-5 ${
-                          contractMoney < 10 || contractMoney > 100000 ? "cursor-not-allowed opacity-50" : "text-blue-600"
-                        }`}
-                        // disabled={contractMoney < 10 || contractMoney > 100000} // Disable checkbox when < 10 or > 100000/
-                      />
-                      <label
-                        className={`ml-2 ${
-                          contractMoney < 10 || contractMoney > 100000 ? "opacity-50 cursor-not-allowed" : "text-blue-600"
-                        }`}
-                      >
-                        I agree
-                      </label>
-                    </div>
-                  </div>
-
-                  {/*popup Buttons */}
-                  <div className="flex justify-end space-x-2 bg-gray-100 p-3 rounded-b-lg">
-                    <button
-                      className="px-4 py-2 bg-red-700 text-white rounded-lg"
-                      onClick={() => setSelectedNumber(null)}
-                    >
-                      CANCEL
-                    </button>
-                    <button
-                      className={`px-4 py-2 text-white rounded-lg ${
-                        agreed ? "bg-green-600" : "bg-gray-400 cursor-not-allowed"
-                      }`}
-                      disabled={!agreed}
-                    >
-                      CONFIRM
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Big & Small Buttons */}
-          <div className="grid grid-cols-2 gap-2">
-            <button className="bg-red-500 px-4 py-2 rounded">Big</button>
-            <button className="bg-green-500 px-4 py-2 rounded">Small</button>
-          </div>
-
-          {/* Record Table */}
-          <div className="p-4 bg-gray-900 max-w-md mx-auto mb-8">
-          <h2 className="text-center text-lg font-bold text-white mb-0">🏆 {selected} min Record</h2>
+          
           <div className="overflow-x-auto">
-            <table className="w-full border border-gray-700 text-white text-sm sm:text-base mb-0">
+            <table className="w-full">
               <thead>
-                <tr className="bg-gray-800">
-                  <th className="p-2 border border-gray-700">Period</th>
-                  <th className="p-2 border border-gray-700">Number</th>
-                  <th className="p-2 border border-gray-700">Result</th>
-                  <th className="p-2 border border-gray-700">Small & Big</th>
+                <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
+                  <th className="py-4 px-6 font-medium">Period</th>
+                  <th className="py-4 px-6 font-medium">Number</th>
+                  <th className="py-4 px-6 font-medium">Result</th>
+                  <th className="py-4 px-6 font-medium">Size</th>
                 </tr>
               </thead>
               <tbody>
                 {currentRecords.length > 0 ? (
                   currentRecords.map((record, index) => (
-                    <tr key={index} className="text-center border-b border-gray-700">
-                      <td className="p-2 border border-gray-700">{record.period}</td>
-                      <td className="p-2 border border-gray-700">{record.number}</td>
-                      <td className="p-2 border border-gray-700">
-  {record.number === 0 ? "🟢+🔴" : record.color === "green" ? "🟢" : "🔴"}
-</td>
-
-                      <td className="p-2 border border-gray-700">{record.small_big}</td>
+                    <tr key={index} className="border-b border-purple-500/10 text-white hover:bg-purple-500/5">
+                      <td className="py-4 px-6">{record.period}</td>
+                      <td className="py-4 px-6">{record.number}</td>
+                      <td className="py-4 px-6">
+                        {record.number === 0 ? "🟣" : record.color === "green" ? "🟢" : "🔴"}
+                      </td>
+                      <td className="py-4 px-6">{record.small_big}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="text-center p-3">No records available</td>
+                    <td colSpan={4} className="text-center py-6 text-gray-400">No records available</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-
-            {/* Pagination */}
-            <div className="flex justify-center gap-2 mt-2 overflow-x-auto w-full max-w-md mx-auto mb-12">
+          
+          {/* Pagination */}
+          <div className="p-4 border-t border-purple-500/10 flex justify-between items-center">
+            <p className="text-gray-400 text-sm">Showing {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, records.length)} of {records.length} records</p>
+            <div className="flex gap-2">
               <button
-                className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className="py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-400 hover:text-white transition-colors"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               >
-                ◀
+                Previous
               </button>
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"}`}
-                  onClick={() => setCurrentPage(i + 1)}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                // Show first page, last page, current page, and pages around current
+                let pageToShow;
+                if (totalPages <= 5) {
+                  pageToShow = i + 1;
+                } else if (currentPage <= 3) {
+                  pageToShow = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageToShow = totalPages - 4 + i;
+                } else {
+                  pageToShow = currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={i}
+                    className={`py-1 px-3 rounded-lg ${
+                      currentPage === pageToShow 
+                        ? "bg-purple-500/20 border border-purple-500/20 text-white" 
+                        : "bg-[#1A1A2E] border border-purple-500/20 text-gray-400 hover:text-white transition-colors"
+                    }`}
+                    onClick={() => setCurrentPage(pageToShow)}
+                  >
+                    {pageToShow}
+                  </button>
+                );
+              })}
+              
               <button
-                className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className="py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-400 hover:text-white transition-colors"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               >
-                ▶
+                Next
               </button>
             </div>
           </div>
         </div>
       </div>
-    </>
+
+      {/* Popup */}
+      {selectedNumber !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+            
+            {/* Header */}
+            <div className="flex justify-between items-center p-5 border-b border-purple-500/10">
+              <h2 className="text-xl font-bold text-white">
+                {typeof selectedNumber === 'number' 
+                  ? `Number ${selectedNumber} Selected` 
+                  : `${selectedNumber} Selected`}
+              </h2>
+              <button 
+                onClick={() => setSelectedNumber(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            {/* Body */}
+            <div className="p-5 space-y-4">
+              <div className="space-y-1">
+                <label className="text-sm text-gray-300">Contract Money</label>
+                <input 
+                  min={10}
+                  step={10}
+                  type="number"
+                  placeholder="Enter amount (Minimum ₹10)"
+                  value={contractMoney}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    if (value > 100000) {
+                      setContractMoney(100000); // Reset to max limit
+                    } else {
+                      setContractMoney(value);
+                    }
+                  }}
+                  className="w-full py-3 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              
+              {/* Error Message or Success Message */}
+              {contractMoney > 100000 ? (
+                <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 text-sm">
+                  Contract money cannot exceed ₹100,000
+                </div>
+              ) : contractMoney >= 10 ? (
+                <div className="p-3 bg-green-500/20 border border-green-500/30 rounded-lg text-green-200 text-sm">
+                  Total contract money is ₹{contractMoney}
+                </div>
+              ) : null}
+              
+              {/* Checkbox */}
+              <div className="flex items-center">
+                <div 
+                  className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
+                    agreed 
+                      ? "bg-purple-600" 
+                      : "bg-[#1A1A2E] border border-purple-500/20"
+                  }`}
+                  onClick={() => setAgreed(!agreed)}
+                >
+                  {agreed && <Check className="w-4 h-4 text-white" />}
+                </div>
+                <label 
+                  className="text-sm text-gray-300 cursor-pointer"
+                  onClick={() => setAgreed(!agreed)}
+                >
+                  I agree to the <span className="text-purple-400">terms and conditions</span>
+                </label>
+              </div>
+            </div>
+            
+            {/* Buttons */}
+            <div className="p-5 border-t border-purple-500/10 flex gap-3">
+              <button 
+                onClick={() => setSelectedNumber(null)}
+                className="flex-1 py-3 px-4 bg-[#1A1A2E] border border-red-500/20 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${
+                  agreed && contractMoney >= 10 && contractMoney <= 100000
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
+                    : "bg-gray-600/50 cursor-not-allowed"
+                }`}
+                disabled={!agreed || contractMoney < 10 || contractMoney > 100000}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
