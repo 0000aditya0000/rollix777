@@ -12,6 +12,7 @@ const aesKey = "126c2e86c418427c4aa717f971063e0e";
 const serverUrl = "https://api.workorder.icu/proxy";
 
 
+
 const encryptAES256 = (data: string, key: string) => {
 const key256 = CryptoJS.enc.Utf8.parse(key);
 const encrypted = CryptoJS.AES.encrypt(data, key256, {
@@ -31,7 +32,7 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
 console.log(`Game UID: ${game_uid}`);
 console.log(`Button element:`, element);
 
-const memberAccount = "h43929rollix777";
+const memberAccount = "h43929thala";
 const transferId = `${memberAccount}_${generateRandom10Digits()}`;
 const timestamp = Date.now();
 
@@ -45,7 +46,7 @@ try {
     currency_code: "BRL",
     language: "en",
     platform: "2",
-    home_url: "https://rollix777.com",
+    home_url: "https://thalaclub.com",
     transfer_id: transferId,
   };
 
@@ -83,7 +84,7 @@ try {
     currency_code: "BRL",
     language: "en",
     platform: "2",
-    home_url: "https://rollix777.com",
+    home_url: "https://thalaclub.com",
     transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
   };
 
@@ -114,11 +115,11 @@ try {
     member_account: memberAccount,
     game_uid: game_uid,
     timestamp: Date.now(),
-    credit_amount: afterAmount.toString(),
+    credit_amount: "5000",
     currency_code: "BRL",
     language: "en",
     platform: "2",
-    home_url: "https://rollix777.com",
+    home_url: "https://thalaclub.com",
     transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
   };
 
@@ -159,6 +160,7 @@ try {
   alert("An error occurred while launching the game.");
 }
 };
+
 
 
 const featuredGames = JDBGames;
