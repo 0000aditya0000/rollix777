@@ -8,7 +8,7 @@ interface GameCarouselProps {
   type: 'featured' | 'popular';
 }
 
-const aesKey = "b2a5ec5d13dd4248b330551d585440ba";
+const aesKey = "126c2e86c418427c4aa717f971063e0e";
 const serverUrl = "https://api.workorder.icu/proxy";
 
 
@@ -31,21 +31,21 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
 console.log(`Game UID: ${game_uid}`);
 console.log(`Button element:`, element);
 
-const memberAccount = "h7bfd41234567890thala";
+const memberAccount = "h43929rollix777";
 const transferId = `${memberAccount}_${generateRandom10Digits()}`;
 const timestamp = Date.now();
 
 try {
   // Step 1: Initialize the payload with a balance of 0
   const initPayload = {
-    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
     member_account: memberAccount,
     timestamp,
     credit_amount: "0", // Set balance to 0
     currency_code: "BRL",
     language: "en",
     platform: "2",
-    home_url: "https://thalaclub.com",
+    home_url: "https://rollix777.com",
     transfer_id: transferId,
   };
 
@@ -55,7 +55,7 @@ try {
   );
 
   const initRequestPayload = {
-    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
     timestamp,
     payload: initEncryptedPayload,
   };
@@ -76,14 +76,14 @@ try {
 
   // Step 2: Deduct the user's balance
   const deductPayload = {
-    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
     member_account: memberAccount,
     timestamp: Date.now(),
     credit_amount: `-${afterAmount}`, // Deduct the current balance
     currency_code: "BRL",
     language: "en",
     platform: "2",
-    home_url: "https://thalaclub.com",
+    home_url: "https://rollix777.com",
     transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
   };
 
@@ -93,7 +93,7 @@ try {
   );
 
   const deductRequestPayload = {
-    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
     timestamp: Date.now(),
     payload: deductEncryptedPayload,
   };
@@ -110,7 +110,7 @@ try {
 
   // Step 3: Launch the game
   const gamePayload = {
-    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
     member_account: memberAccount,
     game_uid: game_uid,
     timestamp: Date.now(),
@@ -118,7 +118,7 @@ try {
     currency_code: "BRL",
     language: "en",
     platform: "2",
-    home_url: "https://thalaclub.com",
+    home_url: "https://rollix777.com",
     transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
   };
 
@@ -128,7 +128,7 @@ try {
   );
 
   const gameRequestPayload = {
-    agency_uid: "6670d2d096b3285fa8daa930c3cf2a1b",
+    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
     timestamp: Date.now(),
     payload: gameEncryptedPayload,
   };
@@ -205,7 +205,7 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
               <div className="p-4">
                 <h3 className="text-white font-semibold text-lg">{game.game_name}</h3>
                                 <button
-                  onClick={handlePlayNow}
+                   onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
                   className="mt-2 w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:opacity-90 transition-opacity"
                 >
                   Play Now
