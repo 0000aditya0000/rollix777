@@ -3,12 +3,15 @@ import { Flame } from "lucide-react";
 import GameData from "../gamesData/gamesData.json";
 import AuthModal from "./AuthModal"; // Import the modal component
 
-const TrendingGames = () => {
+const TrendingGames = ({ isLoggedIn}) => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  console.log("📌 isLoggedIn in TrendingGames:", isLoggedIn);
+
   // Function to check if user is logged in
   const isUserLoggedIn = () => localStorage.getItem("userToken");
 
-  const handlePlayNow = (gameId: string) => {
+  // Corrected handlePlayNow function
+  const handlePlayNow = (gameId) => {
     if (!isUserLoggedIn()) {
       setAuthModalOpen(true); // Show login popup if user is not logged in
       return;
@@ -18,6 +21,7 @@ const TrendingGames = () => {
     console.log(`Launching game with ID: ${gameId}`);
     // Redirect to game page or open game logic here
   };
+
   const trendingGames = GameData.filter(
     (game) => game.game_category === "trending"
   );
@@ -27,6 +31,11 @@ const TrendingGames = () => {
       <div className="flex items-center gap-3 mb-6">
         <Flame className="w-6 h-6 text-orange-500" />
         <h2 className="text-2xl font-bold text-white">Trending Now</h2>
+      </div>
+
+      {/* ✅ Show Login Status Here */}
+      <div className="mb-4 text-white text-center">
+        {isLoggedIn ? <p>✅ Welcome back!</p> : <p>🔑 Please log in to play.</p>}
       </div>
 
       {/* Scrollable Container */}
@@ -47,7 +56,7 @@ const TrendingGames = () => {
                   {game.game_name}
                 </h3>
                 <button
-                  onClick={handlePlayNow}
+                  onClick={() => handlePlayNow(game.game_uid)} // ✅ Fixed function call
                   className="mt-2 w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:opacity-90 transition-opacity"
                 >
                   Play Now
@@ -59,7 +68,8 @@ const TrendingGames = () => {
           <p className="text-white">No trending games available.</p>
         )}
       </div>
-      {/* Authentication Modal */}
+
+      {/* Authentication Modal (Always Present) */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setAuthModalOpen(false)}

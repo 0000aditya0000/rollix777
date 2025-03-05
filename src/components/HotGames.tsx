@@ -24,12 +24,12 @@ import { useState } from 'react';
 //   }
 // ];
 
-const HotGames = () => {
+const HotGames = ({ isLoggedIn }) => {
    const [isAuthModalOpen, setAuthModalOpen] = useState(false);
-
+console.log(isLoggedIn)
   const handlePlayNow = () => {
+    
     const userToken = localStorage.getItem("userToken");
-
     if (!userToken) {
       setAuthModalOpen(true); // Open login modal if not logged in
     } else {

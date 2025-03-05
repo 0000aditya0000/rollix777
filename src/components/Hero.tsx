@@ -1,11 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Gamepad2, Star, Users, Trophy } from 'lucide-react';
+import AuthModal from './AuthModal';
 
 interface HeroProps {
   onLogin?: () => void;
 }
 
 const Hero: React.FC<HeroProps> = ({ onLogin }) => {
+    const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+    // Function to check if user is logged in
+    const isUserLoggedIn = () => localStorage.getItem("userToken");
+  
+    const handlePlayNow = (gameId: string) => {
+      if (!isUserLoggedIn()) {
+        setAuthModalOpen(true); // Show login popup if user is not logged in
+        return;
+      }
+  
+      // Launch game if user is logged in
+      console.log(`Launching game with ID: ${gameId}`);
+      // Redirect to game page or open game logic here
+    };
   return (
     <section className="pt-20 px-4 pb-12 bg-[#1A1A2E] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-purple-600/10 to-pink-600/10" />
@@ -49,7 +64,7 @@ const Hero: React.FC<HeroProps> = ({ onLogin }) => {
           </div>
         </div>
 
-        <button 
+        <button
           onClick={onLogin}
           className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium text-lg hover:opacity-90 transition-opacity relative overflow-hidden"
         >
@@ -57,6 +72,13 @@ const Hero: React.FC<HeroProps> = ({ onLogin }) => {
           <span className="relative">Start Playing Now</span>
         </button>
       </div>
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode="login"
+        onLoginSuccess={() => setAuthModalOpen(false)}
+      />
     </section>
   );
 };

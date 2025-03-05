@@ -39,12 +39,14 @@ function App() {
               ) : (
                 <>
                   <Route path="/hero" element={<Hero onLogin={handleLogin} />} />
-                  <Route path="/featured-games" element={<GameCarousel  title="Featured Games" type="featured" />} />
-                  <Route path="/trending-games" element={<TrendingGames />} />
+                  <Route path="/featured-games" element={<GameCarousel isLoggedIn={isLoggedIn}  title="Featured Games" type="featured" />} />
                   <Route path="/color-game" element={<ColorGame />} />
-                  <Route path="/hot-games" element={<HotGames />} />
+                  <Route path="/hot-games" element={<HotGames isLoggedIn={isLoggedIn} />} />
                   <Route path="/promotions" element={<Promotions />} />
-                  <Route path="/features" element={<Features />} />
+                    <Route path="/features" element={<Features />} />
+                <Route path="/trending-games" element={<TrendingGames isLoggedIn={isLoggedIn} />} />
+
+
                 </>
               )}
             </Routes>
