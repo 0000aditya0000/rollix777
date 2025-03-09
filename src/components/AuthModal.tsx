@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,33 +48,32 @@ const AuthModal: React.FC<AuthModalProps> = ({
     setError("");
   };
 
- const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (email.trim() === "" || password.trim() === "") {
-    setError("Please enter both email and password");
-    return;
-  }
-
-  try {
-    const data = { email, password };
-    const response = await axios.post(
-      `${import.meta.env.VITE_SERVER_BASE_URL}/api/user/login`,
-      data
-    );
-
-    if (response.data.token) {
-      localStorage.setItem("userToken", response.data.token); // Save login token
-      if (onLoginSuccess) {
-        onLoginSuccess(); // Close modal after successful login
-        
-      }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email.trim() === "" || password.trim() === "") {
+      setError("Please enter both email and password");
+      return;
     }
-  } catch (error) {
-    console.error("Login failed:", error);
-    setError("Invalid email or password");
-  }
-};
 
+    try {
+      const data = { email, password };
+      const response = await axios.post(
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/user/login`,
+        data
+      );
+
+      if (response.data.token) {
+        localStorage.setItem("userToken", response.data.token); // Save login token
+        localStorage.setItem("userId", response.data.user.id);
+        if (onLoginSuccess) {
+          onLoginSuccess(); // Close modal after successful login
+        }
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      setError("Invalid email or password");
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">

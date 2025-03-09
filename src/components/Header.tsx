@@ -21,60 +21,73 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
   console.log(onLogout);
-  
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
   const [wallets, setWallets] = useState([]);
- const [selectedCurrency, setSelectedCurrency] = useState({
-  name: "INR",
-  symbol: "₹",
-  color: "bg-black",
-  balance: "0", // Initially 0 until API fetches data
-});
-  // Ensure selected currency updates 
-const handleCurrencySelect = (crypto) => {
-  setSelectedCurrency({
-    name: crypto.name,
-    symbol: crypto.symbol,  // Update symbol dynamically
-    color: crypto.color,
-    balance: crypto.balance,
+  const userId = localStorage.getItem("userId");
+  const [selectedCurrency, setSelectedCurrency] = useState({
+    name: "INR",
+    symbol: "₹",
+    color: "bg-black",
+    balance: "0", // Initially 0 until API fetches data
   });
-  setIsWalletOpen(false);
-};
+  // Ensure selected currency updates
+  const handleCurrencySelect = (crypto) => {
+    setSelectedCurrency({
+      name: crypto.name,
+      symbol: crypto.symbol, // Update symbol dynamically
+      color: crypto.color,
+      balance: crypto.balance,
+    });
+    setIsWalletOpen(false);
+  };
 
   useEffect(() => {
-  async function fetchData() {
-    try {
-      const response = await axios.get("https://rollix777.com/api/wallet/withdrawl");
-      setWallets(response.data);
-      
-      // After fetching, set INR as default currency
-      const inrWallet = response.data.find((w) => w.cryptoname === "INR");
-      if (inrWallet) {
-        setSelectedCurrency({
-          name: "INR",
-          symbol: "₹",
-          color: "bg-black",
-          balance: inrWallet.balance,
-        });
+    async function fetchData() {
+      try {
+        const response = await axios.get(
+          `https://rollix777.com/api/user/wallet/${userId}`
+        );
+        setWallets(response.data);
+
+        // After fetching, set INR as default currency
+        const inrWallet = response.data.find((w) => w.cryptoname === "INR");
+        if (inrWallet) {
+          setSelectedCurrency({
+            name: "INR",
+            symbol: "₹",
+            color: "bg-black",
+            balance: inrWallet.balance,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
     }
-  }
-  fetchData();
-}, []);
- const updatedCryptos = [
+    fetchData();
+  }, []);
+  const updatedCryptos = [
     { name: "Bitcoin", symbol: "₿", color: "bg-yellow-500", cryptoname: "BTC" },
     { name: "Litecoin", symbol: "Ł", color: "bg-gray-500", cryptoname: "LTC" },
     { name: "Ethereum", symbol: "E", color: "bg-blue-500", cryptoname: "ETH" },
     { name: "Tether", symbol: "₮", color: "bg-green-800", cryptoname: "USDT" },
     { name: "Solana", symbol: "◎", color: "bg-green-300", cryptoname: "SOL" },
-    { name: "Dogecoin", symbol: "Ð", color: "bg-yellow-800", cryptoname: "DOGE" },
-    { name: "Bitcoin Cash", symbol: "Ƀ", color: "bg-green-700", cryptoname: "BCH" },
+    {
+      name: "Dogecoin",
+      symbol: "Ð",
+      color: "bg-yellow-800",
+      cryptoname: "DOGE",
+    },
+    {
+      name: "Bitcoin Cash",
+      symbol: "Ƀ",
+      color: "bg-green-700",
+      cryptoname: "BCH",
+    },
     { name: "Ripple", symbol: "✕", color: "bg-gray-900", cryptoname: "XRP" },
     { name: "Tron", symbol: "Ṯ", color: "bg-pink-700", cryptoname: "TRX" },
     { name: "EOS", symbol: "ε", color: "bg-black", cryptoname: "EOS" },
@@ -146,40 +159,49 @@ const handleCurrencySelect = (crypto) => {
                 {/* Wallet in center */}
                 <div className="relative" ref={walletRef}>
                   <button
-  onClick={toggleWallet}
-  className="py-2 px-4 rounded-lg bg-[#252547] text-white font-medium hover:bg-[#2f2f5a] transition-colors flex items-center gap-2 border border-purple-500/20"
->
-  <Wallet className="w-4 h-4 text-purple-400" />
-  <span>{selectedCurrency.symbol} {selectedCurrency.balance}</span> {/* Show selected currency balance */}
-  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isWalletOpen ? "rotate-180" : ""}`} />
-</button>
+                    onClick={toggleWallet}
+                    className="py-2 px-4 rounded-lg bg-[#252547] text-white font-medium hover:bg-[#2f2f5a] transition-colors flex items-center gap-2 border border-purple-500/20"
+                  >
+                    <Wallet className="w-4 h-4 text-purple-400" />
+                    <span>
+                      {selectedCurrency.symbol} {selectedCurrency.balance}
+                    </span>{" "}
+                    {/* Show selected currency balance */}
+                    <ChevronDown
+                      className={`w-4 h-4 text-gray-400 transition-transform ${
+                        isWalletOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
 
-
-               {isWalletOpen && (
-  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-[#252547] rounded-xl border border-purple-500/20 shadow-lg animate-fadeIn z-50">
-    <div className="p-3 border-b border-purple-500/10">
-      <h3 className="text-white font-semibold">My Wallet</h3>
-    </div>
-    <div className="p-3 space-y-3 max-h-48 overflow-y-auto hide-scrollbar">
-      {updatedCryptos.map((crypto, index) => (
-        <div
-          key={index}
-          className="flex items-center justify-between p-2 hover:bg-[#2f2f5a] rounded-lg cursor-pointer"
-          onClick={() => handleCurrencySelect(crypto)}
-        >
-          <div className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full ${crypto.color} flex items-center justify-center text-white font-bold`}>
-              {crypto.symbol}
-            </div>
-            <span className="text-white">{crypto.name}</span>
-          </div>
-          <span className="text-white">{crypto.balance} {crypto.cryptoname}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
+                  {isWalletOpen && (
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-[#252547] rounded-xl border border-purple-500/20 shadow-lg animate-fadeIn z-50">
+                      <div className="p-3 border-b border-purple-500/10">
+                        <h3 className="text-white font-semibold">My Wallet</h3>
+                      </div>
+                      <div className="p-3 space-y-3 max-h-48 overflow-y-auto hide-scrollbar">
+                        {updatedCryptos.map((crypto, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-2 hover:bg-[#2f2f5a] rounded-lg cursor-pointer"
+                            onClick={() => handleCurrencySelect(crypto)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`w-8 h-8 rounded-full ${crypto.color} flex items-center justify-center text-white font-bold`}
+                              >
+                                {crypto.symbol}
+                              </div>
+                              <span className="text-white">{crypto.name}</span>
+                            </div>
+                            <span className="text-white">
+                              {crypto.balance} {crypto.cryptoname}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right side icons */}

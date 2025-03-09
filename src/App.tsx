@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./components/Home";
 import BigSmall from "./components/BigSmall";
@@ -15,6 +15,7 @@ import Dashboard from "./components/Dashboard";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const auth = localStorage.getItem("userToken");
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -22,14 +23,27 @@ function App() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    localStorage.removeItem("userToken")
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userId");
   };
+
+  useEffect(() => {
+    if (auth) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, [auth]);
 
   return (
     <div className="fixed inset-0 bg-[#0F0F19] overflow-y-auto hide-scrollbar">
       <div className="mx-auto w-[100%] max-w-[430px] relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E]">
         <BrowserRouter>
-          <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} onLogin={handleLogin} />
+          <Header
+            isLoggedIn={isLoggedIn}
+            onLogout={handleLogout}
+            onLogin={handleLogin}
+          />
           <main>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -38,8 +52,16 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
               ) : (
                 <>
-                  <Route path="/hero" element={<Hero onLogin={handleLogin} />} />
-                  <Route path="/featured-games" element={<GameCarousel  title="Featured Games" type="featured" />} />
+                  <Route
+                    path="/hero"
+                    element={<Hero onLogin={handleLogin} />}
+                  />
+                  <Route
+                    path="/featured-games"
+                    element={
+                      <GameCarousel title="Featured Games" type="featured" />
+                    }
+                  />
                   <Route path="/trending-games" element={<TrendingGames />} />
                   <Route path="/color-game" element={<ColorGame />} />
                   <Route path="/hot-games" element={<HotGames />} />
