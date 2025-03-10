@@ -14,7 +14,7 @@ type Record = {
 
 type Bet = {
   period: number;
-  number: number;
+  number: number | string; // Allow string for color bets 
   big_smaill: string;
   amount: number;
 };
@@ -25,11 +25,11 @@ const BigSmall = () => {
   const [timeLeft, setTimeLeft] = useState(120); // Default 2 min
   const [isRunning, setIsRunning] = useState(false);
   const [activeTime, setActiveTime] = useState<number | null>(1); // Default to 1 min
-  const [selectedNumber, setSelectedNumber] = useState<any>(null);
-  const [contractMoney, setContractMoney] = useState<any>(null);
+  const [selectedNumber, setSelectedNumber] = useState<number | string | null>(null);
+  const [contractMoney, setContractMoney] = useState<number | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [selected, setSelected] = useState(1);
-  const [records, setRecords] = useState<Record[]>([]); // State to store fetched data
+  const [records, setRecords] = useState<Record[]>([]);
   const [shouldResetTimer, setShouldResetTimer] = useState(false);
   const [currentPeriod, setCurrentPeriod] = useState<number>(0);
   const [bets, setBets] = useState<Bet[]>([]);
@@ -41,7 +41,9 @@ const BigSmall = () => {
       const winningBet = bets.find(
         (bet) =>
           parseInt(record.period) === bet.period &&
-          parseInt(record.number) === bet.number
+          (typeof bet.number === "number"
+            ? parseInt(record.number) === bet.number
+            : record.color.toLowerCase() === bet.number.toLowerCase())
       );
 
       if (winningBet) {
@@ -83,7 +85,7 @@ const BigSmall = () => {
         console.log("failed to fetch");
       }
       const data = response.data;
-      console.log(data);
+      // console.log(data);
       setRecords(data);
       if (bets.length !== 0) {
         setWinner(await handeleWinLose(data[0], bets));
@@ -214,7 +216,7 @@ const BigSmall = () => {
     fetchRecord();
   }, [fetchRecord]);
 
-  console.log(bets);
+  // console.log(bets);
   return (
     <div className="pt-16 pb-24 bg-[#0F0F19]">
       <div className="w-full mx-auto bg-gradient-to-b from-[#252547] to-[#1A1A2E] text-white p-4 space-y-4 rounded-lg">
@@ -565,9 +567,13 @@ const BigSmall = () => {
                     period: currentPeriod,
                     number: selectedNumber,
                     big_smaill:
-                      selectedNumber !== 0 && selectedNumber >= 5
-                        ? "big"
-                        : "small",
+                      typeof selectedNumber === "number"
+                        ? selectedNumber >= 5
+                          ? "big"
+                          : "small"
+                        : selectedNumber === "Green"
+                        ? "small"
+                        : "big",
                     amount: contractMoney,
                   })
                 }
@@ -598,7 +604,7 @@ const BigSmall = () => {
             {/* Body */}
             <div className="p-5 space-y-4">
               <div className="space-y-1">
-                <label className="text-sm text-gray-300">Winner</label>
+                <label className="text-sm text-green-600">Winner</label>
               </div>
             </div>
 
