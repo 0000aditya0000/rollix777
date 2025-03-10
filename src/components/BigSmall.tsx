@@ -14,8 +14,9 @@ type Record = {
 
 type Bet = {
   period: number;
-  number: number;
-  big_smaill: string;
+  number?: number | null; // Optional
+  color?: string; // Optional
+  big_small?: string; // Optional
   amount: number;
 };
 
@@ -25,8 +26,10 @@ const BigSmall = () => {
   const [timeLeft, setTimeLeft] = useState(120); // Default 2 min
   const [isRunning, setIsRunning] = useState(false);
   const [activeTime, setActiveTime] = useState<number | null>(1); // Default to 1 min
-  const [selectedNumber, setSelectedNumber] = useState<any>(null);
-  const [contractMoney, setContractMoney] = useState<any>(null);
+  const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<"big" | "small" | "">("");
+  const [contractMoney, setContractMoney] = useState<number>(0);
   const [agreed, setAgreed] = useState(false);
   const [selected, setSelected] = useState(1);
   const [records, setRecords] = useState<Record[]>([]); // State to store fetched data
@@ -38,11 +41,17 @@ const BigSmall = () => {
 
   const handeleWinLose = useCallback(
     async (record: Record, bets: Bet[]): Promise<boolean> => {
-      const winningBet = bets.find(
-        (bet) =>
-          parseInt(record.period) === bet.period &&
-          parseInt(record.number) === bet.number
-      );
+      const winningBet = bets.find((bet) => {
+        if (parseInt(record.period) !== bet.period) return false; // Check period first
+
+        // Check in sequence: number -> color -> big_small
+        if (bet.number !== null && parseInt(record.number) !== bet.number)
+          return false;
+        if (bet.color && record.color !== bet.color) return false;
+        if (bet.big_small && record.small_big !== bet.big_small) return false;
+
+        return true; // All conditions passed, it's a win
+      });
 
       if (winningBet) {
         const payoutAmount = winningBet.amount * 1.9;
@@ -134,6 +143,8 @@ const BigSmall = () => {
 
       setBets((prev) => [...prev, bet]);
       setSelectedNumber(null);
+      setSelectedColor("");
+      setSelectedSize("");
     } catch (error) {
       console.log("failed with error", error);
     }
@@ -154,6 +165,7 @@ const BigSmall = () => {
         setTimeLeft(activeTime * 60);
         // Generate new data when timer completes
         getResult();
+        setBets([]);
       }
       return;
     }
@@ -284,7 +296,7 @@ const BigSmall = () => {
                 : "bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30"
             }`}
             disabled={timeLeft < 10}
-            onClick={() => timeLeft >= 10 && setSelectedNumber("Green")}
+            onClick={() => setSelectedColor("green")}
           >
             Join Green
           </button>
@@ -296,6 +308,7 @@ const BigSmall = () => {
                 : "bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
             }`}
             disabled={timeLeft < 10}
+            onClick={() => setSelectedColor("voilet")}
           >
             Join Violet
           </button>
@@ -307,7 +320,7 @@ const BigSmall = () => {
                 : "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
             }`}
             disabled={timeLeft < 10}
-            onClick={() => timeLeft >= 10 && setSelectedNumber("Red")}
+            onClick={() => setSelectedColor("red")}
           >
             Join Red
           </button>
@@ -346,6 +359,7 @@ const BigSmall = () => {
                 : "bg-gradient-to-r from-red-600 to-red-500 text-white hover:opacity-90"
             }`}
             disabled={timeLeft < 10}
+            onClick={() => setSelectedSize("big")}
           >
             Big
           </button>
@@ -356,6 +370,7 @@ const BigSmall = () => {
                 : "bg-gradient-to-r from-green-600 to-green-500 text-white hover:opacity-90"
             }`}
             disabled={timeLeft < 10}
+            onClick={() => setSelectedSize("small")}
           >
             Small
           </button>
@@ -468,7 +483,7 @@ const BigSmall = () => {
       </div>
 
       {/* Popup */}
-      {selectedNumber !== null && (
+      {(selectedNumber !== null || selectedColor || selectedSize) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
           <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
@@ -476,12 +491,18 @@ const BigSmall = () => {
             {/* Header */}
             <div className="flex justify-between items-center p-5 border-b border-purple-500/10">
               <h2 className="text-xl font-bold text-white">
-                {typeof selectedNumber === "number"
+                {selectedNumber !== null
                   ? `Number ${selectedNumber} Selected`
-                  : `${selectedNumber} Selected`}
+                  : selectedColor
+                  ? `${selectedColor} Selected`
+                  : `${selectedSize} Selected`}
               </h2>
               <button
-                onClick={() => setSelectedNumber(null)}
+                onClick={() => {
+                  setSelectedNumber(null);
+                  setSelectedColor("");
+                  setSelectedSize("");
+                }}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
               >
                 <X size={18} />
@@ -546,7 +567,11 @@ const BigSmall = () => {
             {/* Buttons */}
             <div className="p-5 border-t border-purple-500/10 flex gap-3">
               <button
-                onClick={() => setSelectedNumber(null)}
+                onClick={() => {
+                  setSelectedNumber(null);
+                  setSelectedColor("");
+                  setSelectedSize("");
+                }}
                 className="flex-1 py-3 px-4 bg-[#1A1A2E] border border-red-500/20 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
               >
                 Cancel
@@ -564,10 +589,14 @@ const BigSmall = () => {
                   handleBet({
                     period: currentPeriod,
                     number: selectedNumber,
-                    big_smaill:
-                      selectedNumber !== 0 && selectedNumber >= 5
+                    color: selectedColor,
+                    big_small:
+                      selectedSize ??
+                      (selectedNumber &&
+                      selectedNumber !== 0 &&
+                      selectedNumber >= 5
                         ? "big"
-                        : "small",
+                        : "small"),
                     amount: contractMoney,
                   })
                 }
@@ -598,7 +627,7 @@ const BigSmall = () => {
             {/* Body */}
             <div className="p-5 space-y-4">
               <div className="space-y-1">
-                <label className="text-sm text-gray-300">Winner</label>
+                <label className="text-sm text-green-600">Winner</label>
               </div>
             </div>
 
