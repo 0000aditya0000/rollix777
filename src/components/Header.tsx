@@ -1,11 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Menu,
-  X,
-  LogIn,
-  UserPlus,
-  Wallet,
-  ChevronDown,
+import { Menu, X,  LogIn,  UserPlus,  Wallet,  ChevronDown,
   Bell,
   LogOut,
 } from "lucide-react";
@@ -17,10 +11,27 @@ interface HeaderProps {
   isLoggedIn: boolean;
   onLogout: () => void;
   onLogin: () => void;
+    onBalanceUpdate: (newBalance: string) => void; // Add this line
+
+}
+interface HeaderProps {
+  selectedCurrency: {
+    name: string;
+    symbol: string;
+    color: string;
+    balance: string;
+  };
+  setSelectedCurrency: (currency: {
+    name: string;
+    symbol: string;
+    color: string;
+    balance: string;
+  }) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
-  console.log(onLogout);
+const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin , selectedCurrency, setSelectedCurrency  }) => {
+  // console.log(onLogout);
+  console.log("isLoggedIn",isLoggedIn) 
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,12 +39,12 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
   const [wallets, setWallets] = useState([]);
- const [selectedCurrency, setSelectedCurrency] = useState({
-  name: "INR",
-  symbol: "₹",
-  color: "bg-black",
-  balance: "0", // Initially 0 until API fetches data
-});
+//  const [selectedCurrency, setSelectedCurrency] = useState({
+//   name: "INR",
+//   symbol: "₹",
+//   color: "bg-black",
+//   balance: "0", // Initially 0 until API fetches data
+// });
   // Ensure selected currency updates 
 const handleCurrencySelect = (crypto) => {
   setSelectedCurrency({
@@ -145,12 +156,12 @@ const handleCurrencySelect = (crypto) => {
 
                 {/* Wallet in center */}
                 <div className="relative" ref={walletRef}>
-                  <button
+  <button
   onClick={toggleWallet}
   className="py-2 px-4 rounded-lg bg-[#252547] text-white font-medium hover:bg-[#2f2f5a] transition-colors flex items-center gap-2 border border-purple-500/20"
 >
   <Wallet className="w-4 h-4 text-purple-400" />
-  <span>{selectedCurrency.symbol} {selectedCurrency.balance}</span> {/* Show selected currency balance */}
+  <span>{selectedCurrency.symbol} {selectedCurrency.balance}</span>
   <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isWalletOpen ? "rotate-180" : ""}`} />
 </button>
 
@@ -175,8 +186,12 @@ const handleCurrencySelect = (crypto) => {
           </div>
           <span className="text-white">{crypto.balance} {crypto.cryptoname}</span>
         </div>
+        
       ))}
     </div>
+                         <button className="w-full py-2 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity">
+                          Manage Wallet
+                        </button>
   </div>
 )}
 

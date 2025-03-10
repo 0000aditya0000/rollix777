@@ -1,11 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { X, ArrowLeft, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
+interface BigSmallProps {
+  onBalanceUpdate: (newBalance: string) => void;
+}
+interface BigSmallProps {
+  selectedCurrency: {
+    name: string;
+    symbol: string;
+    color: string;
+    balance: string;
+  };
+  setSelectedCurrency: (currency: {
+    name: string;
+    symbol: string;
+    color: string;
+    balance: string;
+  }) => void;
+}
+const BigSmall: React.FC<BigSmallProps> = ({ onBalanceUpdate,selectedCurrency, setSelectedCurrency }) => {
 
-const BigSmall = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
-  const [timeLeft, setTimeLeft] = useState(120); // Default 2 min
+  const [timeLeft, setTimeLeft] = useState(60); // Default 1 min
   const [isRunning, setIsRunning] = useState(false);
   const [activeTime, setActiveTime] = useState<number | null>(1); // Default to 1 min
   const [selectedNumber, setSelectedNumber] = useState<any>(null);
@@ -13,13 +30,116 @@ const BigSmall = () => {
   const [agreed, setAgreed] = useState(false);
   const [selected, setSelected] = useState(1);
   const [records, setRecords] = useState<any[]>([]); // State to store fetched data
-  const [shouldResetTimer, setShouldResetTimer] = useState(false);
- 
+  const [isLoading, setIsLoading] = useState(false); // Loading state for API call
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Error message state
 
+  // Fetch data from the API
+  const fetchData = async (minutes: number) => {
+    if (minutes !== 1) return; // Only fetch data for 1-minute interval
 
+    try {
+      const response = await fetch(`https://rollix777.com/api/color/result/${minutes}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      const data = await response.json();
+      setRecords(data); // Assuming the API returns an array of records
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  // Handle placing a bet
+  const handlePlaceBet = async () => {
+  if (!agreed || contractMoney < 10 || contractMoney > 100000) {
+    setErrorMessage("Please agree to the terms and enter a valid contract amount.");
+    return;
+  }
+
+  // Check if the user has sufficient balance
+  if (parseFloat(selectedCurrency.balance) < parseFloat(contractMoney)) {
+    setErrorMessage("Insufficient balance to place this bet.");
+    return;
+  }
+
+  setIsLoading(true);
+  setErrorMessage(null);
+
+  const payload = {
+    userid: "13", // Replace with actual user ID
+    amount: contractMoney.toString(),
+    color: selectedNumber === 0 ? "violet" : selectedNumber % 2 === 0 ? "green" : "red",
+    number: selectedNumber,
+    period: "202501298813", // Replace with actual period
+    mins: "1",
+    small_big: contractMoney > 50 ? "big" : "small", // Example logic for small/big
+  };
+
+  console.log("Payload:", payload); // Debug log
+
+  try {
+    const response = await fetch("https://rollix777.com/api/color/prediction", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    console.log("Response:", response); // Debug log
+
+    if (!response.ok) {
+      const errorData = await response.json(); // Parse error response
+      console.error("API Error:", errorData); // Debug log
+      throw new Error(errorData.message || "Failed to place bet");
+    }
+
+    const result = await response.json();
+    console.log("Bet placed successfully:", result); // Debug log
+
+    // Deduct the balance from the wallet
+    const newBalance = (parseFloat(selectedCurrency.balance) - parseFloat(contractMoney)).toString();
+    setSelectedCurrency({
+      ...selectedCurrency,
+      balance: newBalance,
+    });
+
+    // Step 3: Update the balance on the server
+    const updateBalanceResponse = await fetch("https://rollix777.com/api/user/wallet/balance/set", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userid: "13", // Replace with actual user ID
+        cryptoname: selectedCurrency.name, // Currency name (e.g., "INR")
+        balance: newBalance, // Updated balance
+      }),
+    });
+
+    if (!updateBalanceResponse.ok) {
+      const errorData = await updateBalanceResponse.json(); // Parse error response
+      console.error("Failed to update wallet balance:", errorData); // Debug log
+      throw new Error(errorData.message || "Failed to update wallet balance");
+    }
+
+    const updateBalanceResult = await updateBalanceResponse.json();
+    console.log("Wallet balance updated successfully:", updateBalanceResult); // Debug log
+
+    // Reset states and close popup
+    setSelectedNumber(null);
+    setContractMoney(null);
+    setAgreed(false);
+    setIsLoading(false);
+  } catch (error) {
+    console.error("Error placing bet:", error); // Debug log
+    setErrorMessage(error.message || "Failed to place bet. Please try again.");
+    setIsLoading(false);
+  }
+};
 
   useEffect(() => {
-    // Initialize with some data for 1 min timer
+    // Initialize with 1 min timer
     initializeData(1);
     setIsRunning(true);
   }, []);
@@ -31,8 +151,8 @@ const BigSmall = () => {
       // Timer completed, now reset with the active time
       if (activeTime) {
         setTimeLeft(activeTime * 60);
-        // Generate new data when timer completes
-        generateMockData();
+        // Fetch new data when timer completes (only for 1-minute interval)
+        fetchData(activeTime);
       }
       return;
     }
@@ -49,32 +169,15 @@ const BigSmall = () => {
     setActiveTime(minutes);
     setSelected(minutes);
     setTimeLeft(minutes * 60);
-    generateMockData();
+    fetchData(minutes); // Fetch data for the selected time (only for 1-minute interval)
   };
 
-  // Handle time selection without resetting the current timer
+  // Handle time selection
   const handleTimeSelect = (minutes: number) => {
-    // Only update the active time, don't reset the current timer
+    if (minutes !== 1) return; // Only allow 1-minute selection
     setActiveTime(minutes);
     setSelected(minutes);
-    
-    // Generate new data for the selected time period
-    generateMockData();
-  };
-
-  // Generate mock data for the game records
-  const generateMockData = () => {
-    try {
-      const mockData = Array.from({ length: 20 }, (_, i) => ({
-        period: `20250227${Math.floor(1000 + Math.random() * 9000)}`,
-        number: Math.floor(Math.random() * 10),
-        color: Math.random() > 0.5 ? "green" : "red",
-        small_big: Math.random() > 0.5 ? "Small" : "Big"
-      }));
-      setRecords(mockData);
-    } catch (error) {
-      console.error("Error generating mock data:", error);
-    }
+    fetchData(minutes); // Fetch data for the selected time (only for 1-minute interval)
   };
 
   // Format time as MM:SS
@@ -111,6 +214,7 @@ const BigSmall = () => {
                   : "bg-[#252547] border border-purple-500/20 text-gray-300 hover:bg-[#2f2f5a]"
               }`}
               onClick={() => handleTimeSelect(min)}
+              disabled={min !== 1} // Disable buttons for non-1-minute intervals
             >
               {min} min
             </button>
@@ -136,11 +240,11 @@ const BigSmall = () => {
         <div className="grid grid-cols-3 gap-2">
           <button
             className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10 
+              timeLeft < 10 || activeTime !== 1
                 ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed" 
                 : "bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30"
             }`}
-            disabled={timeLeft < 10}
+            disabled={timeLeft < 10 || activeTime !== 1} // Disable if not 1-minute interval
             onClick={() => timeLeft >= 10 && setSelectedNumber("Green")}
           >
             Join Green
@@ -148,22 +252,22 @@ const BigSmall = () => {
           
           <button 
             className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10 
+              timeLeft < 10 || activeTime !== 1
                 ? "bg-[#252547] border border-purple-500/20 text-gray-400 cursor-not-allowed" 
                 : "bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
             }`}
-            disabled={timeLeft < 10}
+            disabled={timeLeft < 10 || activeTime !== 1} // Disable if not 1-minute interval
           >
             Join Violet
           </button>
           
           <button
             className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10 
+              timeLeft < 10 || activeTime !== 1
                 ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed" 
                 : "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
             }`}
-            disabled={timeLeft < 10}
+            disabled={timeLeft < 10 || activeTime !== 1} // Disable if not 1-minute interval
             onClick={() => timeLeft >= 10 && setSelectedNumber("Red")}
           >
             Join Red
@@ -177,9 +281,9 @@ const BigSmall = () => {
               <button
                 key={i}
                 onClick={() => timeLeft >= 10 && setSelectedNumber(i)}
-                disabled={timeLeft < 10}
+                disabled={timeLeft < 10 || activeTime !== 1} // Disable if not 1-minute interval
                 className={`relative px-0 py-3 text-white font-bold rounded-lg ${
-                  timeLeft < 10
+                  timeLeft < 10 || activeTime !== 1
                     ? "bg-[#252547] border border-gray-600/20 text-gray-500 cursor-not-allowed"
                     : i === 0
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
@@ -198,21 +302,21 @@ const BigSmall = () => {
         <div className="grid grid-cols-2 gap-3">
           <button 
             className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10 
+              timeLeft < 10 || activeTime !== 1
                 ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed" 
                 : "bg-gradient-to-r from-red-600 to-red-500 text-white hover:opacity-90"
             }`}
-            disabled={timeLeft < 10}
+            disabled={timeLeft < 10 || activeTime !== 1} // Disable if not 1-minute interval
           >
             Big
           </button>
           <button 
             className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10 
+              timeLeft < 10 || activeTime !== 1
                 ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed" 
                 : "bg-gradient-to-r from-green-600 to-green-500 text-white hover:opacity-90"
             }`}
-            disabled={timeLeft < 10}
+            disabled={timeLeft < 10 || activeTime !== 1} // Disable if not 1-minute interval
           >
             Small
           </button>
@@ -396,11 +500,19 @@ const BigSmall = () => {
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
                     : "bg-gray-600/50 cursor-not-allowed"
                 }`}
-                disabled={!agreed || contractMoney < 10 || contractMoney > 100000}
+                disabled={!agreed || contractMoney < 10 || contractMoney > 100000 || isLoading}
+                onClick={handlePlaceBet}
               >
-                Confirm
+                {isLoading ? "Placing Bet..." : "Confirm"}
               </button>
             </div>
+
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 text-sm text-center">
+                {errorMessage}
+              </div>
+            )}
           </div>
         </div>
       )}

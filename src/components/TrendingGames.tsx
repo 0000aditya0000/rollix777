@@ -3,7 +3,7 @@ import { Flame } from "lucide-react";
 import GameData from "../gamesData/gamesData.json";
 import AuthModal from "./AuthModal"; // Import the modal component
 
-const TrendingGames = ({ isLoggedIn}) => {
+const TrendingGames = ({isLoggedIn}) => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   console.log("📌 isLoggedIn in TrendingGames:", isLoggedIn);
 
@@ -33,10 +33,6 @@ const TrendingGames = ({ isLoggedIn}) => {
         <h2 className="text-2xl font-bold text-white">Trending Now</h2>
       </div>
 
-      {/* ✅ Show Login Status Here */}
-      <div className="mb-4 text-white text-center">
-        {isLoggedIn ? <p>✅ Welcome back!</p> : <p>🔑 Please log in to play.</p>}
-      </div>
 
       {/* Scrollable Container */}
       <div className="flex gap-4 overflow-x-auto whitespace-nowrap hide-scrollbar px-1">

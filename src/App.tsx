@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./components/Home";
 import BigSmall from "./components/BigSmall";
@@ -15,6 +15,26 @@ import Dashboard from "./components/Dashboard";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [walletBalance, setWalletBalance] = useState("0");
+    const [selectedCurrency, setSelectedCurrency] = useState({
+    name: "INR",
+    symbol: "₹",
+    color: "bg-black",
+    balance: "0",
+  });
+
+  const handleBalanceUpdate = (newBalance: string) => {
+    setWalletBalance(newBalance);
+  };
+ // Check for token in localStorage on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    setIsLoggedIn(!!token); // Convert to boolean (true if token exists)
+  }, []);
+
+  console.log("📌 isLoggedIn in App:", isLoggedIn); // Debugging line
+
+ 
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -22,18 +42,27 @@ function App() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    localStorage.removeItem("userToken")
+    localStorage.removeItem("userToken") 
   };
 
   return (
     <div className="fixed inset-0 bg-[#0F0F19] overflow-y-auto hide-scrollbar">
       <div className="mx-auto w-[100%] max-w-[430px] relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E]">
         <BrowserRouter>
-          <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} onLogin={handleLogin} />
+            <Header
+        isLoggedIn={isLoggedIn}
+        onLogout={handleLogout}
+        onLogin={handleLogin}
+            onBalanceUpdate={handleBalanceUpdate}
+            selectedCurrency={selectedCurrency}
+        setSelectedCurrency={setSelectedCurrency}
+          />
+       
           <main>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/bigsmall" element={<BigSmall />} />
+              <Route path="/bigsmall" element={<BigSmall selectedCurrency={selectedCurrency}
+        setSelectedCurrency={setSelectedCurrency} />} />
               {isLoggedIn ? (
                 <Route path="/dashboard" element={<Dashboard />} />
               ) : (
