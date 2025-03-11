@@ -11,6 +11,7 @@ import {
   Check,
 } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState("");
   const [referalCode, setReferalCode] = useState("");
+  const navigate = useNavigate();
   // console.log("mode", mode, initialMode);
   useEffect(() => {
     if (initialMode) {
@@ -66,8 +68,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
         localStorage.setItem("userToken", response.data.token); // Save login token
         localStorage.setItem("userId", response.data.user.id);
         if (onLoginSuccess) {
-          onLoginSuccess(); // Close modal after successful login
+
+          onLoginSuccess();
+           // Close modal after successful login
         }
+        navigate("/dashboard");
       }
     } catch (error) {
       console.error("Login failed:", error);

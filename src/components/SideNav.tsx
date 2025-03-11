@@ -11,6 +11,7 @@ import {
   History,
   Star,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface SideNavProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ interface SideNavProps {
 
 const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
   // console.log(onLogout);
-
+ const navigate = useNavigate()
   if (!isOpen) return null;
 
   const menuItems = [
@@ -35,8 +36,12 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
   ];
 
   const handleLogOut = () => {
+    localStorage.removeItem("userId")
+    localStorage.removeItem("userToken")
+    navigate("/")
     onLogout();
     onClose();
+  
   };
   return (
     <>

@@ -1,53 +1,122 @@
 import React, { useState } from "react";
 import { Flame } from "lucide-react";
+import CryptoJS from "crypto-js";
 import GameData from "../gamesData/gamesData.json";
-import AuthModal from "./AuthModal"; // Import the modal component
+import AuthModal from "./AuthModal";
+import axios from "axios";
 
-const TrendingGames = () => {
-  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
-  // Function to check if user is logged in
-  const isUserLoggedIn = () => localStorage.getItem("userToken");
+interface TrendingGamesProps {
+  title: string;
+  type: "featured" | "trending";
+}
 
-  const handlePlayNow = (gameId: string) => {
-    if (!isUserLoggedIn()) {
-      setAuthModalOpen(true); // Show login popup if user is not logged in
+const aesKey = "126c2e86c418427c4aa717f971063e0e";
+const serverUrl = "https://api.workorder.icu/proxy";
+
+const encryptAES256 = (data: string, key: string) => {
+  const key256 = CryptoJS.enc.Utf8.parse(key);
+  const encrypted = CryptoJS.AES.encrypt(data, key256, {
+    mode: CryptoJS.mode.ECB,
+    padding: CryptoJS.pad.Pkcs7,
+  });
+  return encrypted.toString();
+};
+
+const generateRandom10Digits = () => {
+  return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+};
+
+const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
+  const userId = localStorage.getItem("userId");
+  const response = await axios.get(`https://rollix777.com/api/user/wallet/${userId}`)
+  const balance = response.data[10].balance;
+
+  
+  console.log(`Game UID: ${game_uid}`, `Balance: ${balance}`);
+
+  const memberAccount = `h43929rollix777${userId}`;
+  const transferId = `${memberAccount}_${generateRandom10Digits()}`;
+  const timestamp = Date.now();
+
+  try {
+    const initPayload = {
+      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
+      member_account: memberAccount,
+      timestamp,
+      credit_amount: "0",
+      currency_code: "BRL",
+      language: "en",
+      platform: "2",
+      home_url: "https://rollix777.com",
+      transfer_id: transferId,
+    };
+
+    const initEncryptedPayload = encryptAES256(JSON.stringify(initPayload), aesKey);
+    const initRequestPayload = { agency_uid: initPayload.agency_uid, timestamp, payload: initEncryptedPayload };
+    const initResponse = await axios.post(serverUrl, initRequestPayload);
+
+    if (initResponse.data.code !== 0) {
+      console.error("Initialization Error:", initResponse.data.msg);
+      alert("Failed to initialize game: " + initResponse.data.msg);
       return;
     }
 
-    // Launch game if user is logged in
-    console.log(`Launching game with ID: ${gameId}`);
-    // Redirect to game page or open game logic here
-  };
-  const trendingGames = GameData.filter(
-    (game) => game.game_category === "trending"
-  );
+    const afterAmount = balance;
+    const deductPayload = { ...initPayload, credit_amount: `-${afterAmount}` };
+    const deductEncryptedPayload = encryptAES256(JSON.stringify(deductPayload), aesKey);
+    const deductRequestPayload = { ...initRequestPayload, payload: deductEncryptedPayload };
+    const deductResponse = await axios.post(serverUrl, deductRequestPayload);
+
+    if (deductResponse.data.code !== 0) {
+      console.error("Deduct Error:", deductResponse.data.msg);
+      alert("Failed to deduct balance: " + deductResponse.data.msg);
+      return;
+    }
+
+    const gamePayload = { ...initPayload, game_uid, credit_amount: afterAmount.toString() };
+    const gameEncryptedPayload = encryptAES256(JSON.stringify(gamePayload), aesKey);
+    const gameRequestPayload = { ...initRequestPayload, payload: gameEncryptedPayload };
+    const gameResponse = await axios.post(serverUrl, gameRequestPayload);
+
+    if (gameResponse.data.code !== 0) {
+      console.error("Game Launch Error:", gameResponse.data.msg);
+      alert("Failed to launch game: " + gameResponse.data.msg);
+      return;
+    }
+
+    const gameLaunchUrl = gameResponse.data.payload?.game_launch_url;
+    if (!gameLaunchUrl) {
+      alert("Game launch URL not found.");
+      return;
+    }
+
+    window.open(gameLaunchUrl, "_blank");
+  } catch (error) {
+    console.error("Error in game launch process:", error);
+    alert("An error occurred while launching the game.");
+  }
+};
+
+const TrendingGames: React.FC<TrendingGamesProps> = ({ title, type }) => {
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  const trendingGames = GameData.filter((game) => game.game_category === "trending");
 
   return (
     <section className="py-8 px-4 bg-[#1A1A2E]">
       <div className="flex items-center gap-3 mb-6">
         <Flame className="w-6 h-6 text-orange-500" />
-        <h2 className="text-2xl font-bold text-white">Trending Now</h2>
+        <h2 className="text-2xl font-bold text-white">Trending Games</h2>
       </div>
 
-      {/* Scrollable Container */}
-      <div className="flex gap-4 overflow-x-auto whitespace-nowrap hide-scrollbar px-1">
+      <div className="flex gap-4 overflow-x-auto hide-scrollbar px-1">
         {trendingGames.length > 0 ? (
           trendingGames.map((game) => (
-            <div
-              key={game.game_uid}
-              className="min-w-[150px] sm:min-w-[200px] md:min-w-[250px] bg-[#252547] rounded-xl hide-scrollbar border border-purple-500/10 shadow-lg"
-            >
-              <img
-                src={game.icon}
-                alt={game.game_name}
-                className="w-full h-32 object-cover"
-              />
+            <div key={game.game_uid} className="min-w-[250px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg">
+              <img src={game.icon} alt={game.game_name} className="w-full h-32 object-cover" />
               <div className="p-3">
-                <h3 className="text-white font-semibold text-sm md:text-base">
-                  {game.game_name}
-                </h3>
+                <h3 className="text-white font-semibold text-sm md:text-base">{game.game_name}</h3>
                 <button
-                  onClick={handlePlayNow}
+                  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
                   className="mt-2 w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:opacity-90 transition-opacity"
                 >
                   Play Now
@@ -59,13 +128,8 @@ const TrendingGames = () => {
           <p className="text-white">No trending games available.</p>
         )}
       </div>
-      {/* Authentication Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialMode="login"
-        onLoginSuccess={() => setAuthModalOpen(false)}
-      />
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setAuthModalOpen(false)} initialMode="login" onLoginSuccess={() => setAuthModalOpen(false)} />
     </section>
   );
 };

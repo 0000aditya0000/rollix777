@@ -28,11 +28,16 @@ return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };
 
 // Open JS Game Function
-const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
+const openJsGame = async (game_uid: string, element: HTMLButtonElement) => { 
+  const userId=localStorage.getItem("userId")
+  const response = await axios.get(`https://rollix777.com/api/user/wallet/${userId}`);
+  const balance = response.data[10].balance;
+  console.log(balance)
+ 
 console.log(`Game UID: ${game_uid}`);
 console.log(`Button element:`, element);
 
-const memberAccount = "h43929thala";
+const memberAccount = `h43929rollix777${userId}`;
 const transferId = `${memberAccount}_${generateRandom10Digits()}`;
 const timestamp = Date.now();
 
@@ -46,7 +51,7 @@ try {
     currency_code: "BRL",
     language: "en",
     platform: "2",
-    home_url: "https://thalaclub.com",
+    home_url: "https://rollix777.com",
     transfer_id: transferId,
   };
 
@@ -73,7 +78,7 @@ try {
   console.log("Initialization successful:", initResponse.data);
 
   // Get the amount to deduct from the user balance
-  const afterAmount = initResponse.data.payload.after_amount; // Amount to deduct
+  const afterAmount = balance; // Amount to deduct
 
   // Step 2: Deduct the user's balance
   const deductPayload = {
@@ -84,7 +89,7 @@ try {
     currency_code: "BRL",
     language: "en",
     platform: "2",
-    home_url: "https://thalaclub.com",
+    home_url: "https://rollix777.com",
     transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
   };
 
@@ -115,11 +120,11 @@ try {
     member_account: memberAccount,
     game_uid: game_uid,
     timestamp: Date.now(),
-    credit_amount: "5000",
+    credit_amount: afterAmount.toString(),
     currency_code: "BRL",
     language: "en",
     platform: "2",
-    home_url: "https://thalaclub.com",
+    home_url: "https://rollix777.com",
     transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
   };
 

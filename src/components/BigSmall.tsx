@@ -239,7 +239,7 @@ const BigSmall = () => {
             <ArrowLeft size={20} />
           </Link>
           <h1 className="text-xl font-bold text-white ml-4">
-            Big & Small Game
+           Wingo
           </h1>
         </div>
 

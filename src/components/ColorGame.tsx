@@ -27,7 +27,7 @@ const ColorGame = () => {
             <div className="p-3 bg-purple-500/20 rounded-xl">
               <Dices className="w-8 h-8 text-purple-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Color Game</h2>
+            <h2 className="text-2xl font-bold text-white">WinGo</h2>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
