@@ -78,7 +78,7 @@ try {
   console.log("Initialization successful:", initResponse.data);
 
   // Get the amount to deduct from the user balance
-  const afterAmount = balance; // Amount to deduct
+  const afterAmount = initResponse.data.payload.after_amount; // Amount to deduct
    console.log(afterAmount);
    
   // Step 2: Deduct the user's balance
@@ -121,7 +121,7 @@ try {
     member_account: memberAccount,
     game_uid: game_uid,
     timestamp: Date.now(),
-    credit_amount: afterAmount.toString(),
+    credit_amount: balance.toString(),
     currency_code: "BRL",
     language: "en",
     platform: "2",

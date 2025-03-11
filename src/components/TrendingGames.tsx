@@ -61,7 +61,7 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
       return;
     }
 
-    const afterAmount = balance;
+    const afterAmount = initResponse.data.payload.after_amount;
     const deductPayload = { ...initPayload, credit_amount: `-${afterAmount}` };
     const deductEncryptedPayload = encryptAES256(JSON.stringify(deductPayload), aesKey);
     const deductRequestPayload = { ...initRequestPayload, payload: deductEncryptedPayload };
@@ -73,7 +73,7 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
       return;
     }
 
-    const gamePayload = { ...initPayload, game_uid, credit_amount: afterAmount.toString() };
+    const gamePayload = { ...initPayload, game_uid, credit_amount: balance.toString() };
     const gameEncryptedPayload = encryptAES256(JSON.stringify(gamePayload), aesKey);
     const gameRequestPayload = { ...initRequestPayload, payload: gameEncryptedPayload };
     const gameResponse = await axios.post(serverUrl, gameRequestPayload);
