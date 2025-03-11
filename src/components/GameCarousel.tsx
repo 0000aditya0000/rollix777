@@ -48,7 +48,7 @@ try {
     member_account: memberAccount,
     timestamp,
     credit_amount: "0", // Set balance to 0
-    currency_code: "BRL",
+    currency_code: "INR",
     language: "en",
     platform: "2",
     home_url: "https://rollix777.com",
@@ -79,14 +79,15 @@ try {
 
   // Get the amount to deduct from the user balance
   const afterAmount = balance; // Amount to deduct
-
+   console.log(afterAmount);
+   
   // Step 2: Deduct the user's balance
   const deductPayload = {
     agency_uid: "fd37fafd6af3eb5af8dee92101100347",
     member_account: memberAccount,
     timestamp: Date.now(),
     credit_amount: `-${afterAmount}`, // Deduct the current balance
-    currency_code: "BRL",
+    currency_code: "INR",
     language: "en",
     platform: "2",
     home_url: "https://rollix777.com",
@@ -121,7 +122,7 @@ try {
     game_uid: game_uid,
     timestamp: Date.now(),
     credit_amount: afterAmount.toString(),
-    currency_code: "BRL",
+    currency_code: "INR",
     language: "en",
     platform: "2",
     home_url: "https://rollix777.com",
