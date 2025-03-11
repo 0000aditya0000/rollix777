@@ -43,7 +43,7 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
       member_account: memberAccount,
       timestamp,
       credit_amount: "0",
-      currency_code: "INR",
+      currency_code: "BRL",
       language: "en",
       platform: "2",
       home_url: "https://rollix777.com",

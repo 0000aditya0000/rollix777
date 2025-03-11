@@ -48,7 +48,7 @@ try {
     member_account: memberAccount,
     timestamp,
     credit_amount: "0", // Set balance to 0
-    currency_code: "INR",
+    currency_code: "BRL",
     language: "en",
     platform: "2",
     home_url: "https://rollix777.com",
@@ -87,7 +87,7 @@ try {
     member_account: memberAccount,
     timestamp: Date.now(),
     credit_amount: `-${afterAmount}`, // Deduct the current balance
-    currency_code: "INR",
+    currency_code: "BRL",
     language: "en",
     platform: "2",
     home_url: "https://rollix777.com",
@@ -122,7 +122,7 @@ try {
     game_uid: game_uid,
     timestamp: Date.now(),
     credit_amount: afterAmount.toString(),
-    currency_code: "INR",
+    currency_code: "BRL",
     language: "en",
     platform: "2",
     home_url: "https://rollix777.com",
