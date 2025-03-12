@@ -12,12 +12,14 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { login, logout } from "../slices/authSlice";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: "login" | "register";
-  onLoginSuccess?: () => void;
+  onLoginSuccess: () => void;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({
@@ -37,6 +39,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [referalCode, setReferalCode] = useState("");
   const navigate = useNavigate();
   // console.log("mode", mode, initialMode);
+  const dispatch = useDispatch();
+
   useEffect(() => {
     if (initialMode) {
       setMode(initialMode);
@@ -67,16 +71,18 @@ const AuthModal: React.FC<AuthModalProps> = ({
       if (response.data.token) {
         localStorage.setItem("userToken", response.data.token); // Save login token
         localStorage.setItem("userId", response.data.user.id);
-        if (onLoginSuccess) {
-
-          onLoginSuccess();
-           // Close modal after successful login
-        }
+        const user = {
+          id: response.data.user.id,
+          name: response.data.user.name,
+        };
+        dispatch(login({ user, token: response.data.token }));
+        onLoginSuccess(); // Close modal after successful login
         navigate("/dashboard");
       }
     } catch (error) {
       console.error("Login failed:", error);
       setError("Invalid email or password");
+      dispatch(logout());
     }
   };
 

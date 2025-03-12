@@ -12,23 +12,20 @@ import {
 import AuthModal from "./AuthModal.tsx";
 import SideNav from "./SideNav.tsx";
 import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../store.ts";
+import { logout } from "../slices/authSlice.ts";
 
-interface HeaderProps {
-  isLoggedIn: boolean;
-  onLogout: () => void;
-  onLogin: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
-  console.log(onLogout);
-
+const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
   const [wallets, setWallets] = useState([]);
-  const userId = localStorage.getItem("userId");
+  const { isAuthenticated, user } = useSelector(
+    (state: RootState) => state.auth
+  );
   const [selectedCurrency, setSelectedCurrency] = useState({
     name: "INR",
     symbol: "₹",
@@ -36,6 +33,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
     balance: "0", // Initially 0 until API fetches data
   });
   // Ensure selected currency updates
+  const dispatch = useDispatch();
   const handleCurrencySelect = (crypto) => {
     setSelectedCurrency({
       name: crypto.name,
@@ -50,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
     async function fetchData() {
       try {
         const response = await axios.get(
-          `https://rollix777.com/api/user/wallet/${userId}`
+          `https://rollix777.com/api/user/wallet/${user.id}`
         );
         setWallets(response.data);
 
@@ -69,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
       }
     }
     fetchData();
-  }, []);
+  }, [user?.id]);
   const updatedCryptos = [
     { name: "Bitcoin", symbol: "₿", color: "bg-yellow-500", cryptoname: "BTC" },
     { name: "Litecoin", symbol: "Ł", color: "bg-gray-500", cryptoname: "LTC" },
@@ -136,12 +134,11 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
 
   const handleLogout = () => {
     setIsMenuOpen(false);
-    onLogout();
+    dispatch(logout());
   };
 
   const handleLoginSuccess = () => {
     setIsModalOpen(false);
-    onLogin(); // Call the onLogin prop to update the App state
   };
 
   return (
@@ -149,7 +146,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
       <header className="fixed top-0 w-full max-w-[430px] z-40">
         <div className="px-4 py-3 bg-[#1A1A2E]/95 backdrop-blur-lg border-b border-purple-500/10">
           <div className="flex items-center justify-between">
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               // Logged in header
               <>
                 <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
@@ -255,7 +252,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout, onLogin }) => {
           </div>
         </div>
 
-        {isMenuOpen && !isLoggedIn && (
+        {isMenuOpen && !isAuthenticated && (
           <div className="absolute top-full left-0 right-0 bg-[#1A1A2E]/95 backdrop-blur-lg border-b border-purple-500/10 p-4 flex flex-col gap-3 animate-fadeIn">
             <button
               onClick={openLoginModal}

@@ -1,17 +1,13 @@
-import React from 'react';
-import { Gamepad2, Star, Users, Trophy } from 'lucide-react';
+import React from "react";
+import { Gamepad2, Star, Users, Trophy } from "lucide-react";
 
-interface HeroProps {
-  onLogin?: () => void;
-}
-
-const Hero: React.FC<HeroProps> = ({ onLogin }) => {
+const Hero: React.FC = () => {
   return (
     <section className="pt-20 px-4 pb-12 bg-[#1A1A2E] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-purple-600/10 to-pink-600/10" />
       <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl" />
-      
+
       <div className="relative">
         <div className="flex justify-center mb-6">
           <div className="relative">
@@ -49,10 +45,7 @@ const Hero: React.FC<HeroProps> = ({ onLogin }) => {
           </div>
         </div>
 
-        <button 
-          onClick={onLogin}
-          className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium text-lg hover:opacity-90 transition-opacity relative overflow-hidden"
-        >
+        <button className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium text-lg hover:opacity-90 transition-opacity relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 animate-pulse" />
           <span className="relative">Start Playing Now</span>
         </button>

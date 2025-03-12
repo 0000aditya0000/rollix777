@@ -127,8 +127,13 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
           <p className="text-white">No hot games available.</p>
         )}
       </div>
-
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setAuthModalOpen(false)} initialMode="login" onLoginSuccess={() => setAuthModalOpen(false)} />
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode="login"
+        onLoginSuccess={() => setAuthModalOpen(false)}
+      />
     </section>
   );
 };
