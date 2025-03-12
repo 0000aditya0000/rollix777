@@ -6,8 +6,8 @@ interface FooterProps {
   isLoggedIn?: boolean;
 }
 
-const Footer: React.FC<FooterProps> = ({ isLoggedIn = false }) => {
-  const [showAdminButton, setShowAdminButton] = useState(false);
+const Footer: React.FC<FooterProps> = ({ isLoggedIn = true }) => {
+  const [showAdminButton, setShowAdminButton] = useState(true);
   const location = useLocation();
   
   const handleAdminAccess = () => {
@@ -48,4 +48,4 @@ const Footer: React.FC<FooterProps> = ({ isLoggedIn = false }) => {
   );
 };
 
-export default Footer;  
+export default Footer;
