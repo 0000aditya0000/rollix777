@@ -12,7 +12,7 @@ import {
   Star,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { Link } from 'react-router-dom';
 interface SideNavProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,14 +25,14 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
   if (!isOpen) return null;
 
   const menuItems = [
-    { icon: <User size={20} />, label: "My Profile" },
-    { icon: <History size={20} />, label: "Transaction History" },
-    { icon: <CreditCard size={20} />, label: "Payment Methods" },
-    { icon: <Star size={20} />, label: "VIP Program" },
-    { icon: <Gift size={20} />, label: "Referrals & Rewards" },
-    { icon: <Settings size={20} />, label: "Settings" },
-    { icon: <Shield size={20} />, label: "Security" },
-    { icon: <HelpCircle size={20} />, label: "Help & Support" },
+    { icon: <User size={20} />, label: 'My Profile', path: '/profile' },
+    { icon: <History size={20} />, label: 'Transaction History', path: '/bet-history' },
+    { icon: <CreditCard size={20} />, label: 'Payment Methods', path: '/payment-methods' },
+    { icon: <Star size={20} />, label: 'VIP Program', path: '/vip' },
+    { icon: <Gift size={20} />, label: 'Referrals & Rewards', path: '/referrals' },
+    { icon: <Settings size={20} />, label: 'Settings', path: '/settings' },
+    { icon: <Shield size={20} />, label: 'Security', path: '/security' },
+    { icon: <HelpCircle size={20} />, label: 'Help & Support', path: '/support' },
   ];
 
   const handleLogOut = () => {
@@ -79,10 +79,14 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
               <ul className="space-y-1">
                 {menuItems.map((item, index) => (
                   <li key={index}>
-                    <button className="w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-purple-500/10 hover:text-white transition-colors">
+                     <Link 
+                      to={item.path}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-purple-500/10 hover:text-white transition-colors"
+                      onClick={onClose}
+                    >
                       <span className="text-purple-400">{item.icon}</span>
                       <span>{item.label}</span>
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
