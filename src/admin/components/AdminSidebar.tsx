@@ -96,7 +96,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) =>
           {/* Footer */}
           <div className="p-4 border-t border-purple-500/10">
             <Link
-              to="/"
+              to="/dashboard"
               className="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:bg-[#252547] hover:text-white transition-colors"
             >
               <span>🏠</span>
