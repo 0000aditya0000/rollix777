@@ -10,8 +10,8 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ toggleSidebar }) => {
   const [showNotifications, setShowNotifications] = useState(false);
 
   return (
-    <header className="bg-[#1A1A2E]/80 backdrop-blur-md border-b border-purple-500/10 sticky top-0 z-30">
-      <div className="flex items-center justify-between px-4 py-3">
+    <header className="bg-[#1A1A2E]/80 backdrop-blur-md border-b border-purple-500/10 sticky top-0 z-30 h-16">
+      <div className="flex items-center justify-between px-4 py-3 h-full">
         <div className="flex items-center gap-4">
           <button 
             onClick={toggleSidebar}
