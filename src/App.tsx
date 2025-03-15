@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./components/Home";
 import BigSmall from "./components/BigSmall";
@@ -14,24 +13,13 @@ import Footer from "./components/Footer";
 import Dashboard from "./components/Dashboard";
 import AdminRoutes from "./admin";
 import BetHistory from "./components/BetHistory";
+import { useSelector } from "react-redux";
+import { RootState } from "./store";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const auth = localStorage.getItem("userToken");
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("userId");
-  };
-
-  useEffect(() => {
-    setIsLoggedIn(!!auth);
-  }, [auth]);
+  const authenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
 
   return (
     <BrowserRouter>
@@ -45,19 +33,30 @@ function App() {
           element={
             <div className="fixed inset-0 bg-[#0F0F19] overflow-y-auto hide-scrollbar">
               <div className="mx-auto w-[100%] max-w-[430px] relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E]">
-                <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} onLogin={handleLogin} />
+                <Header />
                 <main>
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/bigsmall" element={<BigSmall />} />
                     <Route path="/bet-history" element={<BetHistory />} />
-                    {isLoggedIn ? (
+                    {authenticated ? (
                       <Route path="/dashboard" element={<Dashboard />} />
                     ) : (
                       <>
-                        <Route path="/hero" element={<Hero onLogin={handleLogin} />} />
-                        <Route path="/featured-games" element={<GameCarousel title="Featured Games" type="featured" />} />
-                        <Route path="/trending-games" element={<TrendingGames />} />
+                        <Route path="/hero" element={<Hero />} />
+                        <Route
+                          path="/featured-games"
+                          element={
+                            <GameCarousel
+                              title="Featured Games"
+                              type="featured"
+                            />
+                          }
+                        />
+                        <Route
+                          path="/trending-games"
+                          element={<TrendingGames />}
+                        />
                         <Route path="/color-game" element={<ColorGame />} />
                         <Route path="/hot-games" element={<HotGames />} />
                         <Route path="/promotions" element={<Promotions />} />
@@ -66,7 +65,7 @@ function App() {
                     )}
                   </Routes>
                 </main>
-                <Footer isLoggedIn={isLoggedIn} />
+                <Footer />
               </div>
             </div>
           }

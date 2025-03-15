@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Dices } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 
 const ColorGame = () => {
-  const auth = localStorage.getItem("userToken");
+  const auth = useSelector((state: RootState) => state.auth.isAuthenticated);
   const navigate = useNavigate();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
@@ -50,7 +52,11 @@ const ColorGame = () => {
           </div>
         </div>
       </section>
-      <AuthModal isOpen={authModalOpen} onClose={handleOnClose} />
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={handleOnClose}
+        onLoginSuccess={handleOnClose}
+      />
     </>
   );
 };

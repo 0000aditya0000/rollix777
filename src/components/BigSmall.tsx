@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { X, ArrowLeft, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 
 type Record = {
   id: number;
@@ -36,7 +38,7 @@ const BigSmall = () => {
   const [shouldResetTimer, setShouldResetTimer] = useState(false);
   const [currentPeriod, setCurrentPeriod] = useState<number>(0);
   const [bets, setBets] = useState<Bet[]>([]);
-  const userId = localStorage.getItem("userId");
+  const userId = useSelector((state: RootState) => state.auth.user?.id);
   const [winner, setWinner] = useState(false);
 
   const handeleWinLose = useCallback(
