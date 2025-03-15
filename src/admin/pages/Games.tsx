@@ -1,26 +1,40 @@
-import React, { useState } from 'react';
-import { Search, Filter, Plus, Edit, Trash2, Eye, BarChart3 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Search, Plus, Edit, Trash2, Eye, BarChart3 } from 'lucide-react';
 
 const Games = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
-  
-  // Dummy data
-  const games = [
-    { id: 1, name: 'Space Warriors', category: 'Action', plays: 12500, revenue: '$25,400', status: 'active' },
-    { id: 2, name: 'Racing Legends', category: 'Racing', plays: 9800, revenue: '$18,750', status: 'active' },
-    { id: 3, name: 'Mystic Quest', category: 'Adventure', plays: 8700, revenue: '$15,300', status: 'active' },
-    { id: 4, name: 'Crypto Slots', category: 'Casino', plays: 15600, revenue: '$42,800', status: 'active' },
-    { id: 5, name: 'Blackjack Pro', category: 'Cards', plays: 11200, revenue: '$31,500', status: 'active' },
-    { id: 6, name: 'Lucky Roulette', category: 'Casino', plays: 13400, revenue: '$38,900', status: 'maintenance' },
-    { id: 7, name: 'Poker Master', category: 'Cards', plays: 10100, revenue: '$27,600', status: 'active' },
-    { id: 8, name: 'Dragon Quest', category: 'Adventure', plays: 7800, revenue: '$14,200', status: 'inactive' },
-  ];
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchGames = async () => {
+      try {
+        const response = await axios.get('https://rollix777.com/api/games/allgames');
+        setGames(response.data); // Assuming the API returns an array of games
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchGames();
+  }, []);
+
+  // Debugging: Log the games and filter
+  console.log('Games:', games);
+  console.log('Category Filter:', categoryFilter);
 
   const filteredGames = categoryFilter === 'all' 
     ? games 
-    : games.filter(g => g.category.toLowerCase() === categoryFilter);
+    : games.filter(g => g.type.toLowerCase() === categoryFilter.toLowerCase());
 
-  const getStatusColor = (status: string) => {
+  // filtered games
+  console.log('Filtered Games:', filteredGames);
+
+  const getStatusColor = (status) => {
     switch (status) {
       case 'active':
         return 'bg-green-500/20 text-green-400';
@@ -32,6 +46,9 @@ const Games = () => {
         return 'bg-gray-500/20 text-gray-400';
     }
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="space-y-6">
@@ -137,12 +154,12 @@ const Games = () => {
                 <tr key={game.id} className="border-b border-purple-500/10 text-white hover:bg-purple-500/5">
                   <td className="py-4 px-6">#{game.id}</td>
                   <td className="py-4 px-6">{game.name}</td>
-                  <td className="py-4 px-6">{game.category}</td>
-                  <td className="py-4 px-6">{game.plays.toLocaleString()}</td>
-                  <td className="py-4 px-6">{game.revenue}</td>
+                  <td className="py-4 px-6">{game.type}</td>
+                  <td className="py-4 px-6">{game.playing.toLocaleString()}</td>
+                  <td className="py-4 px-6">{game.revenue||3400}</td>
                   <td className="py-4 px-6">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(game.status)}`}>
-                      {game.status}
+                      {game.status || "active"}
                     </span>
                   </td>
                   <td className="py-4 px-6">
@@ -169,7 +186,7 @@ const Games = () => {
         
         {/* Pagination */}
         <div className="p-4 border-t border-purple-500/10 flex justify-between items-center">
-          <p className="text-gray-400 text-sm">Showing 1-8 of 30 games</p>
+          <p className="text-gray-400 text-sm">Showing 1-{filteredGames.length} of {games.length} games</p>
           <div className="flex gap-2">
             <button className="py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-400 hover:text-white transition-colors">
               Previous

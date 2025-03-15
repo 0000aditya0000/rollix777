@@ -1,21 +1,33 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Filter, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import axios from 'axios';
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Dummy data
-  const users = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', status: 'active', balance: '$1,245.00', joined: '2025-01-15' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', status: 'active', balance: '$3,780.50', joined: '2025-02-20' },
-    { id: 3, name: 'Robert Johnson', email: 'robert@example.com', status: 'inactive', balance: '$0.00', joined: '2025-03-05' },
-    { id: 4, name: 'Emily Davis', email: 'emily@example.com', status: 'active', balance: '$950.25', joined: '2025-03-10' },
-    { id: 5, name: 'Michael Wilson', email: 'michael@example.com', status: 'suspended', balance: '$2,100.75', joined: '2025-01-25' },
-    { id: 6, name: 'Sarah Brown', email: 'sarah@example.com', status: 'active', balance: '$4,520.00', joined: '2025-02-15' },
-    { id: 7, name: 'David Miller', email: 'david@example.com', status: 'active', balance: '$1,875.50', joined: '2025-03-20' },
-    { id: 8, name: 'Lisa Taylor', email: 'lisa@example.com', status: 'inactive', balance: '$0.00', joined: '2025-01-10' },
-  ];
+ const [users, setUsers] = useState([]); // State to store fetched users
+  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState(null); 
+   
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get('https://rollix777.com/api/user/allusers');
+        setUsers(response.data); // Set the fetched data to the state
+        setLoading(false); // Set loading to false
 
+        // Store the total number of users in localStorage
+        const AllUsers = response.data.length;
+        console.log(AllUsers)
+        localStorage.setItem("AllUser", AllUsers.toString()); // Store as string
+      } catch (error) {
+        setError(error); // Set error if the request fails
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+         
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -28,7 +40,14 @@ const Users = () => {
         return 'bg-gray-500/20 text-gray-400';
     }
   };
+ if (loading) {
+    return <div className="text-white text-center py-6">Loading...</div>;
+  }
 
+  // Display error state
+  if (error) {
+    return <div className="text-red-500 text-center py-6">Error: {error.message}</div>;
+  }
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -76,15 +95,15 @@ const Users = () => {
               {users.map((user) => (
                 <tr key={user.id} className="border-b border-purple-500/10 text-white hover:bg-purple-500/5">
                   <td className="py-4 px-6">#{user.id}</td>
-                  <td className="py-4 px-6">{user.name}</td>
+                  <td className="py-4 px-6">{user.username}</td>
                   <td className="py-4 px-6">{user.email}</td>
                   <td className="py-4 px-6">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(user.status)}`}>
-                      {user.status}
+                      {user.status||"active"}
                     </span>
                   </td>
-                  <td className="py-4 px-6">{user.balance}</td>
-                  <td className="py-4 px-6">{user.joined}</td>
+                  <td className="py-4 px-6">{user.balance || 3400}</td>
+                  <td className="py-4 px-6">{user.code ||453}</td>
                   <td className="py-4 px-6">
                     <div className="flex gap-2">
                       <button className="p-1.5 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition-colors">
