@@ -3,9 +3,10 @@ import { Users, DollarSign, Eye, Check, X } from 'lucide-react';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'kyc' | 'withdrawals'>('kyc');
-  
+   const users=localStorage.getItem("AllUser")
   // Dummy data
-  const totalUsers = 12458;
+  const totalUsers = users;
+
   const totalTransactions = '$1,245,789.00';
   
   const kycRequests = [
