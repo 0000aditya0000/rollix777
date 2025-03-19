@@ -29,110 +29,57 @@ const generateRandom10Digits = () => {
 
 // Open JS Game Function
 const openJsGame = async (game_uid: string, element: HTMLButtonElement) => { 
-  const userId=localStorage.getItem("userId")
+  const userId = localStorage.getItem("userId");
   const response = await axios.get(`https://rollix777.com/api/user/wallet/${userId}`);
   const balance = response.data[10].balance;
-  console.log(balance)
+  console.log(balance);
  
-console.log(`Game UID: ${game_uid}`);
-console.log(`Button element:`, element);
+  console.log(`Game UID: ${game_uid}`);
+  console.log(`Button element:`, element);
 
-const memberAccount = `h43929rollix777${userId}`;
-const transferId = `${memberAccount}_${generateRandom10Digits()}`;
-const timestamp = Date.now();
+  const memberAccount = `h43929rollix777${userId}`;
+  const transferId = `${memberAccount}_${generateRandom10Digits()}`;
+  const timestamp = Date.now();
 
-try {
-  // Step 1: Initialize the payload with a balance of 0
-  const initPayload = {
-    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-    member_account: memberAccount,
-    timestamp,
-    credit_amount: "0", // Set balance to 0
-    currency_code: "BRL",
-    language: "en",
-    platform: "2",
-    home_url: "https://rollix777.com",
-    transfer_id: transferId,
-  };
+  try {
+    // Step 1: Initialize the payload with a balance of 0
+    const initPayload = {
+      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
+      member_account: memberAccount,
+      timestamp,
+      credit_amount: "0", // Set balance to 0
+      currency_code: "BRL",
+      language: "en",
+      platform: "2",
+      home_url: "https://rollix777.com",
+      transfer_id: transferId,
+    };
 
-  const initEncryptedPayload = encryptAES256(
-    JSON.stringify(initPayload),
-    aesKey
-  );
+    const initEncryptedPayload = encryptAES256(
+      JSON.stringify(initPayload),
+      aesKey
+    );
 
-  const initRequestPayload = {
-    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-    timestamp,
-    payload: initEncryptedPayload,
-  };
+    const initRequestPayload = {
+      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
+      timestamp,
+      payload: initEncryptedPayload,
+    };
 
-  // Send the initial request to the server
-  const initResponse = await axios.post(serverUrl, initRequestPayload);
+    // Send the initial request to the server
+    const initResponse = await axios.post(serverUrl, initRequestPayload);
 
-  if (initResponse.data.code !== 0) {
-    console.error("Initialization Error:", initResponse.data.msg);
-    alert("Failed to initialize game: " + initResponse.data.msg);
-    return;
-  }
-
-  console.log("Initialization successful:", initResponse.data);
-
-  // Get the amount to deduct from the user balance
-  const afterAmount = initResponse.data.payload.after_amount; // Amount to deduct
-   console.log(afterAmount);
-   
-  // Step 2: Deduct the user's balance
-  const deductPayload = {
-    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-    member_account: memberAccount,
-    timestamp: Date.now(),
-    credit_amount: `-${afterAmount}`, // Deduct the current balance
-    currency_code: "BRL",
-    language: "en",
-    platform: "2",
-    home_url: "https://rollix777.com",
-    transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
-  };
-
-  const deductEncryptedPayload = encryptAES256(
-    JSON.stringify(deductPayload),
-    aesKey
-  );
-
-  const deductRequestPayload = {
-    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-    timestamp: Date.now(),
-    payload: deductEncryptedPayload,
-  };
-
-  const deductResponse = await axios.post(serverUrl, deductRequestPayload);
-
-  if (deductResponse.data.code !== 0) {
-    console.error("Deduct Error:", deductResponse.data.msg);
-    alert("Failed to deduct balance: " + deductResponse.data.msg);
-    return;
-  }
-
-  console.log("Deduct successful:", deductResponse.data);
-
-  // Step 3: Launch the game
-  const gamePayload = {
-    agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-    member_account: memberAccount,
-    game_uid: game_uid,
-    timestamp: Date.now(),
-    credit_amount: balance.toString(),
-    currency_code: "BRL",
-    language: "en",
-    platform: "2",
-    home_url: "https://rollix777.com",
-    transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
-  };
+    if (initResponse.data.code !== 0) {
+      console.error("Initialization Error:", initResponse.data.msg);
+      alert("Failed to initialize game: " + initResponse.data.msg);
+      return;
+    }
 
     console.log("Initialization successful:", initResponse.data);
 
     // Get the amount to deduct from the user balance
     const afterAmount = initResponse.data.payload.after_amount; // Amount to deduct
+    console.log(afterAmount);
 
     // Step 2: Deduct the user's balance
     const deductPayload = {

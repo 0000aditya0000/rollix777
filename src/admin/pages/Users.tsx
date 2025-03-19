@@ -1,64 +1,375 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Search, Filter, Plus, Edit, Trash2, Eye, User, Mail, Phone, Calendar } from 'lucide-react';
 import axios from 'axios';
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
- const [users, setUsers] = useState([]); // State to store fetched users
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState(null); 
-   
+  const [users, setUsers] = useState<any[]>([]);
+  const [error, setError] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showEditPopup, setShowEditPopup] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Get All Users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get('https://rollix777.com/api/user/allusers');
-        setUsers(response.data); // Set the fetched data to the state
-        setLoading(false); // Set loading to false
-
-        // Store the total number of users in localStorage
-        const AllUsers = response.data.length;
-        console.log(AllUsers)
-        localStorage.setItem("AllUser", AllUsers.toString()); // Store as string
+        setUsers(response.data);
+        console.log(response.data);
       } catch (error) {
-        setError(error); // Set error if the request fails
+        setError(error);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchUsers();
   }, []);
-         
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-500/20 text-green-400';
-      case 'inactive':
-        return 'bg-gray-500/20 text-gray-400';
-      case 'suspended':
-        return 'bg-red-500/20 text-red-400';
-      default:
-        return 'bg-gray-500/20 text-gray-400';
+
+  // Delete User
+  const deleteUser = async (id) => {
+    try {
+      await axios.delete(`https://rollix777.com/api/user/user/${id}`);
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+      alert("User deleted successfully.");
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      alert("Failed to delete user");
     }
   };
- if (loading) {
+
+  // Add New User
+  const addNewUser = async (userData) => {
+    try {
+      const response = await axios.post('https://rollix777.com/api/admin/user', userData);
+      setUsers((prevUsers) => [...prevUsers, response.data]);
+      alert("User added successfully.");
+    } catch (err) {
+      console.error("Error adding user:", err);
+      alert("Failed to add user.");
+    }
+  };
+
+  // Update User
+  const updateUser = async (id, userData) => {
+    try {
+      const response = await axios.put(`https://rollix777.com/api/user/user/${id}`, userData);
+      setUsers((prevUsers) =>
+        prevUsers.map((user) => (user.id === id ? response.data : user))
+      );
+      alert("User updated successfully.");
+    } catch (err) {
+      console.error("Error updating user:", err);
+      alert("Failed to update user.");
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-500/20 text-green-400';
+      case 'inactive': return 'bg-gray-500/20 text-gray-400';
+      case 'suspended': return 'bg-red-500/20 text-red-400';
+      default: return 'bg-gray-500/20 text-gray-400';
+    }
+  };
+
+  if (loading) {
     return <div className="text-white text-center py-6">Loading...</div>;
   }
 
-  // Display error state
   if (error) {
     return <div className="text-red-500 text-center py-6">Error: {error.message}</div>;
   }
+
+  // Popup Component for Adding User
+  const Popup = ({ onClose, onAddUser }) => {
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState('');
+    const [dob, setDob] = useState('');
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      const userData = {
+        username,
+        email,
+        password,
+        phone,
+        dob,
+      };
+
+      await onAddUser(userData);
+      onClose();
+    };
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="bg-[#1A1A2E] p-6 rounded-lg w-full max-w-md">
+          <h2 className="text-xl font-bold text-white mb-4">Add User</h2>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Username</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <User className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="text"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  placeholder="Choose a username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Email</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Mail className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="email"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Mail className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="password"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Phone Number</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Phone className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="tel"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  placeholder="Enter your phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Date of Birth</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Calendar className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="date"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="py-2 px-4 bg-gray-500/20 text-gray-300 rounded-lg hover:bg-gray-500/30 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="py-2 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white hover:opacity-90 transition-opacity"
+              >
+                Add User
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // Edit Popup Component
+  const EditPopup = ({ onClose, onUpdateUser, user }) => {
+    const [username, setUsername] = useState(user.username);
+    const [email, setEmail] = useState(user.email);
+    const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState(user.phone);
+    const [dob, setDob] = useState(user.dob);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      const userData = {
+        username,
+        email,
+        password,
+        phone,
+        dob,
+      };
+
+      await onUpdateUser(user.id, userData);
+      onClose();
+    };
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="bg-[#1A1A2E] p-6 rounded-lg w-full max-w-md">
+          <h2 className="text-xl font-bold text-white mb-4">Edit User</h2>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Username</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <User className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="text"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  placeholder="Choose a username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Email</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Mail className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="email"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Mail className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="password"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Phone Number</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Phone className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="tel"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  placeholder="Enter your phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Date of Birth</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Calendar className="w-5 h-5 text-purple-400" />
+                </div>
+                <input
+                  type="date"
+                  className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="py-2 px-4 bg-gray-500/20 text-gray-300 rounded-lg hover:bg-gray-500/30 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="py-2 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white hover:opacity-90 transition-opacity"
+              >
+                Update User
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-white">Users</h1>
-        <button className="py-2 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <button
+          onClick={() => setShowPopup(true)}
+          className="py-2 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white flex items-center gap-2 hover:opacity-90 transition-opacity"
+        >
           <Plus size={18} />
           <span>Add User</span>
         </button>
       </div>
-      
-      {/* Filters and Search */}
+
+      {showPopup && <Popup onClose={() => setShowPopup(false)} onAddUser={addNewUser} />}
+      {showEditPopup && (
+        <EditPopup
+          onClose={() => setShowEditPopup(false)}
+          onUpdateUser={updateUser}
+          user={selectedUser}
+        />
+      )}
+
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <input
@@ -75,8 +386,7 @@ const Users = () => {
           <span>Filters</span>
         </button>
       </div>
-      
-      {/* Users Table */}
+
       <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -99,20 +409,29 @@ const Users = () => {
                   <td className="py-4 px-6">{user.email}</td>
                   <td className="py-4 px-6">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(user.status)}`}>
-                      {user.status||"active"}
+                      {user.status || "active"}
                     </span>
                   </td>
-                  <td className="py-4 px-6">{user.balance || 3400}</td>
-                  <td className="py-4 px-6">{user.code ||453}</td>
+                  <td className="py-4 px-6">{user.balance}</td>
+                  <td className="py-4 px-6">{"N/A"}</td>
                   <td className="py-4 px-6">
                     <div className="flex gap-2">
                       <button className="p-1.5 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition-colors">
                         <Eye size={16} />
                       </button>
-                      <button className="p-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors">
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowEditPopup(true);
+                        }}
+                        className="p-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors"
+                      >
                         <Edit size={16} />
                       </button>
-                      <button className="p-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors">
+                      <button
+                        onClick={() => deleteUser(user.id)}
+                        className="p-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -121,28 +440,6 @@ const Users = () => {
               ))}
             </tbody>
           </table>
-        </div>
-        
-        {/* Pagination */}
-        <div className="p-4 border-t border-purple-500/10 flex justify-between items-center">
-          <p className="text-gray-400 text-sm">Showing 1-8 of 100 users</p>
-          <div className="flex gap-2">
-            <button className="py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-400 hover:text-white transition-colors">
-              Previous
-            </button>
-            <button className="py-1 px-3 bg-purple-500/20 border border-purple-500/20 rounded-lg text-white">
-              1
-            </button>
-            <button className="py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-400 hover:text-white transition-colors">
-              2
-            </button>
-            <button className="py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-400 hover:text-white transition-colors">
-              3
-            </button>
-            <button className="py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-400 hover:text-white transition-colors">
-              Next
-            </button>
-          </div>
         </div>
       </div>
     </div>

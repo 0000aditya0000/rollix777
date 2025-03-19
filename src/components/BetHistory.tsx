@@ -1,63 +1,45 @@
-import React, { useState } from 'react';
-import { Search, Filter, ArrowLeft } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const BetHistory = () => {
   const [statusFilter, setStatusFilter] = useState('all');
-  
-  // Dummy data for bet history
-  const bets = [
-    { 
-      id: 'BET-001', 
-      game: 'Color Game',
-      amount: '$50.00',
-      selectedColor: 'Red',
-      result: 'Green',
-      status: 'lost',
-      payout: '$0.00',
-      date: '2025-04-10 14:30:25'
-    },
-    { 
-      id: 'BET-002', 
-      game: 'Color Game',
-      amount: '$100.00',
-      selectedColor: 'Green',
-      result: 'Green',
-      status: 'won',
-      payout: '$190.00',
-      date: '2025-04-10 14:25:18'
-    },
-    { 
-      id: 'BET-003', 
-      game: 'Color Game',
-      amount: '$75.00',
-      selectedColor: 'Red',
-      result: 'Red',
-      status: 'won',
-      payout: '$142.50',
-      date: '2025-04-10 14:20:45'
-    },
-    { 
-      id: 'BET-004', 
-      game: 'Color Game',
-      amount: '$200.00',
-      selectedColor: 'Green',
-      result: 'Red',
-      status: 'lost',
-      payout: '$0.00',
-      date: '2025-04-10 14:15:30'
-    },
-    { 
-      id: 'BET-005', 
-      game: 'Color Game',
-      amount: '$150.00',
-      selectedColor: 'Red',
-      result: 'Green',
-      status: 'lost',
-      payout: '$0.00',
-      date: '2025-04-10 14:10:15'
-    }
-  ];
+  const [bets, setBets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchBetHistory = async () => {
+      try {
+        const response = await axios.post(
+          "https://rollix777.com/api/color/bet-history",
+          { userId: 29 },
+          {
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        );
+
+        console.log("Full API Response:", response.data); // Debug log
+        const betData = response.data.betHistory || []; // Extract betHistory correctly
+
+        if (!Array.isArray(betData)) {
+          console.error("Unexpected data format:", betData);
+        }
+
+        setBets(betData); // Set the correct data
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchBetHistory();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -71,7 +53,10 @@ const BetHistory = () => {
   };
 
   const getColorBadge = (color: string) => {
-    switch (color.toLowerCase()) {
+    // Ensure color is a string and convert it to lowercase
+    const colorLower = typeof color === 'string' ? color.toLowerCase() : '';
+
+    switch (colorLower) {
       case 'red':
         return 'bg-red-500 w-4 h-4 rounded-full';
       case 'green':
@@ -80,6 +65,27 @@ const BetHistory = () => {
         return 'bg-gray-500 w-4 h-4 rounded-full';
     }
   };
+
+  // Calculate total won and total lost
+  const totalWon = bets
+    .filter(bet => bet.status === "won")
+    .reduce((sum, bet) => sum + parseFloat(bet.amountReceived || 0), 0);
+
+  const totalLost = bets
+    .filter(bet => bet.status === "lost")
+    .reduce((sum, bet) => sum + parseFloat(bet.amount || 0), 0);
+
+  if (loading) {
+    return <div className="pt-16 pb-24 text-center text-white">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="pt-16 pb-24 text-center text-red-500">
+        Error: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="pt-16 pb-24">
@@ -127,11 +133,11 @@ const BetHistory = () => {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-green-500/20 p-4">
             <p className="text-gray-400 text-sm">Total Won</p>
-            <p className="text-2xl font-bold text-green-400">$332.50</p>
+            <p className="text-2xl font-bold text-green-400">₹{totalWon.toFixed(2)}</p>
           </div>
           <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-red-500/20 p-4">
             <p className="text-gray-400 text-sm">Total Lost</p>
-            <p className="text-2xl font-bold text-red-400">$400.00</p>
+            <p className="text-2xl font-bold text-red-400">₹{totalLost.toFixed(2)}</p>
           </div>
         </div>
 
@@ -144,7 +150,7 @@ const BetHistory = () => {
                   <th className="py-4 px-6 font-medium">ID</th>
                   <th className="py-4 px-6 font-medium">Game</th>
                   <th className="py-4 px-6 font-medium">Amount</th>
-                  <th className="py-4 px-6 font-medium">Selected</th>
+                  <th className="py-4 px-6 font-medium">BetType</th>
                   <th className="py-4 px-6 font-medium">Result</th>
                   <th className="py-4 px-6 font-medium">Status</th>
                   <th className="py-4 px-6 font-medium">Payout</th>
@@ -153,20 +159,20 @@ const BetHistory = () => {
               </thead>
               <tbody>
                 {bets.map((bet) => (
-                  <tr key={bet.id} className="border-b border-purple-500/10 text-white hover:bg-purple-500/5">
-                    <td className="py-4 px-6">{bet.id}</td>
-                    <td className="py-4 px-6">{bet.game}</td>
-                    <td className="py-4 px-6">{bet.amount}</td>
+                  <tr key={bet.betId} className="border-b border-purple-500/10 text-white hover:bg-purple-500/5">
+                    <td className="py-4 px-6">BET-{bet.betId}</td>
+                    <td className="py-4 px-6">{"WinGo"}</td>
+                    <td className="py-4 px-6">₹{bet.amount}</td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
-                        <div className={getColorBadge(bet.selectedColor)}></div>
-                        <span>{bet.selectedColor}</span>
+                        <div className={getColorBadge(bet.betValue || '')}></div>
+                        <span>{bet.betValue}</span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
-                        <div className={getColorBadge(bet.result)}></div>
-                        <span>{bet.result}</span>
+                        <div className={getColorBadge(bet.periodNumber || '')}></div>
+                        <span>{bet.periodNumber}</span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -174,7 +180,7 @@ const BetHistory = () => {
                         {bet.status.charAt(0).toUpperCase() + bet.status.slice(1)}
                       </span>
                     </td>
-                    <td className="py-4 px-6">{bet.payout}</td>
+                    <td className="py-4 px-6">₹{bet.amountReceived}</td>
                     <td className="py-4 px-6">{bet.date}</td>
                   </tr>
                 ))}
