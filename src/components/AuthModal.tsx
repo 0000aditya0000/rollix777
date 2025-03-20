@@ -71,6 +71,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
       if (response.data.token) {
         localStorage.setItem("userToken", response.data.token); // Save login token
         localStorage.setItem("userId", response.data.user.id);
+        localStorage.setItem("userName", response.data.user.username);
         const user = {
           id: response.data.user.id,
           name: response.data.user.name,

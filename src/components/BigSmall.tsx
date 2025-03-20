@@ -16,16 +16,16 @@ type Record = {
 
 type Bet = {
   period: number;
-  number?: number | null; // Optional
-  color?: string; // Optional
-  big_small?: string; // Optional
+  number?: number | null;
+  color?: string;
+  big_small?: string;
   amount: number;
 };
 
 const BigSmall = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
-  const [timeLeft, setTimeLeft] = useState(120); // Default 2 min
+  const [timeLeft, setTimeLeft] = useState(60); // Default 1 min
   const [isRunning, setIsRunning] = useState(false);
   const [activeTime, setActiveTime] = useState<number | null>(1); // Default to 1 min
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
@@ -34,85 +34,74 @@ const BigSmall = () => {
   const [contractMoney, setContractMoney] = useState<number>(0);
   const [agreed, setAgreed] = useState(false);
   const [selected, setSelected] = useState(1);
-  const [records, setRecords] = useState<Record[]>([]); // State to store fetched data
+  const [records, setRecords] = useState<Record[]>([]);
   const [shouldResetTimer, setShouldResetTimer] = useState(false);
-  const [currentPeriod, setCurrentPeriod] = useState<number>(0);
+  const [currentPeriod, setCurrentPeriod] = useState<number>(1); // Start period from 1
   const [bets, setBets] = useState<Bet[]>([]);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
-  const [winner, setWinner] = useState(false);
+  const [winner, setWinner] = useState<boolean | null>(null);
+  const [result, setResult] = useState<Record | null>(null);
 
-  const handeleWinLose = useCallback(
-    async (record: Record, bets: Bet[]): Promise<boolean> => {
-      const winningBet = bets.find((bet) => {
-        if (parseInt(record.period) !== bet.period) return false; // Check period first
+  // const id = localStorage.getItem("userId");
+  // console.log(id);
 
-        // Check in sequence: number -> color -> big_small
-        if (bet.number !== null && parseInt(record.number) !== bet.number)
-          return false;
-        if (bet.color && record.color !== bet.color) return false;
-        if (bet.big_small && record.small_big !== bet.big_small) return false;
+  // Handle win/loss logic
+const handleWinLose = useCallback(
+  async (result: Result, bets: Bet[]): Promise<boolean> => {
+    // Find the bet that matches the result period
+    const winningBet = bets.find((bet) => {
+      // Ensure the bet is for the same period as the result
+      if (parseInt(result.period) !== bet.period) return false;
 
-        return true; // All conditions passed, it's a win
-      });
+      // Check if ANY of the bet conditions match the result
+      const isNumberMatch =
+        bet.number !== null && parseInt(result.number) === bet.number;
+      const isColorMatch = bet.color && result.color === bet.color;
+      const isSizeMatch = bet.big_small && result.small_big === bet.big_small;
 
-      if (winningBet) {
-        const payoutAmount = winningBet.amount * 1.9;
-        try {
-          const response = await axios.put(
-            "https://rollix777.com/api/user/wallet/balance",
-            {
-              userId,
-              cryptoname: "INR",
-              balance: payoutAmount,
-            }
-          );
+      // If ANY condition matches, it's a win
+      return isNumberMatch || isColorMatch || isSizeMatch;
+    });
 
-          if (response.status === 200) {
-            console.log(`Payout successful: ${payoutAmount}`);
-            return true; // Win and payout successful
-          } else {
-            console.log("Payout failed.");
-            return false; // Win but payout failed
+    if (winningBet) {
+      // If a winning bet is found, process the payout
+      const payoutAmount = winningBet.amount * 1.9; // Example payout multiplier
+      try {
+        const response = await axios.put(
+          "https://rollix777.com/api/user/wallet/balance",
+          {
+            userId,
+            cryptoname: "INR",
+            balance: payoutAmount,
           }
-        } catch (error) {
-          console.error("API error:", error);
-          return false; // Win but API error
+        );
+
+        if (response.status === 200) {
+          console.log(`Payout successful: ${payoutAmount}`);
+          return true; // Win and payout successful
+        } else {
+          console.log("Payout failed.");
+          return false; // Win but payout failed
         }
-      } else {
-        return false; // No win
+      } catch (error) {
+        console.error("API error:", error);
+        return false; // Win but API error
       }
-    },
-    [userId]
-  );
-
-  const fetchRecord = useCallback(async () => {
-    try {
-      const response = await axios.get<Record[]>(
-        `https://rollix777.com/api/color/result/${activeTime}min?mins=${activeTime}min`
-      );
-      if (!response) {
-        console.log("failed to fetch");
-      }
-      const data = response.data;
-      console.log(data);
-      setRecords(data);
-      if (bets.length !== 0) {
-        setWinner(await handeleWinLose(data[0], bets));
-      }
-      const period = Number(data[0].period);
-      setCurrentPeriod(period + 1);
-    } catch (error) {
-      console.log(error);
+    } else {
+      return false; // No win
     }
-  }, [activeTime, bets, handeleWinLose]);
+  },
+  [userId]
+);
 
+  // Fetch the latest result
   const getResult = async () => {
     try {
       const response = await axios.post(
-        "https://rollix777.com/api/color/result",
+        "https://rollix777.com/api/color/generate-result",
         {
           mins: "1min",
-          period: currentPeriod,
+          periodNumber: currentPeriod,
         }
       );
       if (!response) {
@@ -120,44 +109,94 @@ const BigSmall = () => {
       }
       const data = response.data;
       console.log(data);
-      fetchRecord();
+
+      // Set the result
+      setResult(data);
+
+      // Add the result to the records table
+      setRecords((prev) => [data, ...prev]);
+
+      // Check if the user won or lost
+      if (bets.length > 0) {
+        const isWinner = await handleWinLose(data, bets);
+        setWinner(isWinner);
+      }
+
+      // Increment the period for the next round
+      setCurrentPeriod((prev) => prev + 1);
+
+      // Reset bets for the next round
+      setBets([]);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const handleBet = async (bet: Bet) => {
+  // Handle placing a bet
+  const handleBet = async () => {
     try {
-      const response = await axios.post(
-        `https://rollix777.com/api/wallet/withdrawl`,
-        {
-          userId,
-          balance: String(bet.amount),
-          cryptoname: "INR",
-          status: "0",
-        }
-      );
+      // Determine bet type and value
+      let betType: string;
+      let betValue: string | number;
 
-      if (!response) {
-        console.log("failed to place bet");
+      if (selectedNumber !== null) {
+        betType = "number";
+        betValue = selectedNumber;
+      } else if (selectedColor) {
+        betType = "color";
+        betValue = selectedColor;
+      } else if (selectedSize) {
+        betType = "size";
+        betValue = selectedSize;
+      } else {
+        console.log("No valid bet selected");
         return;
       }
 
-      setBets((prev) => [...prev, bet]);
-      setSelectedNumber(null);
-      setSelectedColor("");
-      setSelectedSize("");
+      // Construct payload
+      const payload = {
+        userId,
+        betType,
+        betValue,
+        amount: contractMoney,
+        periodNumber: currentPeriod,
+      };
+
+      // Call API to place bet
+      const response = await axios.post(
+        "https://rollix777.com/api/color/place-bet",
+        payload
+      );
+
+      if (response.status === 200) {
+        console.log("Bet placed successfully:", response.data);
+
+        // Store bet locally
+        const bet: Bet = {
+          period: currentPeriod,
+          number: selectedNumber !== null ? selectedNumber : null,
+          color: selectedColor || undefined,
+          big_small: selectedSize || undefined,
+          amount: contractMoney,
+        };
+
+        setBets((prev) => [...prev, bet]);
+
+        // Reset selections
+        setSelectedNumber(null);
+        setSelectedColor("");
+        setSelectedSize("");
+        setContractMoney(0);
+        setAgreed(false);
+      } else {
+        console.log("Failed to place bet:", response.data);
+      }
     } catch (error) {
-      console.log("failed with error", error);
+      console.error("Error placing bet:", error);
     }
   };
 
-  useEffect(() => {
-    // Initialize with some data for 1 min timer
-    initializeData(1);
-    setIsRunning(true);
-  }, []);
-
+  // Timer logic
   useEffect(() => {
     if (!isRunning) return;
 
@@ -167,7 +206,6 @@ const BigSmall = () => {
         setTimeLeft(activeTime * 60);
         // Generate new data when timer completes
         getResult();
-        setBets([]);
       }
       return;
     }
@@ -179,38 +217,10 @@ const BigSmall = () => {
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, activeTime]);
 
-  // Initialize data without resetting timer
-  const initializeData = (minutes: number) => {
-    setActiveTime(minutes);
-    setSelected(minutes);
-    setTimeLeft(minutes * 60);
-    generateMockData();
-  };
-
-  // Handle time selection without resetting the current timer
-  const handleTimeSelect = (minutes: number) => {
-    // Only update the active time, don't reset the current timer
-    setActiveTime(minutes);
-    setSelected(minutes);
-
-    // Generate new data for the selected time period
-    generateMockData();
-  };
-
-  // Generate mock data for the game records
-  const generateMockData = () => {
-    try {
-      const mockData = Array.from({ length: 20 }, (_, i) => ({
-        period: `20250227${Math.floor(1000 + Math.random() * 9000)}`,
-        number: Math.floor(Math.random() * 10),
-        color: Math.random() > 0.5 ? "green" : "red",
-        small_big: Math.random() > 0.5 ? "Small" : "Big",
-      }));
-      // setRecords(mockData);
-    } catch (error) {
-      console.error("Error generating mock data:", error);
-    }
-  };
+  // Initialize timer
+  useEffect(() => {
+    setIsRunning(true);
+  }, []);
 
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
@@ -219,16 +229,13 @@ const BigSmall = () => {
     return `${minutes}:${secs < 10 ? `0${secs}` : secs}`;
   };
 
+  // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(records.length / recordsPerPage);
 
-  useEffect(() => {
-    fetchRecord();
-  }, [fetchRecord]);
-
-  console.log(bets);
+  
   return (
     <div className="pt-16 pb-24 bg-[#0F0F19]">
       <div className="w-full mx-auto bg-gradient-to-b from-[#252547] to-[#1A1A2E] text-white p-4 space-y-4 rounded-lg">
@@ -240,9 +247,7 @@ const BigSmall = () => {
           >
             <ArrowLeft size={20} />
           </Link>
-          <h1 className="text-xl font-bold text-white ml-4">
-           Wingo
-          </h1>
+          <h1 className="text-xl font-bold text-white ml-4">Wingo</h1>
         </div>
 
         {/* Time Buttons */}
@@ -255,7 +260,7 @@ const BigSmall = () => {
                   ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                   : "bg-[#252547] border border-purple-500/20 text-gray-300 hover:bg-[#2f2f5a]"
               }`}
-              onClick={() => handleTimeSelect(min)}
+              onClick={() => setActiveTime(min)}
             >
               {min} min
             </button>
@@ -382,7 +387,7 @@ const BigSmall = () => {
         <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden mt-6">
           <div className="p-4 border-b border-purple-500/10">
             <h2 className="text-xl font-bold text-white">
-              🏆 {selected} min Record
+               {selected} min Record
             </h2>
           </div>
 
@@ -403,16 +408,14 @@ const BigSmall = () => {
                       key={index}
                       className="border-b border-purple-500/10 text-white hover:bg-purple-500/5"
                     >
-                      <td className="py-4 px-4">{record.period}</td>
-                      <td className="py-4 px-4">{record.number}</td>
+                      <td className="py-4 px-4">{record.periodNumber}</td>
+                      <td className="py-4 px-4">{record.winningNumber}</td>
                       <td className="py-4 px-4">
-                        {Number(record.number) === 0
+                        {Number(record.periodNumber) === 0
                           ? "🟣"
-                          : record.color === "green"
-                          ? "🟢"
-                          : "🔴"}
+                          : record.winningColor === "green"? "🟢":"🔴"}
                       </td>
-                      <td className="py-4 px-4">{record.small_big}</td>
+                      <td className="py-4 px-4">{record.winningSize}</td>
                     </tr>
                   ))
                 ) : (
@@ -484,7 +487,7 @@ const BigSmall = () => {
         </div>
       </div>
 
-      {/* Popup */}
+      {/* Popup for bet confirmation */}
       {(selectedNumber !== null || selectedColor || selectedSize) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
           <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
@@ -587,21 +590,7 @@ const BigSmall = () => {
                 disabled={
                   !agreed || contractMoney < 10 || contractMoney > 100000
                 }
-                onClick={() =>
-                  handleBet({
-                    period: currentPeriod,
-                    number: selectedNumber,
-                    color: selectedColor,
-                    big_small:
-                      selectedSize ??
-                      (selectedNumber &&
-                      selectedNumber !== 0 &&
-                      selectedNumber >= 5
-                        ? "big"
-                        : "small"),
-                    amount: contractMoney,
-                  })
-                }
+                onClick={handleBet} // Call handleBet directly
               >
                 Confirm
               </button>
@@ -610,16 +599,21 @@ const BigSmall = () => {
         </div>
       )}
 
-      {winner && (
+      {/* Popup for win/loss */}
+        {winner !== null && (
+          // console.log("Rendering Popup with Winner:", winner), // Debugging
+
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
           <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
 
             {/* Header */}
             <div className="flex justify-between items-center p-5 border-b border-purple-500/10">
-              <h2 className="text-xl font-bold text-white">Winner</h2>
+              <h2 className="text-xl font-bold text-white">
+                {winner ? "You Won!" : "You Lost!"}
+              </h2>
               <button
-                onClick={() => setWinner(false)}
+                onClick={() => setWinner(null)}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
               >
                 <X size={18} />
@@ -629,17 +623,19 @@ const BigSmall = () => {
             {/* Body */}
             <div className="p-5 space-y-4">
               <div className="space-y-1">
-                <label className="text-sm text-green-600">Winner</label>
+                <label className="text-sm text-gray-300">
+                  {winner ? "Congratulations!" : "Better luck next time!"}
+                </label>
               </div>
             </div>
 
             {/* Buttons */}
             <div className="p-5 border-t border-purple-500/10 flex gap-3">
               <button
-                onClick={() => setWinner(false)}
+                onClick={() => setWinner(null)}
                 className="flex-1 py-3 px-4 bg-[#1A1A2E] border border-red-500/20 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
               >
-                Cancel
+                Close
               </button>
             </div>
           </div>

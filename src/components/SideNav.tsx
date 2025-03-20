@@ -23,6 +23,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
   // console.log(onLogout);
  const navigate = useNavigate()
   if (!isOpen) return null;
+const name = localStorage.getItem("userName");
 
   const menuItems = [
     { icon: <User size={20} />, label: 'My Profile', path: '/profile' },
@@ -64,10 +65,10 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
           <div className="p-5 border-b border-purple-500/10">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-xl">
-                J
+                {name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h3 className="text-white font-semibold">John Doe</h3>
+                <h3 className="text-white font-semibold">{name}</h3>
                 <p className="text-gray-400 text-sm">VIP Level 2</p>
               </div>
             </div>
