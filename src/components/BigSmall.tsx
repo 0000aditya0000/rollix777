@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, ArrowLeft, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
+import { current } from "@reduxjs/toolkit";
 
 type Record = {
   id: number;
@@ -35,64 +36,35 @@ const BigSmall = () => {
   const [agreed, setAgreed] = useState(false);
   const [selected, setSelected] = useState(1);
   const [records, setRecords] = useState<Record[]>([]);
-  const [shouldResetTimer, setShouldResetTimer] = useState(false);
-  const [currentPeriod, setCurrentPeriod] = useState<number>(1); // Start period from 1
+  const [currentPeriod, setCurrentPeriod] = useState<number>(); // Start period from 1
   const [bets, setBets] = useState<Bet[]>([]);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
-  const [winner, setWinner] = useState<boolean | null>(null);
+  const [winner, setWinner] = useState(false);
+  const [popup, setpopup] = useState('');
   const [result, setResult] = useState<Record | null>(null);
+  const [betHistory, setbetHistory] = useState([])
+  // const [records, setRecords] = useState<Record[]>([]);
 
-  // const id = localStorage.getItem("userId");
-  // console.log(id);
 
-  // Handle win/loss logic
-const handleWinLose = useCallback(
-  async (result: Result, bets: Bet[]): Promise<boolean> => {
-    // Find the bet that matches the result period
-    const winningBet = bets.find((bet) => {
-      // Ensure the bet is for the same period as the result
-      if (parseInt(result.period) !== bet.period) return false;
+  // fetch the latest period number
 
-      // Check if ANY of the bet conditions match the result
-      const isNumberMatch =
-        bet.number !== null && parseInt(result.number) === bet.number;
-      const isColorMatch = bet.color && result.color === bet.color;
-      const isSizeMatch = bet.big_small && result.small_big === bet.big_small;
-
-      // If ANY condition matches, it's a win
-      return isNumberMatch || isColorMatch || isSizeMatch;
-    });
-
-    if (winningBet) {
-      // If a winning bet is found, process the payout
-      const payoutAmount = winningBet.amount * 1.9; // Example payout multiplier
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const response = await axios.put(
-          "https://rollix777.com/api/user/wallet/balance",
-          {
-            userId,
-            cryptoname: "INR",
-            balance: payoutAmount,
-          }
-        );
+        const response = await axios.get("https://rollix777.com/api/color/results");
 
-        if (response.status === 200) {
-          console.log(`Payout successful: ${payoutAmount}`);
-          return true; // Win and payout successful
-        } else {
-          console.log("Payout failed.");
-          return false; // Win but payout failed
-        }
+        console.log("Period Number:", response.data.results);
+        setCurrentPeriod(response.data.results[0].period_number);
+        setRecords(response.data.results);
+
+
       } catch (error) {
-        console.error("API error:", error);
-        return false; // Win but API error
+        console.error("Error fetching data:", error);
       }
-    } else {
-      return false; // No win
-    }
-  },
-  [userId]
-);
+    };
+
+    fetchData();
+  }, []);
 
   // Fetch the latest result
   const getResult = async () => {
@@ -105,10 +77,11 @@ const handleWinLose = useCallback(
         }
       );
       if (!response) {
-        console.log("failed to fetch");
+        console.log("Failed to fetch result");
+        return;
       }
       const data = response.data;
-      console.log(data);
+      console.log("Result Data:", data);
 
       // Set the result
       setResult(data);
@@ -116,21 +89,54 @@ const handleWinLose = useCallback(
       // Add the result to the records table
       setRecords((prev) => [data, ...prev]);
 
-      // Check if the user won or lost
-      if (bets.length > 0) {
-        const isWinner = await handleWinLose(data, bets);
-        setWinner(isWinner);
-      }
+      // Fetch bet history and check for win/loss
+      await checkWinLose(data);
 
       // Increment the period for the next round
-      setCurrentPeriod((prev) => prev + 1);
+      setCurrentPeriod((prev) => prev + 2);
 
       // Reset bets for the next round
       setBets([]);
     } catch (error) {
+      console.error("Error fetching result:", error);
+    }
+  };
+
+
+
+  // Fetch bet history and check for win/loss
+  const checkWinLose = async (result: any) => {
+    try {
+      const response = await axios.post(
+        "https://rollix777.com/api/color/bet-history",
+        { userId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const latestBetHistory = response.data.betHistory[0]; // Store in a variable
+      setbetHistory(latestBetHistory);
+
+      console.log(latestBetHistory);
+      console.log(latestBetHistory.periodNumber);
+
+      if (latestBetHistory.periodNumber === currentPeriod) {
+        if (latestBetHistory.status === "won") {
+          setWinner(true);
+          setpopup("won");
+        } else {
+          setWinner(true);
+          setpopup("lost");
+        }
+      }
+    } catch (error) {
       console.log(error);
     }
   };
+
 
   // Handle placing a bet
   const handleBet = async () => {
@@ -201,6 +207,8 @@ const handleWinLose = useCallback(
     if (!isRunning) return;
 
     if (timeLeft === 0) {
+              getResult();
+
       // Timer completed, now reset with the active time
       if (activeTime) {
         setTimeLeft(activeTime * 60);
@@ -235,7 +243,6 @@ const handleWinLose = useCallback(
   const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(records.length / recordsPerPage);
 
-  
   return (
     <div className="pt-16 pb-24 bg-[#0F0F19]">
       <div className="w-full mx-auto bg-gradient-to-b from-[#252547] to-[#1A1A2E] text-white p-4 space-y-4 rounded-lg">
@@ -255,11 +262,10 @@ const handleWinLose = useCallback(
           {[1, 3, 5, 10].map((min) => (
             <button
               key={min}
-              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                activeTime === min
+              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${activeTime === min
                   ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                   : "bg-[#252547] border border-purple-500/20 text-gray-300 hover:bg-[#2f2f5a]"
-              }`}
+                }`}
               onClick={() => setActiveTime(min)}
             >
               {min} min
@@ -271,24 +277,21 @@ const handleWinLose = useCallback(
         <div className="flex items-center bg-gradient-to-r from-purple-900/50 to-pink-900/50 px-4 py-3 rounded-lg border border-purple-500/20">
           <span className="mr-2">🏆</span>
           <span className="font-bold">Period</span>
-          <span className="ml-auto">{currentPeriod}</span>
+          <span className="ml-auto">{currentPeriod+1}</span>
         </div>
 
         {/* Timer */}
         <div
-          className={`flex items-center justify-center gap-2 bg-[#252547] border border-purple-500/20 text-center py-3 px-4 rounded-lg ${
-            timeLeft < 10 ? "bg-red-500/20 border-red-500/30" : ""
-          }`}
+          className={`flex items-center justify-center gap-2 bg-[#252547] border border-purple-500/20 text-center py-3 px-4 rounded-lg ${timeLeft < 10 ? "bg-red-500/20 border-red-500/30" : ""
+            }`}
         >
           <Clock
-            className={`w-5 h-5 ${
-              timeLeft < 10 ? "text-red-400" : "text-purple-400"
-            }`}
+            className={`w-5 h-5 ${timeLeft < 10 ? "text-red-400" : "text-purple-400"
+              }`}
           />
           <span
-            className={`font-bold ${
-              timeLeft < 10 ? "text-red-400" : "text-white"
-            }`}
+            className={`font-bold ${timeLeft < 10 ? "text-red-400" : "text-white"
+              }`}
           >
             Time Left: {formatTime(timeLeft)}
           </span>
@@ -297,11 +300,10 @@ const handleWinLose = useCallback(
         {/* Join Buttons */}
         <div className="grid grid-cols-3 gap-2">
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
                 ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30"
-            }`}
+              }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedColor("green")}
           >
@@ -309,11 +311,10 @@ const handleWinLose = useCallback(
           </button>
 
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
                 ? "bg-[#252547] border border-purple-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
-            }`}
+              }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedColor("voilet")}
           >
@@ -321,11 +322,10 @@ const handleWinLose = useCallback(
           </button>
 
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
                 ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
-            }`}
+              }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedColor("red")}
           >
@@ -341,15 +341,14 @@ const handleWinLose = useCallback(
                 key={i}
                 onClick={() => timeLeft >= 10 && setSelectedNumber(i)}
                 disabled={timeLeft < 10}
-                className={`relative px-0 py-3 text-white font-bold rounded-lg ${
-                  timeLeft < 10
+                className={`relative px-0 py-3 text-white font-bold rounded-lg ${timeLeft < 10
                     ? "bg-[#252547] border border-gray-600/20 text-gray-500 cursor-not-allowed"
                     : i === 0
-                    ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
-                    : i % 2 === 0
-                    ? "bg-gradient-to-r from-green-600 to-green-500 hover:opacity-90"
-                    : "bg-gradient-to-r from-red-600 to-red-500 hover:opacity-90"
-                }`}
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
+                      : i % 2 === 0
+                        ? "bg-gradient-to-r from-green-600 to-green-500 hover:opacity-90"
+                        : "bg-gradient-to-r from-red-600 to-red-500 hover:opacity-90"
+                  }`}
               >
                 {i}
               </button>
@@ -360,22 +359,20 @@ const handleWinLose = useCallback(
         {/* Big & Small Buttons */}
         <div className="grid grid-cols-2 gap-3">
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
                 ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-r from-red-600 to-red-500 text-white hover:opacity-90"
-            }`}
+              }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedSize("big")}
           >
             Big
           </button>
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${
-              timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
                 ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-r from-green-600 to-green-500 text-white hover:opacity-90"
-            }`}
+              }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedSize("small")}
           >
@@ -387,7 +384,7 @@ const handleWinLose = useCallback(
         <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden mt-6">
           <div className="p-4 border-b border-purple-500/10">
             <h2 className="text-xl font-bold text-white">
-               {selected} min Record
+              {selected} min Record
             </h2>
           </div>
 
@@ -408,14 +405,14 @@ const handleWinLose = useCallback(
                       key={index}
                       className="border-b border-purple-500/10 text-white hover:bg-purple-500/5"
                     >
-                      <td className="py-4 px-4">{record.periodNumber}</td>
-                      <td className="py-4 px-4">{record.winningNumber}</td>
+                      <td className="py-4 px-4">{record.period_number}</td>
+                      <td className="py-4 px-4">{record.result_number}</td>
                       <td className="py-4 px-4">
-                        {Number(record.periodNumber) === 0
-                          ? "🟣"
-                          : record.winningColor === "green"? "🟢":"🔴"}
+                        {record.result_number === 0 ? "🟣" : record.result_color === "green" ? "🟢" : "🔴"}
+
                       </td>
-                      <td className="py-4 px-4">{record.winningSize}</td>
+                      <td className="py-4 px-4">{record.result_number === 0 ? "Mix" : record.result_size}
+                      </td>
                     </tr>
                   ))
                 ) : (
@@ -461,11 +458,10 @@ const handleWinLose = useCallback(
                 return (
                   <button
                     key={i}
-                    className={`py-1 px-3 rounded-lg ${
-                      currentPage === pageToShow
+                    className={`py-1 px-3 rounded-lg ${currentPage === pageToShow
                         ? "bg-purple-500/20 border border-purple-500/20 text-white"
                         : "bg-[#1A1A2E] border border-purple-500/20 text-gray-400 hover:text-white transition-colors"
-                    }`}
+                      }`}
                     onClick={() => setCurrentPage(pageToShow)}
                   >
                     {pageToShow}
@@ -499,8 +495,8 @@ const handleWinLose = useCallback(
                 {selectedNumber !== null
                   ? `Number ${selectedNumber} Selected`
                   : selectedColor
-                  ? `${selectedColor} Selected`
-                  : `${selectedSize} Selected`}
+                    ? `${selectedColor} Selected`
+                    : `${selectedSize} Selected`}
               </h2>
               <button
                 onClick={() => {
@@ -550,11 +546,10 @@ const handleWinLose = useCallback(
               {/* Checkbox */}
               <div className="flex items-center">
                 <div
-                  className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
-                    agreed
+                  className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${agreed
                       ? "bg-purple-600"
                       : "bg-[#1A1A2E] border border-purple-500/20"
-                  }`}
+                    }`}
                   onClick={() => setAgreed(!agreed)}
                 >
                   {agreed && <Check className="w-4 h-4 text-white" />}
@@ -582,15 +577,14 @@ const handleWinLose = useCallback(
                 Cancel
               </button>
               <button
-                className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${
-                  agreed && contractMoney >= 10 && contractMoney <= 100000
+                className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${agreed && contractMoney >= 10 && contractMoney <= 100000
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
                     : "bg-gray-600/50 cursor-not-allowed"
-                }`}
+                  }`}
                 disabled={
                   !agreed || contractMoney < 10 || contractMoney > 100000
                 }
-                onClick={handleBet} // Call handleBet directly
+                onClick={handleBet}
               >
                 Confirm
               </button>
@@ -600,9 +594,7 @@ const handleWinLose = useCallback(
       )}
 
       {/* Popup for win/loss */}
-        {winner !== null && (
-          // console.log("Rendering Popup with Winner:", winner), // Debugging
-
+      {winner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
           <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
@@ -610,10 +602,10 @@ const handleWinLose = useCallback(
             {/* Header */}
             <div className="flex justify-between items-center p-5 border-b border-purple-500/10">
               <h2 className="text-xl font-bold text-white">
-                {winner ? "You Won!" : "You Lost!"}
+                {popup === "won" ? "You Won!" : "You Lost!"}
               </h2>
               <button
-                onClick={() => setWinner(null)}
+                onClick={() => setWinner(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
               >
                 <X size={18} />
@@ -624,7 +616,19 @@ const handleWinLose = useCallback(
             <div className="p-5 space-y-4">
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">
-                  {winner ? "Congratulations!" : "Better luck next time!"}
+                  {popup === "won" ? (
+                    <>
+                      Congratulations <br />
+                      BetAmount: {betHistory.amount} <br />
+                      AmountReceived: {betHistory.amountReceived}
+                    </>
+                  ) : (
+                    <>
+                      Better luck next time! <br />
+                      BetAmount: {betHistory.amount}
+                    </>
+                  )}
+
                 </label>
               </div>
             </div>

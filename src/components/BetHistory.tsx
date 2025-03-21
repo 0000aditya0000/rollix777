@@ -88,7 +88,7 @@ const BetHistory = () => {
   }
 
   return (
-    <div className="pt-16 pb-24">
+    <div className="pt-16 pb-24 max-w-[470px] mx-auto  bg-[#1A1A2E]/95">
       <div className="px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -144,7 +144,7 @@ const BetHistory = () => {
         {/* Bets Table */}
         <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full max-w-[470px]">
               <thead>
                 <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
                   <th className="py-4 px-6 font-medium">ID</th>
