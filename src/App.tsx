@@ -20,7 +20,6 @@ function App() {
   const authenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
-
   return (
     <BrowserRouter>
       <Routes>

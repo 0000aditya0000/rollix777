@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  X,
+import { X,
   Mail,
   Lock,
   User,
@@ -38,22 +37,25 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [error, setError] = useState("");
   const [referalCode, setReferalCode] = useState("");
   const navigate = useNavigate();
-  // console.log("mode", mode, initialMode);
   const dispatch = useDispatch();
 
+  // Sync mode with initialMode prop
   useEffect(() => {
     if (initialMode) {
       setMode(initialMode);
     }
   }, [initialMode]);
 
+  // Close modal if not open
   if (!isOpen) return null;
 
+  // Toggle between login and register modes
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
     setError("");
   };
 
+  // Handle login form submission
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim() === "" || password.trim() === "") {
@@ -69,21 +71,70 @@ const AuthModal: React.FC<AuthModalProps> = ({
       );
 
       if (response.data.token) {
-        localStorage.setItem("userToken", response.data.token); // Save login token
+        // Save user data to localStorage
+        localStorage.setItem("userToken", response.data.token);
         localStorage.setItem("userId", response.data.user.id);
         localStorage.setItem("userName", response.data.user.username);
+
+        // Dispatch login action to update Redux state
         const user = {
           id: response.data.user.id,
-          name: response.data.user.name,
+          name: response.data.user.username,
         };
         dispatch(login({ user, token: response.data.token }));
-        onLoginSuccess(); // Close modal after successful login
+
+        // Close modal and navigate to dashboard
+        onLoginSuccess();
         navigate("/dashboard");
       }
     } catch (error) {
       console.error("Login failed:", error);
       setError("Invalid email or password");
       dispatch(logout());
+    }
+  };
+
+  // Handle register form submission
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!acceptTerms) {
+      setError("You must accept the terms and conditions");
+      return;
+    }
+
+    try {
+      const data = {
+        username,
+        email,
+        password,
+        phoneNumber,
+        referalCode,
+      };
+      const response = await axios.post(
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/user/register`,
+        data
+      );
+
+      if (response.data.token) {
+        // Save user data to localStorage
+        localStorage.setItem("userToken", response.data.token);
+        localStorage.setItem("userId", response.data.user.id);
+        localStorage.setItem("userName", response.data.user.username);
+
+        // Dispatch login action to update Redux state
+        const user = {
+          id: response.data.user.id,
+          name: response.data.user.username,
+        };
+        dispatch(login({ user, token: response.data.token }));
+
+        // Close modal and navigate to dashboard
+        onLoginSuccess();
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error("Registration failed:", error);
+      setError("Registration failed. Please try again.");
     }
   };
 
@@ -180,7 +231,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
               </button>
             </form>
           ) : (
-            <form className="space-y-4" onSubmit={handleLogin}>
+            <form className="space-y-4" onSubmit={handleRegister}>
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">Username</label>
                 <div className="relative">
@@ -193,20 +244,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Choose a username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Full Name</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <User className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <input
-                    type="text"
-                    className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                    placeholder="Enter your full name"
                   />
                 </div>
               </div>

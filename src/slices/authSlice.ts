@@ -6,11 +6,20 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-const initialState: AuthState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
+// Load initial state from localStorage (if available)
+const loadInitialState = (): AuthState => {
+  const token = localStorage.getItem("userToken");
+  const userId = localStorage.getItem("userId");
+  const userName = localStorage.getItem("userName");
+
+  return {
+    user: token && userId && userName ? { id: userId, name: userName } : null,
+    token: token || null,
+    isAuthenticated: !!token, // Set to true if token exists
+  };
 };
+
+const initialState: AuthState = loadInitialState();
 
 const authSlice = createSlice({
   name: "auth",
@@ -23,18 +32,47 @@ const authSlice = createSlice({
         token: string;
       }>
     ) => {
-      state.user = action.payload.user;
-      state.token = action.payload.token;
+      const { user, token } = action.payload;
+
+      // Update state
+      state.user = user;
+      state.token = token;
       state.isAuthenticated = true;
+
+      // Save to localStorage
+      localStorage.setItem("userToken", token);
+      localStorage.setItem("userId", user.id);
+      localStorage.setItem("userName", user.name);
     },
     logout: (state) => {
-      localStorage.clear();
+      // Clear state
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+
+      // Remove auth-related items from localStorage
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("userName");
+    },
+    checkAuth: (state) => {
+      // Check if the token exists in localStorage
+      const token = localStorage.getItem("userToken");
+      const userId = localStorage.getItem("userId");
+      const userName = localStorage.getItem("userName");
+
+      if (token && userId && userName) {
+        state.user = { id: userId, name: userName };
+        state.token = token;
+        state.isAuthenticated = true;
+      } else {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+      }
     },
   },
 });
 
-export const { login, logout } = authSlice.actions;
+export const { login, logout, checkAuth } = authSlice.actions;
 export default authSlice.reducer;
