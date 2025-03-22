@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../store";
 
 const Footer: React.FC = () => {
-  const [showAdminButton, setShowAdminButton] = useState(false);
+  const [showAdminButton, setShowAdminButton] = useState(true);
   const isLoggedIn = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
