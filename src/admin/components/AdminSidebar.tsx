@@ -16,9 +16,10 @@ import {
 interface AdminSidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
+  onNavigate: () => void;
 }
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) => {
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar, onNavigate }) => {
   const location = useLocation();
   
   const menuItems = [
@@ -31,6 +32,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) =>
     { icon: <Gamepad2 size={20} />, label: 'Games', path: '/admin/games' },
     { icon: <Settings size={20} />, label: 'Settings', path: '/admin/settings' },
   ];
+
+  const handleNavigation = () => {
+    if (window.innerWidth < 768) {
+      onNavigate();
+    }
+  };
 
   return (
     <>
@@ -79,6 +86,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) =>
                   <li key={index}>
                     <Link
                       to={item.path}
+                      onClick={handleNavigation}
                       className={`flex items-center gap-3 p-3 rounded-lg transition-colors
                         ${isActive 
                           ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-white border border-purple-500/20' 
@@ -96,7 +104,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) =>
           {/* Footer */}
           <div className="p-4 border-t border-purple-500/10">
             <Link
-              to="/dashboard"
+              to="/"
+              onClick={handleNavigation}
               className="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:bg-[#252547] hover:text-white transition-colors"
             >
               <span>🏠</span>
