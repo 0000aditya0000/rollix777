@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Flame } from "lucide-react";
 import CryptoJS from "crypto-js";
 import GameData from "../gamesData/gamesData.json";
@@ -28,10 +28,9 @@ const generateRandom10Digits = () => {
 
 const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
   const userId = localStorage.getItem("userId");
-  const response = await axios.get(`https://rollix777.com/api/user/wallet/${userId}`)
+  const response = await axios.get(`https://rollix777.com/api/user/wallet/${userId}`);
   const balance = response.data[10].balance;
 
-  
   console.log(`Game UID: ${game_uid}`, `Balance: ${balance}`);
 
   const memberAccount = `h43929rollix777${userId}`;
@@ -99,28 +98,68 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
 
 const TrendingGames: React.FC<TrendingGamesProps> = ({ title, type }) => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const trendingGames = GameData.filter((game) => game.game_category === "trending");
+
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
+    }
+  };
 
   return (
     <section className="py-8 px-4 bg-[#1A1A2E]">
-      <div className="flex items-center gap-3 mb-6">
-        <Flame className="w-6 h-6 text-orange-500" />
-        <h2 className="text-2xl font-bold text-white">Trending Games</h2>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
+          <Flame className="w-6 h-6 text-orange-500" />
+          <h2 className="text-2xl font-bold text-white">Trending Games</h2>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={scrollLeft}
+                      className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
+
+          >
+            &lt;
+          </button>
+          <button
+            onClick={scrollRight}
+           className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
+          >
+            &gt;
+          </button>
+        </div>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto hide-scrollbar px-1">
+      <div
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto hide-scrollbar px-1"
+      >
         {trendingGames.length > 0 ? (
           trendingGames.map((game) => (
-            <div key={game.game_uid} className="min-w-[250px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg">
-              <img src={game.icon} alt={game.game_name} className="w-full h-32 object-cover" />
-              <div className="p-3">
-                <h3 className="text-white font-semibold text-sm md:text-base">{game.game_name}</h3>
-                <button
+            <div
+              key={game.game_uid}
+              className="min-w-[140px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg relative"
+            >
+              <div className="relative">
+                <img
+                  src={game.icon}
+                  alt={game.game_name}
                   onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
-                  className="mt-2 w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:opacity-90 transition-opacity"
-                >
-                  Play Now
-                </button>
+                  className="w-full h-60 object-cover cursor-pointer rounded-t-xl"
+                />
+                {/* Game Name Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 rounded-b-xl">
+                  <h3 className="text-white  font-bold text-lg rounded-lg">
+                    {game.game_name}
+                  </h3>
+                </div>
               </div>
             </div>
           ))
@@ -129,7 +168,13 @@ const TrendingGames: React.FC<TrendingGamesProps> = ({ title, type }) => {
         )}
       </div>
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setAuthModalOpen(false)} initialMode="login" onLoginSuccess={() => setAuthModalOpen(false)} />
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode="login"
+        onLoginSuccess={() => setAuthModalOpen(false)}
+      />
     </section>
   );
 };

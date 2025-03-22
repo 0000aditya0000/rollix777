@@ -24,6 +24,7 @@ type Bet = {
   amount: number;
 };
 
+
 const DB_NAME = "wingoTimerDB";
 const STORE_NAME = "timerState";
 const DB_VERSION = 1;
@@ -43,13 +44,12 @@ const initDB = async () => {
     };
   });
 };
-
 const BigSmall = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(60); // Default 1 min
   const [isRunning, setIsRunning] = useState(false);
-  const [activeTime, setActiveTime] = useState<number | null>(1);
+  const [activeTime, setActiveTime] = useState<number | null>(1); // Default to 1 min
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<"big" | "small" | "">("");
@@ -57,18 +57,25 @@ const BigSmall = () => {
   const [agreed, setAgreed] = useState(false);
   const [selected, setSelected] = useState(1);
   const [records, setRecords] = useState<Record[]>([]);
-  const [currentPeriod, setCurrentPeriod] = useState<number>();
+  const [currentPeriod, setCurrentPeriod] = useState<number>(); // Start period from 1
   const [bets, setBets] = useState<Bet[]>([]);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const [winner, setWinner] = useState(false);
   const [popup, setpopup] = useState("");
   const [result, setResult] = useState<Record | null>(null);
+
   const [betHistory, setbetHistory] = useState([]);
   const dispatch = useDispatch();
+  // const [records, setRecords] = useState<Record[]>([]);
+
+
+  // fetch the latest period number
+
 
   useEffect(() => {
-    const initializeDB = async () => {
+    const fetchData = async () => {
       try {
+
         const db = (await initDB()) as IDBDatabase;
         const transaction = db.transaction(STORE_NAME, "readonly");
         const store = transaction.objectStore(STORE_NAME);
@@ -83,10 +90,19 @@ const BigSmall = () => {
           }
           setIsRunning(true);
         };
+
+        const response = await axios.get("https://rollix777.com/api/color/results");
+
+        console.log("Period Number:", response.data.results);
+        setCurrentPeriod(response.data.results[0].period_number);
+        setRecords(response.data.results);
+
+
       } catch (error) {
-        setIsRunning(true);
+        console.error("Error fetching data:", error);
       }
     };
+
 
     initializeDB();
   }, []);
@@ -124,28 +140,50 @@ const BigSmall = () => {
     }
   };
 
+
+    fetchData();
+  }, []);
+
+  // Fetch the latest result
+
   const getResult = async () => {
     try {
       const response = await axios.post(
         "https://rollix777.com/api/color/generate-result",
         {
+          mins: "1min",
           periodNumber: currentPeriod,
         }
       );
       if (!response) {
+        console.log("Failed to fetch result");
         return;
       }
       const data = response.data;
+      console.log("Result Data:", data);
+
+      // Set the result
       setResult(data);
+
+      // Add the result to the records table
       setRecords((prev) => [data, ...prev]);
-      fetchTableData();
+
+      // Fetch bet history and check for win/loss
       await checkWinLose(data);
+
+      // Increment the period for the next round
+      setCurrentPeriod((prev) => prev + 1);
+
+      // Reset bets for the next round
       setBets([]);
     } catch (error) {
-      // Handle error silently
+      console.error("Error fetching result:", error);
     }
   };
 
+
+
+  // Fetch bet history and check for win/loss
   const checkWinLose = async (result: any) => {
     try {
       const response = await axios.post(
@@ -158,8 +196,11 @@ const BigSmall = () => {
         }
       );
 
-      const latestBetHistory = response.data.betHistory[0];
+      const latestBetHistory = response.data.betHistory[0]; // Store in a variable
       setbetHistory(latestBetHistory);
+
+      console.log(latestBetHistory);
+      console.log(latestBetHistory.periodNumber);
 
       if (latestBetHistory.periodNumber === currentPeriod) {
         if (latestBetHistory.status === "won") {
@@ -177,12 +218,15 @@ const BigSmall = () => {
         }
       }
     } catch (error) {
-      // Handle error silently
+      console.log(error);
     }
   };
 
+
+  // Handle placing a bet
   const handleBet = async () => {
     try {
+
       const checkResponse = await axios.post(
         "https://rollix777.com/api/color/checkValidBet",
         { userId }
@@ -192,6 +236,8 @@ const BigSmall = () => {
         alert("You have already placed a bet for this period.");
         return;
       }
+
+      // Determine bet type and value
 
       let betType: string;
       let betValue: string | number;
@@ -206,8 +252,12 @@ const BigSmall = () => {
         betType = "size";
         betValue = selectedSize;
       } else {
+        console.log("No valid bet selected");
         return;
       }
+
+
+
 
       const payload = {
         userId,
@@ -217,12 +267,16 @@ const BigSmall = () => {
         periodNumber: currentPeriod,
       };
 
+      // Call API to place bet
       const response = await axios.post(
         "https://rollix777.com/api/color/place-bet",
         payload
       );
 
       if (response.status === 200) {
+        console.log("Bet placed successfully:", response.data);
+
+        // Store bet locally
         const bet: Bet = {
           period: currentPeriod,
           number: selectedNumber !== null ? selectedNumber : null,
@@ -232,46 +286,59 @@ const BigSmall = () => {
         };
         dispatch(withdraw({ cryptoname: "INR", amount: contractMoney }));
         setBets((prev) => [...prev, bet]);
+
+        // Reset selections
         setSelectedNumber(null);
         setSelectedColor("");
         setSelectedSize("");
         setContractMoney(0);
         setAgreed(false);
+      } else {
+        console.log("Failed to place bet:", response.data);
       }
     } catch (error) {
-      // Handle error silently
+      console.error("Error placing bet:", error);
     }
   };
 
+  // Timer logic
   useEffect(() => {
     if (!isRunning) return;
 
     if (timeLeft === 0) {
+
       getResult();
 
+      // Timer completed, now reset with the active time
+
       if (activeTime) {
-        setTimeout(() => setTimeLeft(activeTime * 60), 0);
+        setTimeLeft(activeTime * 60);
+        // Generate new data when timer completes
+        getResult();
       }
       return;
     }
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        const newTime = prev - 1;
-        saveTimerState();
-        return newTime;
-      });
+      setTimeLeft((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, activeTime]);
 
+  // Initialize timer
+  useEffect(() => {
+    setIsRunning(true);
+  }, []);
+
+  // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes}:${secs < 10 ? `0${secs}` : secs}`;
   };
 
+  // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
@@ -312,7 +379,7 @@ const BigSmall = () => {
         <div className="flex items-center bg-gradient-to-r from-purple-900/50 to-pink-900/50 px-4 py-3 rounded-lg border border-purple-500/20">
           <span className="mr-2">🏆</span>
           <span className="font-bold">Period</span>
-          <span className="ml-auto">{currentPeriod}</span>
+          <span className="ml-auto">{currentPeriod+1}</span>
         </div>
 
         {/* Timer */}
@@ -382,6 +449,7 @@ const BigSmall = () => {
                 key={i}
                 onClick={() => timeLeft >= 10 && setSelectedNumber(i)}
                 disabled={timeLeft < 10}
+
                 className={`relative px-0 py-3 text-white font-bold rounded-lg ${
                   timeLeft < 10
                     ? "bg-[#252547] border border-gray-600/20 text-gray-500 cursor-not-allowed"
@@ -391,6 +459,16 @@ const BigSmall = () => {
                     ? "bg-gradient-to-r from-green-600 to-green-500 hover:opacity-90"
                     : "bg-gradient-to-r from-red-600 to-red-500 hover:opacity-90"
                 }`}
+
+                className={`relative px-0 py-3 text-white font-bold rounded-lg ${timeLeft < 10
+                    ? "bg-[#252547] border border-gray-600/20 text-gray-500 cursor-not-allowed"
+                    : i === 0
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
+                      : i % 2 === 0
+                        ? "bg-gradient-to-r from-green-600 to-green-500 hover:opacity-90"
+                        : "bg-gradient-to-r from-red-600 to-red-500 hover:opacity-90"
+                  }`}
+
               >
                 {i}
               </button>
@@ -452,13 +530,19 @@ const BigSmall = () => {
                       <td className="py-4 px-4">{record.period_number}</td>
                       <td className="py-4 px-4">{record.result_number}</td>
                       <td className="py-4 px-4">
+
                         {record.result_color === "voilet"
                           ? "🟣"
                           : record.result_color === "green"
                           ? "🟢"
                           : "🔴"}
+
+                        {record.result_number === 0 ? "🟣" : record.result_color === "green" ? "🟢" : "🔴"}
+
                       </td>
-                      <td className="py-4 px-4">{record.result_size}</td>
+                      <td className="py-4 px-4">{record.result_number === 0 ? "Mix" : record.result_size}
+
+                      </td>
                     </tr>
                   ))
                 ) : (
@@ -489,6 +573,7 @@ const BigSmall = () => {
               </button>
 
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                // Show first page, last page, current page, and pages around current
                 let pageToShow;
                 if (totalPages <= 5) {
                   pageToShow = i + 1;
@@ -569,7 +654,7 @@ const BigSmall = () => {
                   onChange={(e) => {
                     const value = Number(e.target.value);
                     if (value > 100000) {
-                      setContractMoney(100000);
+                      setContractMoney(100000); // Reset to max limit
                     } else {
                       setContractMoney(value);
                     }
@@ -676,6 +761,7 @@ const BigSmall = () => {
                       BetAmount: {betHistory.amount}
                     </>
                   )}
+
                 </label>
               </div>
             </div>
@@ -683,7 +769,7 @@ const BigSmall = () => {
             {/* Buttons */}
             <div className="p-5 border-t border-purple-500/10 flex gap-3">
               <button
-                onClick={() => setWinner(false)}
+                onClick={() => setWinner(null)}
                 className="flex-1 py-3 px-4 bg-[#1A1A2E] border border-red-500/20 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
               >
                 Close
