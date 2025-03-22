@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { X, ArrowLeft, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { current } from "@reduxjs/toolkit";
+import { deposit, withdraw } from "../slices/walletSlice";
 
 type Record = {
   id: number;
@@ -23,8 +24,8 @@ type Bet = {
   amount: number;
 };
 
-const DB_NAME = 'wingoTimerDB';
-const STORE_NAME = 'timerState';
+const DB_NAME = "wingoTimerDB";
+const STORE_NAME = "timerState";
 const DB_VERSION = 1;
 
 const initDB = async () => {
@@ -60,17 +61,18 @@ const BigSmall = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const [winner, setWinner] = useState(false);
-  const [popup, setpopup] = useState('');
+  const [popup, setpopup] = useState("");
   const [result, setResult] = useState<Record | null>(null);
   const [betHistory, setbetHistory] = useState([]);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const initializeDB = async () => {
       try {
-        const db = await initDB() as IDBDatabase;
-        const transaction = db.transaction(STORE_NAME, 'readonly');
+        const db = (await initDB()) as IDBDatabase;
+        const transaction = db.transaction(STORE_NAME, "readonly");
         const store = transaction.objectStore(STORE_NAME);
-        const request = store.get('timerState');
+        const request = store.get("timerState");
 
         request.onsuccess = () => {
           if (request.result) {
@@ -91,13 +93,16 @@ const BigSmall = () => {
 
   const saveTimerState = async () => {
     try {
-      const db = await initDB() as IDBDatabase;
-      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const db = (await initDB()) as IDBDatabase;
+      const transaction = db.transaction(STORE_NAME, "readwrite");
       const store = transaction.objectStore(STORE_NAME);
-      store.put({
-        timeRemaining: timeLeft,
-        lastUpdated: Date.now()
-      }, 'timerState');
+      store.put(
+        {
+          timeRemaining: timeLeft,
+          lastUpdated: Date.now(),
+        },
+        "timerState"
+      );
     } catch (error) {
       // Handle error silently
     }
@@ -109,8 +114,10 @@ const BigSmall = () => {
 
   const fetchTableData = async () => {
     try {
-      const response = await axios.get("https://rollix777.com/api/color/results");
-      setCurrentPeriod(response.data.results[0].period_number+1);
+      const response = await axios.get(
+        "https://rollix777.com/api/color/results"
+      );
+      setCurrentPeriod(response.data.results[0].period_number + 1);
       setRecords(response.data.results);
     } catch (error) {
       // Handle error silently
@@ -156,6 +163,12 @@ const BigSmall = () => {
 
       if (latestBetHistory.periodNumber === currentPeriod) {
         if (latestBetHistory.status === "won") {
+          dispatch(
+            deposit({
+              cryptoname: "INR",
+              amount: latestBetHistory?.amountReceived,
+            })
+          );
           setWinner(true);
           setpopup("won");
         } else {
@@ -174,15 +187,15 @@ const BigSmall = () => {
         "https://rollix777.com/api/color/checkValidBet",
         { userId }
       );
-  
+
       if (checkResponse.data?.pendingBets > 0) {
         alert("You have already placed a bet for this period.");
         return;
       }
-  
+
       let betType: string;
       let betValue: string | number;
-  
+
       if (selectedNumber !== null) {
         betType = "number";
         betValue = selectedNumber;
@@ -195,7 +208,7 @@ const BigSmall = () => {
       } else {
         return;
       }
-  
+
       const payload = {
         userId,
         betType,
@@ -217,7 +230,7 @@ const BigSmall = () => {
           big_small: selectedSize || undefined,
           amount: contractMoney,
         };
-
+        dispatch(withdraw({ cryptoname: "INR", amount: contractMoney }));
         setBets((prev) => [...prev, bet]);
         setSelectedNumber(null);
         setSelectedColor("");
@@ -232,16 +245,16 @@ const BigSmall = () => {
 
   useEffect(() => {
     if (!isRunning) return;
-  
+
     if (timeLeft === 0) {
       getResult();
-      
+
       if (activeTime) {
         setTimeout(() => setTimeLeft(activeTime * 60), 0);
       }
       return;
     }
-  
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         const newTime = prev - 1;
@@ -249,7 +262,7 @@ const BigSmall = () => {
         return newTime;
       });
     }, 1000);
-  
+
     return () => clearInterval(timer);
   }, [isRunning, timeLeft]);
 
@@ -283,10 +296,11 @@ const BigSmall = () => {
           {[1, 3, 5, 10].map((min) => (
             <button
               key={min}
-              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${activeTime === min
+              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                activeTime === min
                   ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                   : "bg-[#252547] border border-purple-500/20 text-gray-300 hover:bg-[#2f2f5a]"
-                }`}
+              }`}
               onClick={() => setActiveTime(min)}
             >
               {min} min
@@ -303,16 +317,19 @@ const BigSmall = () => {
 
         {/* Timer */}
         <div
-          className={`flex items-center justify-center gap-2 bg-[#252547] border border-purple-500/20 text-center py-3 px-4 rounded-lg ${timeLeft < 10 ? "bg-red-500/20 border-red-500/30" : ""
-            }`}
+          className={`flex items-center justify-center gap-2 bg-[#252547] border border-purple-500/20 text-center py-3 px-4 rounded-lg ${
+            timeLeft < 10 ? "bg-red-500/20 border-red-500/30" : ""
+          }`}
         >
           <Clock
-            className={`w-5 h-5 ${timeLeft < 10 ? "text-red-400" : "text-purple-400"
-              }`}
+            className={`w-5 h-5 ${
+              timeLeft < 10 ? "text-red-400" : "text-purple-400"
+            }`}
           />
           <span
-            className={`font-bold ${timeLeft < 10 ? "text-red-400" : "text-white"
-              }`}
+            className={`font-bold ${
+              timeLeft < 10 ? "text-red-400" : "text-white"
+            }`}
           >
             Time Left: {formatTime(timeLeft)}
           </span>
@@ -321,10 +338,11 @@ const BigSmall = () => {
         {/* Join Buttons */}
         <div className="grid grid-cols-3 gap-2">
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10
                 ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30"
-              }`}
+            }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedColor("green")}
           >
@@ -332,10 +350,11 @@ const BigSmall = () => {
           </button>
 
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10
                 ? "bg-[#252547] border border-purple-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
-              }`}
+            }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedColor("voilet")}
           >
@@ -343,10 +362,11 @@ const BigSmall = () => {
           </button>
 
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10
                 ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
-              }`}
+            }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedColor("red")}
           >
@@ -357,45 +377,46 @@ const BigSmall = () => {
         {/* 0-9 Number Buttons */}
         <div className="p-2 bg-[#1A1A2E] rounded-lg border border-purple-500/10">
           <div className="grid grid-cols-5 gap-3">
-          {Array.from({ length: 10 }, (_, i) => (
-  <button
-    key={i}
-    onClick={() => timeLeft >= 10 && setSelectedNumber(i)}
-    disabled={timeLeft < 10}
-    className={`relative px-0 py-3 text-white font-bold rounded-lg ${
-      timeLeft < 10
-        ? "bg-[#252547] border border-gray-600/20 text-gray-500 cursor-not-allowed"
-        : i === 0 || i === 5
-        ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
-        : [2, 4, 6, 8].includes(i)
-        ? "bg-gradient-to-r from-green-600 to-green-500 hover:opacity-90"
-        : "bg-gradient-to-r from-red-600 to-red-500 hover:opacity-90"
-    }`}
-  >
-    {i}
-  </button>
-))}
-
+            {Array.from({ length: 10 }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => timeLeft >= 10 && setSelectedNumber(i)}
+                disabled={timeLeft < 10}
+                className={`relative px-0 py-3 text-white font-bold rounded-lg ${
+                  timeLeft < 10
+                    ? "bg-[#252547] border border-gray-600/20 text-gray-500 cursor-not-allowed"
+                    : i === 0 || i === 5
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
+                    : [2, 4, 6, 8].includes(i)
+                    ? "bg-gradient-to-r from-green-600 to-green-500 hover:opacity-90"
+                    : "bg-gradient-to-r from-red-600 to-red-500 hover:opacity-90"
+                }`}
+              >
+                {i}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Big & Small Buttons */}
         <div className="grid grid-cols-2 gap-3">
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10
                 ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-r from-red-600 to-red-500 text-white hover:opacity-90"
-              }`}
+            }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedSize("big")}
           >
             Big
           </button>
           <button
-            className={`px-4 py-3 rounded-lg font-medium ${timeLeft < 10
+            className={`px-4 py-3 rounded-lg font-medium ${
+              timeLeft < 10
                 ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-r from-green-600 to-green-500 text-white hover:opacity-90"
-              }`}
+            }`}
             disabled={timeLeft < 10}
             onClick={() => setSelectedSize("small")}
           >
@@ -433,7 +454,9 @@ const BigSmall = () => {
                       <td className="py-4 px-4">
                         {record.result_color === "voilet"
                           ? "🟣"
-                          : record.result_color === "green"? "🟢":"🔴"}
+                          : record.result_color === "green"
+                          ? "🟢"
+                          : "🔴"}
                       </td>
                       <td className="py-4 px-4">{record.result_size}</td>
                     </tr>
@@ -480,10 +503,11 @@ const BigSmall = () => {
                 return (
                   <button
                     key={i}
-                    className={`py-1 px-3 rounded-lg ${currentPage === pageToShow
+                    className={`py-1 px-3 rounded-lg ${
+                      currentPage === pageToShow
                         ? "bg-purple-500/20 border border-purple-500/20 text-white"
                         : "bg-[#1A1A2E] border border-purple-500/20 text-gray-400 hover:text-white transition-colors"
-                      }`}
+                    }`}
                     onClick={() => setCurrentPage(pageToShow)}
                   >
                     {pageToShow}
@@ -517,8 +541,8 @@ const BigSmall = () => {
                 {selectedNumber !== null
                   ? `Number ${selectedNumber} Selected`
                   : selectedColor
-                    ? `${selectedColor} Selected`
-                    : `${selectedSize} Selected`}
+                  ? `${selectedColor} Selected`
+                  : `${selectedSize} Selected`}
               </h2>
               <button
                 onClick={() => {
@@ -568,10 +592,11 @@ const BigSmall = () => {
               {/* Checkbox */}
               <div className="flex items-center">
                 <div
-                  className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${agreed
+                  className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
+                    agreed
                       ? "bg-purple-600"
                       : "bg-[#1A1A2E] border border-purple-500/20"
-                    }`}
+                  }`}
                   onClick={() => setAgreed(!agreed)}
                 >
                   {agreed && <Check className="w-4 h-4 text-white" />}
@@ -599,10 +624,11 @@ const BigSmall = () => {
                 Cancel
               </button>
               <button
-                className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${agreed && contractMoney >= 10 && contractMoney <= 100000
+                className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${
+                  agreed && contractMoney >= 10 && contractMoney <= 100000
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
                     : "bg-gray-600/50 cursor-not-allowed"
-                  }`}
+                }`}
                 disabled={
                   !agreed || contractMoney < 10 || contractMoney > 100000
                 }
