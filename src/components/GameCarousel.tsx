@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import JDBGames from "../gamesData/gamesData.json";
 import axios from "axios";
 import CryptoJS from "crypto-js";
 import AuthModal from "./AuthModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
+
 interface GameCarouselProps {
   title: string;
   type: "featured" | "popular";
@@ -28,12 +29,12 @@ const generateRandom10Digits = () => {
 };
 
 // Open JS Game Function
-const openJsGame = async (game_uid: string, element: HTMLButtonElement) => { 
+const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
   const userId = localStorage.getItem("userId");
   const response = await axios.get(`https://rollix777.com/api/user/wallet/${userId}`);
   const balance = response.data[10].balance;
   console.log(balance);
- 
+
   console.log(`Game UID: ${game_uid}`);
   console.log(`Button element:`, element);
 
@@ -167,13 +168,10 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
   }
 };
 
-const featuredGames = JDBGames;
-
-const popularGames = JDBGames;
-
 const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const userToken = useSelector((state: RootState) => state.auth.token);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const handlePlayNow = () => {
     if (!userToken) {
@@ -183,36 +181,65 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
       // Implement redirection to the game page here
     }
   };
+
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
+    }
+  };
+
   const games = JDBGames.filter((game) => game.game_category === "popular");
 
   return (
-    <section className="py-8 px-4 bg-[#1A1A2E]">
-      <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
-      <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 snap-x hide-scrollbar">
+    <section className="py-8 px-4 bg-[#1A1A2E] relative">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-white">{title}</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={scrollLeft}
+       className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
+
+          >
+            &lt;
+          </button>
+          <button
+            onClick={scrollRight}
+      className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
+
+          >
+            &gt;
+          </button>
+        </div>
+      </div>
+      <div
+        ref={scrollRef}
+        className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 snap-x hide-scrollbar"
+      >
         {games.map((game) => (
-          <div key={game.game_uid} className="flex-none w-[280px] snap-start">
+          <div key={game.game_uid} className="flex-none w-[140px] snap-start">
             <div className="bg-[#252547] rounded-xl overflow-hidden border border-purple-500/10">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10" />
                 <img
+                  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
                   src={game.icon}
                   alt={game.game_name}
-                  className="w-full h-40 object-cover"
+                  className="w-full h-60 object-cover cursor-pointer"
                 />
-                <span className="absolute bottom-2 left-2 text-sm text-white z-20 bg-purple-500/20 px-2 py-1 rounded-full backdrop-blur-sm">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 rounded-b-xl">
+                  <h3 className="text-white font-bold text-lg rounded-lg">
+                    {game.game_name}
+                  </h3>
+                </div>
+                {/* <span className="absolute bottom-2 left-2 text-sm text-white z-20 bg-purple-500/20 px-2 py-1 rounded-full backdrop-blur-sm">
                   {game.game_type}
-                </span>
-              </div>
-              <div className="p-4">
-                <h3 className="text-white font-semibold text-lg">
-                  {game.game_name}
-                </h3>
-                <button
-                  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
-                  className="mt-2 w-full py-1.5 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:opacity-90 transition-opacity"
-                >
-                  Play Now
-                </button>
+                </span> */}
               </div>
             </div>
           </div>

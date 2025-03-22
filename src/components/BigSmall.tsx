@@ -93,7 +93,7 @@ const BigSmall = () => {
       await checkWinLose(data);
 
       // Increment the period for the next round
-      setCurrentPeriod((prev) => prev + 2);
+      setCurrentPeriod((prev) => prev + 1);
 
       // Reset bets for the next round
       setBets([]);
