@@ -15,6 +15,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store.ts";
 import { logout } from "../slices/authSlice.ts";
+import { setWallets } from "../slices/walletSlice.ts";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,7 +23,8 @@ const Header: React.FC = () => {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
-  const [wallets, setWallets] = useState([]);
+  // const [wallets, setWallets] = useState([]);
+  const { wallets } = useSelector((state: RootState) => state.wallet);
   const { isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
   );
@@ -50,18 +52,7 @@ const Header: React.FC = () => {
         const response = await axios.get(
           `https://rollix777.com/api/user/wallet/${user.id}`
         );
-        setWallets(response.data);
-
-        // After fetching, set INR as default currency
-        const inrWallet = response.data.find((w) => w.cryptoname === "INR");
-        if (inrWallet) {
-          setSelectedCurrency({
-            name: "INR",
-            symbol: "₹",
-            color: "bg-black",
-            balance: inrWallet.balance,
-          });
-        }
+        dispatch(setWallets(response.data));
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -140,6 +131,19 @@ const Header: React.FC = () => {
   const handleLoginSuccess = () => {
     setIsModalOpen(false);
   };
+
+  useEffect(() => {
+    // After fetching, set INR as default currency
+    const inrWallet = wallets.find((w) => w.cryptoname === "INR");
+    if (inrWallet) {
+      setSelectedCurrency({
+        name: "INR",
+        symbol: "₹",
+        color: "bg-black",
+        balance: inrWallet.balance,
+      });
+    }
+  }, [wallets]);
 
   return (
     <>
