@@ -30,6 +30,7 @@ const generateRandom10Digits = () => {
 
 // Open JS Game Function
 const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
+  
   const userId = localStorage.getItem("userId");
   const response = await axios.get(`https://rollix777.com/api/user/wallet/${userId}`);
   const balance = response.data[10].balance;
@@ -222,26 +223,21 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
         className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 snap-x hide-scrollbar"
       >
         {games.map((game) => (
-          <div key={game.game_uid} className="flex-none w-[140px] snap-start">
-            <div className="bg-[#252547] rounded-xl overflow-hidden border border-purple-500/10">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10" />
+          <div key={game.game_uid} className="min-w-[140px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg relative">
+             <div className="relative">
                 <img
-                  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
                   src={game.icon}
                   alt={game.game_name}
-                  className="w-full h-60 object-cover cursor-pointer"
+                  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
+                  className="w-full h-60 object-cover cursor-pointer rounded-xl"
                 />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 rounded-b-xl">
-                  <h3 className="text-white font-bold text-lg rounded-lg">
+                {/* Game Name Overlay */}
+                {/* <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 rounded-b-xl">
+                  <h3 className="text-white text-center  font-bold text-lg rounded-lg">
                     {game.game_name}
                   </h3>
-                </div>
-                {/* <span className="absolute bottom-2 left-2 text-sm text-white z-20 bg-purple-500/20 px-2 py-1 rounded-full backdrop-blur-sm">
-                  {game.game_type}
-                </span> */}
+                </div> */}
               </div>
-            </div>
           </div>
         ))}
       </div>

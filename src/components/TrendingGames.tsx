@@ -155,11 +155,11 @@ const TrendingGames: React.FC<TrendingGamesProps> = ({ title, type }) => {
                   className="w-full h-60 object-cover cursor-pointer rounded-t-xl"
                 />
                 {/* Game Name Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 rounded-b-xl">
-                  <h3 className="text-white  font-bold text-lg rounded-lg">
+                {/* <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 rounded-b-xl">
+                  <h3 className="text-white text-center  font-bold text-lg rounded-lg">
                     {game.game_name}
                   </h3>
-                </div>
+                </div> */}
               </div>
             </div>
           ))

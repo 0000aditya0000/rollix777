@@ -16,6 +16,7 @@ import BetHistory from "./components/BetHistory";
 import { useSelector } from "react-redux";
 import { RootState } from "./store";
 
+
 function App() {
   const authenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
@@ -36,6 +37,7 @@ function App() {
                 <main>
                   <Routes>
                     <Route path="/" element={<Home />} />
+                  
                     <Route path="/bigsmall" element={<BigSmall />} />
                     <Route path="/bet-history" element={<BetHistory />} />
                     {authenticated ? (

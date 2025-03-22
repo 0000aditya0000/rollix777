@@ -7,6 +7,7 @@ import TrendingGames from './TrendingGames';
 import HotGames from './HotGames';
 import DepositModal from './DepositModal';
 import WithdrawModal from './WithdrawModal';
+import LatestGames from './LatestGames';
 
 const Dashboard = () => {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -37,6 +38,7 @@ const Dashboard = () => {
 
       {/* Game Sections */}
       <ColorGame />
+      <LatestGames/>
       <GameCarousel title="Popular Games" type="popular" />
       <TrendingGames />
       <HotGames />

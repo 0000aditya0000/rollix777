@@ -5,9 +5,9 @@ import GameData from "../gamesData/gamesData.json";
 import AuthModal from "./AuthModal";
 import axios from "axios";
 
-interface HotGamesProps {
+interface LatestGamesProps {
   title: string;
-  type: "featured" | "hot";
+  type: "featured" | "latest";
 }
 
 const aesKey = "126c2e86c418427c4aa717f971063e0e";
@@ -96,10 +96,10 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
   }
 };
 
-const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
+const LatestGames: React.FC<LatestGamesProps> = ({ title, type }) => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const hotGames = GameData.filter((game) => game.game_category === "hot");
+  const latestGames = GameData.filter((game) => game.game_category === "latest");
 
   const scrollLeft = () => {
     if (scrollRef.current) {
@@ -118,7 +118,7 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           <Zap className="w-6 h-6 text-yellow-500" />
-          <h2 className="text-2xl font-bold text-white">Hot Games</h2>
+          <h2 className="text-2xl font-bold text-white">Latest Games</h2>
         </div>
         <div className="flex gap-2">
           <button
@@ -142,8 +142,8 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto hide-scrollbar px-1"
       >
-        {hotGames.length > 0 ? (
-          hotGames.map((game) => (
+        {latestGames.length > 0 ? (
+          latestGames.map((game) => (
             <div
               key={game.game_uid}
               className="min-w-[140px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg relative"
@@ -153,7 +153,7 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
                   src={game.icon}
                   alt={game.game_name}
                   onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
-                  className="w-full h-60 object-cover cursor-pointer rounded-xl"
+                  className="w-full h-full object-cover cursor-pointer rounded-xl"
                 />
                 {/* Game Name Overlay */}
                 {/* <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 rounded-b-xl">
@@ -165,7 +165,7 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
             </div>
           ))
         ) : (
-          <p className="text-white">No hot games available.</p>
+          <p className="text-white">No latest games available.</p>
         )}
       </div>
 
@@ -180,4 +180,4 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
   );
 };
 
-export default HotGames;
+export default LatestGames;
