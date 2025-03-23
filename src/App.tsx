@@ -15,7 +15,10 @@ import AdminRoutes from "./admin";
 import BetHistory from "./components/BetHistory";
 import { useSelector } from "react-redux";
 import { RootState } from "./store";
-
+import Profile from "./components/profile/Profile";
+import PaymentMethods from "./components/profile/PaymentMethods";
+import Referrals from "./components/profile/Referrals";
+import Settings from "./components/profile/Settings";
 
 function App() {
   const authenticated = useSelector(
@@ -40,6 +43,10 @@ function App() {
                   
                     <Route path="/bigsmall" element={<BigSmall />} />
                     <Route path="/bet-history" element={<BetHistory />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/payment-methods" element={<PaymentMethods />} />
+                    <Route path="/referrals" element={<Referrals />} />
+                    <Route path="/settings" element={<Settings />} />
                     {authenticated ? (
                       <Route path="/dashboard" element={<Dashboard />} />
                     ) : (

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { X,
+import { signin, register } from "../lib/services/authService";
+import {
+  X,
   Mail,
   Lock,
   User,
@@ -64,32 +66,21 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     try {
-      const data = { email, password };
-      const response = await axios.post(
-        `${import.meta.env.VITE_SERVER_BASE_URL}/api/user/login`,
-        data
+      const data = await signin({ email, password });
+      localStorage.setItem("userToken", data.token);
+      localStorage.setItem("userId", data.user.id);
+      localStorage.setItem("userName", data.user.username);
+      dispatch(
+        login({
+          user: { id: data.user.id, name: data.user.username },
+          token: data.token,
+        })
       );
-
-      if (response.data.token) {
-        // Save user data to localStorage
-        localStorage.setItem("userToken", response.data.token);
-        localStorage.setItem("userId", response.data.user.id);
-        localStorage.setItem("userName", response.data.user.username);
-
-        // Dispatch login action to update Redux state
-        const user = {
-          id: response.data.user.id,
-          name: response.data.user.username,
-        };
-        dispatch(login({ user, token: response.data.token }));
-
-        // Close modal and navigate to dashboard
-        onLoginSuccess();
-        navigate("/dashboard");
-      }
+      onLoginSuccess();
+      navigate("/dashboard");
     } catch (error) {
-      console.error("Login failed:", error);
-      setError("Invalid email or password");
+      console.error("Login failed:", error.message);
+      setError(error.message);
       dispatch(logout());
     }
   };
@@ -103,38 +94,30 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     try {
-      const data = {
+      const data = await register({
         username,
         email,
         password,
         phoneNumber,
         referalCode,
-      };
-      const response = await axios.post(
-        `${import.meta.env.VITE_SERVER_BASE_URL}/api/user/register`,
-        data
+      });
+
+      localStorage.setItem("userToken", data.token);
+      localStorage.setItem("userId", data.user.id);
+      localStorage.setItem("userName", data.user.username);
+
+      dispatch(
+        login({
+          user: { id: data.user.id, name: data.user.username },
+          token: data.token,
+        })
       );
 
-      if (response.data.token) {
-        // Save user data to localStorage
-        localStorage.setItem("userToken", response.data.token);
-        localStorage.setItem("userId", response.data.user.id);
-        localStorage.setItem("userName", response.data.user.username);
-
-        // Dispatch login action to update Redux state
-        const user = {
-          id: response.data.user.id,
-          name: response.data.user.username,
-        };
-        dispatch(login({ user, token: response.data.token }));
-
-        // Close modal and navigate to dashboard
-        onLoginSuccess();
-        navigate("/dashboard");
-      }
+      onLoginSuccess();
+      navigate("/dashboard");
     } catch (error) {
-      console.error("Registration failed:", error);
-      setError("Registration failed. Please try again.");
+      console.error("Registration failed:", error.message);
+      setError(error.message);
     }
   };
 

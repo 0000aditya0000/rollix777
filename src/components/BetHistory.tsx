@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Search, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import {betHistory} from '../lib/services/betService'
 
 const BetHistory = () => {
   const [statusFilter, setStatusFilter] = useState('all');
@@ -12,30 +12,22 @@ const BetHistory = () => {
   useEffect(() => {
     const fetchBetHistory = async () => {
       try {
-        const response = await axios.post(
-          "https://rollix777.com/api/color/bet-history",
-          { userId: 29 },
-          {
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
+        const response = await betHistory({ userId: 29 });
 
-        console.log("Full API Response:", response.data); // Debug log
-        const betData = response.data.betHistory || []; // Extract betHistory correctly
+        console.log("Full API Response:", response); 
+        const betData = response.betHistory || []; 
 
         if (!Array.isArray(betData)) {
-          console.error("Unexpected data format:", betData);
+            console.error("Unexpected data format:", betData);
         }
 
         setBets(betData); // Set the correct data
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching data:", err);
+    } catch (err) {
+        console.error("Error fetching data:", err.message);
         setError(err.message);
+    } finally {
         setLoading(false);
-      }
+    }
     };
 
     fetchBetHistory();
