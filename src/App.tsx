@@ -19,6 +19,7 @@ import Profile from "./components/profile/Profile";
 import PaymentMethods from "./components/profile/PaymentMethods";
 import Referrals from "./components/profile/Referrals";
 import Settings from "./components/profile/Settings";
+import Security from "./components/profile/Security";
 
 function App() {
   const authenticated = useSelector(
@@ -47,6 +48,7 @@ function App() {
                     <Route path="/payment-methods" element={<PaymentMethods />} />
                     <Route path="/referrals" element={<Referrals />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/security" element={<Security />} />
                     {authenticated ? (
                       <Route path="/dashboard" element={<Dashboard />} />
                     ) : (
