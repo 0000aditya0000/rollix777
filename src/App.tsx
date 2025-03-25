@@ -21,6 +21,8 @@ import Referrals from "./components/profile/Referrals";
 import Settings from "./components/profile/Settings";
 import Security from "./components/profile/Security";
 import AllGames from './components/games/AllGames';
+import MyAccount from './components/account/MyAccount';
+import Wallet from './components/wallet/Wallet';
 
 function App() {
   const authenticated = useSelector(
@@ -75,6 +77,8 @@ function App() {
                       </>
                     )}
                     <Route path="/games" element={<AllGames />} />
+                    <Route path="/account" element={<MyAccount />} />
+                    <Route path="/wallet" element={<Wallet />} />
                   </Routes>
                 </main>
                 <Footer />

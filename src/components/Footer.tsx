@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Home, Gamepad2, Gift, User, Settings } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 
@@ -10,9 +10,19 @@ const Footer: React.FC = () => {
     (state: RootState) => state.auth.isAuthenticated
   );
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleAdminAccess = () => {
     window.location.href = "/admin";
+  };
+
+  const handleAccountClick = () => {
+    if (isLoggedIn) {
+      navigate('/account');
+    } else {
+      // Handle login modal or navigation
+      navigate('/login');
+    }
   };
 
   return (
@@ -66,9 +76,24 @@ const Footer: React.FC = () => {
             {isLoggedIn ? "Rewards" : "Promotions"}
           </span>
         </button>
-        <button className="flex flex-col items-center gap-1">
-          <User className="w-6 h-6 text-gray-400" />
-          <span className="text-xs text-gray-400">
+        <button 
+          onClick={handleAccountClick} 
+          className="flex flex-col items-center gap-1"
+        >
+          <User 
+            className={`w-6 h-6 ${
+              location.pathname === "/account" 
+                ? "text-purple-500" 
+                : "text-gray-400"
+            }`}
+          />
+          <span 
+            className={`text-xs ${
+              location.pathname === "/account" 
+                ? "text-purple-500" 
+                : "text-gray-400"
+            }`}
+          >
             {isLoggedIn ? "Account" : "Login"}
           </span>
         </button>
