@@ -2,8 +2,10 @@ import { baseUrl } from "../config/server";
 
 const request = async (endpoint, data) => {
   try {
+    const userId = localStorage.getItem("userId");
+    console.log("aasifId", userId);
     const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: "POST",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json"
       },
@@ -17,9 +19,10 @@ const request = async (endpoint, data) => {
 
     return await response.json();
   } catch (error) {
-    console.error("Auth Request Error:", error.message);
+    console.error("Request Error:", error.message);
     throw error;
   }
 };
 
-export const betHistory = async data => request("/api/color/bet-history", data);
+export const updatePassword = async (userId, data) =>
+  request(`/api/user/user/password/${userId}`, data);
