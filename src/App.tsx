@@ -20,6 +20,7 @@ import PaymentMethods from "./components/profile/PaymentMethods";
 import Referrals from "./components/profile/Referrals";
 import Settings from "./components/profile/Settings";
 import Security from "./components/profile/Security";
+import AllGames from './components/games/AllGames';
 
 function App() {
   const authenticated = useSelector(
@@ -73,6 +74,7 @@ function App() {
                         <Route path="/features" element={<Features />} />
                       </>
                     )}
+                    <Route path="/games" element={<AllGames />} />
                   </Routes>
                 </main>
                 <Footer />

@@ -42,17 +42,17 @@ const Footer: React.FC = () => {
             Home
           </span>
         </Link>
-        <Link to="/bigsmall" className="flex flex-col items-center gap-1">
+        <Link to="/games" className="flex flex-col items-center gap-1">
           <Gamepad2
             className={`w-6 h-6 ${
-              location.pathname === "/bigsmall"
+              location.pathname === "/games"
                 ? "text-purple-500"
                 : "text-gray-400"
             }`}
           />
           <span
             className={`text-xs ${
-              location.pathname === "/bigsmall"
+              location.pathname === "/games"
                 ? "text-purple-500"
                 : "text-gray-400"
             }`}
