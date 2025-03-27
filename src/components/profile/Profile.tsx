@@ -40,6 +40,7 @@ const Profile = () => {
           username: userData.username || "",
           image: userData.image || "",
         });
+        // Set profile image from base64 data if it exists
         if (userData.image) {
           setProfileImage(userData.image);
         }
@@ -55,63 +56,10 @@ const Profile = () => {
     getUserData();
   }, []);
 
-  const compressImage = (file: File): Promise<Blob> => {
+  const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          // Calculate new dimensions while maintaining aspect ratio
-          let width = img.width;
-          let height = img.height;
-          const maxSize = 800; // Maximum dimension
-          
-          if (width > height && width > maxSize) {
-            height = Math.round((height * maxSize) / width);
-            width = maxSize;
-          } else if (height > maxSize) {
-            width = Math.round((width * maxSize) / height);
-            height = maxSize;
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          
-          if (!ctx) {
-            reject(new Error('Could not get canvas context'));
-            return;
-          }
-          
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          // Convert to blob with reduced quality
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                resolve(blob);
-              } else {
-                reject(new Error('Failed to compress image'));
-              }
-            },
-            'image/jpeg',
-            0.7 // Quality parameter (0.7 = 70% quality)
-          );
-        };
-        img.onerror = (error) => reject(error);
-      };
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const convertToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
       reader.onload = () => {
         if (typeof reader.result === 'string') {
           resolve(reader.result);
@@ -127,31 +75,10 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setToast({
-        message: "Please select a valid image file",
-        type: "error"
-      });
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setToast({
-        message: "Image size should be less than 5MB",
-        type: "error"
-      });
-      return;
-    }
-
     setIsUploading(true);
     try {
-      // Compress image first
-      const compressedBlob = await compressImage(file);
-      
-      // Convert compressed image to base64
-      const base64Image = await convertToBase64(compressedBlob);
+      // Convert image to base64
+      const base64Image = await convertToBase64(file);
       
       // Update formData with base64 image
       setFormData(prev => ({
@@ -190,17 +117,7 @@ const Profile = () => {
     }
 
     try {
-      // Create a new object with all form data including the image
-      const payload = {
-        name: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        username: formData.username,
-        image: formData.image // Make sure image is included in the payload
-      };
-
-      console.log('Submitting payload:', payload); // Debug log
-      const updatedUserData = await updateUserData(userId, payload);
+      const updatedUserData = await updateUserData(userId, formData);
       setFormData(updatedUserData);
       setIsEditing(false);
       setToast({
@@ -208,7 +125,6 @@ const Profile = () => {
         type: "success"
       });
     } catch (error) {
-      console.error('Error updating profile:', error); // Debug log
       setToast({
         message: error instanceof Error ? error.message : "Failed to update profile",
         type: "error"

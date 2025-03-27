@@ -11,11 +11,19 @@ import {
 } from "lucide-react";
 import AuthModal from "./AuthModal.tsx";
 import SideNav from "./SideNav.tsx";
-import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store.ts";
 import { logout } from "../slices/authSlice.ts";
 import { setWallets } from "../slices/walletSlice.ts";
+import { getWallet } from "../lib/services/WalletService";
+
+interface Crypto {
+  name: string;
+  symbol: string;
+  color: string;
+  cryptoname: string;
+  balance: string;
+}
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,10 +44,10 @@ const Header: React.FC = () => {
   });
   // Ensure selected currency updates
   const dispatch = useDispatch();
-  const handleCurrencySelect = (crypto) => {
+  const handleCurrencySelect = (crypto: Crypto) => {
     setSelectedCurrency({
       name: crypto.name,
-      symbol: crypto.symbol, // Update symbol dynamically
+      symbol: crypto.symbol,
       color: crypto.color,
       balance: crypto.balance,
     });
@@ -48,17 +56,17 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     async function fetchData() {
+      if (!user?.id) return;
+      
       try {
-        const response = await axios.get(
-          `https://rollix777.com/api/user/wallet/${user.id}`
-        );
-        dispatch(setWallets(response.data));
+        const walletData = await getWallet(user.id);
+        dispatch(setWallets(walletData));
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching wallet data:", error);
       }
     }
     fetchData();
-  }, [user?.id]);
+  }, [user?.id, dispatch]);
   const updatedCryptos = [
     { name: "Bitcoin", symbol: "₿", color: "bg-yellow-500", cryptoname: "BTC" },
     { name: "Litecoin", symbol: "Ł", color: "bg-gray-500", cryptoname: "LTC" },

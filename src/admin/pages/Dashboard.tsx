@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Users, DollarSign, Eye, Check, X, User } from 'lucide-react';
-import axios from 'axios';
+import { getAllUsers } from '../../lib/services/UserAdmin';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'kyc' | 'withdrawals'>('kyc');
@@ -10,8 +10,8 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('https://rollix777.com/api/user/allusers');
-        setUsers(response.data); // Set the fetched data to the state
+        const response = await getAllUsers();
+        setUsers(response); // Set the fetched data to the state
 
       } catch (error) {
         setError(error); // Set error if the request fails

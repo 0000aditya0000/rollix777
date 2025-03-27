@@ -1,25 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Plus, Edit, Trash2, Eye, User, Mail, Phone, Calendar } from 'lucide-react';
-import axios from 'axios';
+import { Search, Filter, Plus, Edit, Trash2, Eye, User as UserIcon, Mail, Phone, Calendar } from 'lucide-react';
+import { getAllUsers, deleteUser, addNewUser, updateUser, User, UserData } from '../../lib/services/UserAdmin';
+
+interface PopupProps {
+  onClose: () => void;
+  onAddUser: (userData: UserData) => Promise<void>;
+}
+
+interface EditPopupProps {
+  onClose: () => void;
+  onUpdateUser: (id: string, userData: UserData) => Promise<void>;
+  user: User;
+}
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [users, setUsers] = useState<any[]>([]);
-  const [error, setError] = useState(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Get All Users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('https://rollix777.com/api/user/allusers');
-        setUsers(response.data);
-        console.log(response.data);
-      } catch (error) {
-        setError(error);
+        const data = await getAllUsers();
+        setUsers(data);
+      } catch (err: any) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -29,44 +39,44 @@ const Users = () => {
   }, []);
 
   // Delete User
-  const deleteUser = async (id) => {
+  const handleDeleteUser = async (id: string) => {
     try {
-      await axios.delete(`https://rollix777.com/api/user/user/${id}`);
+      await deleteUser(id);
       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
       alert("User deleted successfully.");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error deleting user:", err);
-      alert("Failed to delete user");
+      alert(err.message || "Failed to delete user");
     }
   };
 
   // Add New User
-  const addNewUser = async (userData) => {
+  const handleAddUser = async (userData: UserData) => {
     try {
-      const response = await axios.post('https://rollix777.com/api/admin/user', userData);
-      setUsers((prevUsers) => [...prevUsers, response.data]);
+      const newUser = await addNewUser(userData);
+      setUsers((prevUsers) => [...prevUsers, newUser]);
       alert("User added successfully.");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error adding user:", err);
-      alert("Failed to add user.");
+      alert(err.message || "Failed to add user.");
     }
   };
 
   // Update User
-  const updateUser = async (id, userData) => {
+  const handleUpdateUser = async (id: string, userData: UserData) => {
     try {
-      const response = await axios.put(`https://rollix777.com/api/user/user/${id}`, userData);
+      const updatedUser = await updateUser(id, userData);
       setUsers((prevUsers) =>
-        prevUsers.map((user) => (user.id === id ? response.data : user))
+        prevUsers.map((user) => (user.id === id ? updatedUser : user))
       );
       alert("User updated successfully.");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error updating user:", err);
-      alert("Failed to update user.");
+      alert(err.message || "Failed to update user.");
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-500/20 text-green-400';
       case 'inactive': return 'bg-gray-500/20 text-gray-400';
@@ -80,18 +90,18 @@ const Users = () => {
   }
 
   if (error) {
-    return <div className="text-red-500 text-center py-6">Error: {error.message}</div>;
+    return <div className="text-red-500 text-center py-6">Error: {error}</div>;
   }
 
   // Popup Component for Adding User
-  const Popup = ({ onClose, onAddUser }) => {
+  const Popup = ({ onClose, onAddUser }: PopupProps) => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [phone, setPhone] = useState('');
     const [dob, setDob] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
 
       const userData = {
@@ -115,7 +125,7 @@ const Users = () => {
               <label className="text-sm text-gray-300">Username</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <User className="w-5 h-5 text-purple-400" />
+                  <UserIcon className="w-5 h-5 text-purple-400" />
                 </div>
                 <input
                   type="text"
@@ -217,14 +227,14 @@ const Users = () => {
   };
 
   // Edit Popup Component
-  const EditPopup = ({ onClose, onUpdateUser, user }) => {
+  const EditPopup = ({ onClose, onUpdateUser, user }: EditPopupProps) => {
     const [username, setUsername] = useState(user.username);
     const [email, setEmail] = useState(user.email);
     const [password, setPassword] = useState('');
     const [phone, setPhone] = useState(user.phone);
     const [dob, setDob] = useState(user.dob);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
 
       const userData = {
@@ -248,7 +258,7 @@ const Users = () => {
               <label className="text-sm text-gray-300">Username</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <User className="w-5 h-5 text-purple-400" />
+                  <UserIcon className="w-5 h-5 text-purple-400" />
                 </div>
                 <input
                   type="text"
@@ -361,11 +371,11 @@ const Users = () => {
         </button>
       </div>
 
-      {showPopup && <Popup onClose={() => setShowPopup(false)} onAddUser={addNewUser} />}
-      {showEditPopup && (
+      {showPopup && <Popup onClose={() => setShowPopup(false)} onAddUser={handleAddUser} />}
+      {showEditPopup && selectedUser && (
         <EditPopup
           onClose={() => setShowEditPopup(false)}
-          onUpdateUser={updateUser}
+          onUpdateUser={handleUpdateUser}
           user={selectedUser}
         />
       )}
@@ -429,7 +439,7 @@ const Users = () => {
                         <Edit size={16} />
                       </button>
                       <button
-                        onClick={() => deleteUser(user.id)}
+                        onClick={() => handleDeleteUser(user.id)}
                         className="p-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
                       >
                         <Trash2 size={16} />
