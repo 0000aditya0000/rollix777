@@ -48,6 +48,15 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
   }, [initialMode]);
 
+  // Add effect to check for referral code
+  useEffect(() => {
+    const pendingReferralCode = localStorage.getItem('pendingReferralCode');
+    if (pendingReferralCode) {
+      setReferalCode(pendingReferralCode);
+      setMode('register');
+    }
+  }, [isOpen]);
+
   // Close modal if not open
   if (!isOpen) return null;
 
@@ -55,6 +64,24 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
     setError("");
+  };
+
+  // Updated function to generate referral code with random digits
+  const generateReferralCode = (firstName: string, phone: string) => {
+    // Get first 4 letters of first name (or pad with 'x' if shorter)
+    const namePrefix = (firstName.substring(0, 4) + 'xxxx').substring(0, 4).toUpperCase();
+    
+    // Convert phone number to array of digits and shuffle them
+    const digits = phone.split('');
+    for (let i = digits.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [digits[i], digits[j]] = [digits[j], digits[i]]; // Swap elements
+    }
+    
+    // Take first 5 digits after shuffling
+    const randomDigits = digits.slice(0, 5).join('');
+    
+    return `${namePrefix}${randomDigits}`;
   };
 
   // Handle login form submission
@@ -93,18 +120,27 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    try {
-      const data = await register({
-        username,
-        email,
-        password,
-        phoneNumber,
-        referalCode,
-      });
+    // Generate referral code using username and phone number
+    const generatedReferralCode = generateReferralCode(username, phoneNumber);
 
+    // Create payload
+    const registerPayload = {
+      username,
+      email,
+      password,
+      phoneNumber,
+      referalCode: referalCode || '', // Existing referral code if any
+      myReferralCode: generatedReferralCode // New generated referral code
+    };
+
+    console.log("Register Payload:", registerPayload);
+
+    try {
+      const data = await register(registerPayload);
       localStorage.setItem("userToken", data.token);
       localStorage.setItem("userId", data.user.id);
       localStorage.setItem("userName", data.user.username);
+      localStorage.removeItem('pendingReferralCode');
 
       dispatch(
         login({
@@ -247,6 +283,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
+          
+
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">Phone Number</label>
                 <div className="relative">
@@ -258,9 +296,19 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
                     placeholder="Enter your phone number"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    onChange={(e) => {
+                      // Only allow numbers and limit to 10 digits
+                      const value = e.target.value.replace(/\D/g, '').substring(0, 10);
+                      setPhoneNumber(value);
+                    }}
+                    required
                   />
                 </div>
+                {phoneNumber && phoneNumber.length !== 10 && (
+                  <p className="text-red-400 text-xs mt-1">
+                    Phone number must be 10 digits
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -277,6 +325,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Enter referral code if you have one"
                     value={referalCode}
                     onChange={(e) => setReferalCode(e.target.value)}
+                    disabled={!!localStorage.getItem('pendingReferralCode')}
                   />
                 </div>
               </div>
@@ -332,7 +381,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="submit"
                 className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-                disabled={!acceptTerms}
+                disabled={!acceptTerms || phoneNumber.length !== 10}
               >
                 Register
               </button>

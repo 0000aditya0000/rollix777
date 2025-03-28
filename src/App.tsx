@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
 import Home from "./components/Home";
 import BigSmall from "./components/BigSmall";
 import Header from "./components/Header";
@@ -23,6 +23,20 @@ import Security from "./components/profile/Security";
 import AllGames from './components/games/AllGames';
 import MyAccount from './components/account/MyAccount';
 import Wallet from './components/wallet/Wallet';
+import AgentProgram from './components/promotions/AgentProgram';
+import TeamReport from './components/promotions/TeamReport';
+
+// Add new ReferralRedirect component
+const ReferralRedirect: React.FC = () => {
+  const location = useLocation();
+  const referralCode = location.pathname.split('/refer/')[1];
+  
+  if (referralCode) {
+    localStorage.setItem('pendingReferralCode', referralCode);
+  }
+  
+  return <Navigate to="/" replace />;
+};
 
 function App() {
   const authenticated = useSelector(
@@ -31,6 +45,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Add the referral route before other routes */}
+        <Route path="/refer/:referralCode" element={<ReferralRedirect />} />
+
         {/* Admin Routes - Full width */}
         <Route path="/admin/*" element={<AdminRoutes />} />
 
@@ -46,6 +63,8 @@ function App() {
                     <Route path="/" element={<Home />} />
                   
                     <Route path="/bigsmall" element={<BigSmall />} />
+                    <Route path="/promotions" element={<AgentProgram />} />
+                    <Route path="/promotions/team-report" element={<TeamReport />} />
                     <Route path="/bet-history" element={<BetHistory />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/payment-methods" element={<PaymentMethods />} />
