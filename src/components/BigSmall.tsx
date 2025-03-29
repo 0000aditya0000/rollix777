@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { X, ArrowLeft, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useDispatch } from "react-redux";
 import { current } from "@reduxjs/toolkit";
 import { deposit, withdraw } from "../slices/walletSlice";
+import { getResults, generateResult, checkValidBet, placeBet, getBetHistory } from "../lib/services/BigSmallService";
 
 type Record = {
-  id: number;
-  period: string;
-  number: string;
-  color: string;
-  small_big: string;
-  mins: string;
+  period_number: number;
+  result_number: number;
+  result_color: string;
+  result_size: string;
 };
 
 type Bet = {
@@ -23,6 +21,13 @@ type Bet = {
   color?: string;
   big_small?: string;
   amount: number;
+};
+
+type BetHistoryType = {
+  amount: number;
+  amountReceived: number;
+  periodNumber: number;
+  status: string;
 };
 
 const DB_NAME = 'wingoTimerDB';
@@ -64,7 +69,7 @@ const BigSmall = () => {
   const [winner, setWinner] = useState(false);
   const [popup, setpopup] = useState('');
   const [result, setResult] = useState<Record | null>(null);
-  const [betHistory, setbetHistory] = useState([]);
+  const [betHistory, setBetHistory] = useState<BetHistoryType | null>(null);
   const dispatch = useDispatch();
   useEffect(() => {
     const initializeDB = async () => {
@@ -111,50 +116,39 @@ const BigSmall = () => {
 
   const fetchTableData = async () => {
     try {
-      const response = await axios.get("https://rollix777.com/api/color/results");
-      setCurrentPeriod(response.data.results[0].period_number+1);
-      setRecords(response.data.results);
+      const response = await getResults();
+      setCurrentPeriod(response.results[0].period_number + 1);
+      setRecords(response.results);
     } catch (error) {
-      // Handle error silently
+      console.error("Error fetching table data:", error);
     }
   };
 
   const getResult = async () => {
     try {
-      const response = await axios.post(
-        "https://rollix777.com/api/color/generate-result",
-        {
-          periodNumber: currentPeriod,
-        }
-      );
-      if (!response) {
-        return;
-      }
-      const data = response.data;
+      if (!currentPeriod) return;
+      const data = await generateResult(currentPeriod);
+      if (!data) return;
+      
       setResult(data);
       setRecords((prev) => [data, ...prev]);
       fetchTableData();
       await checkWinLose(data);
       setBets([]);
     } catch (error) {
-      // Handle error silently
+      console.error("Error generating result:", error);
     }
   };
 
   const checkWinLose = async (result: any) => {
     try {
-      const response = await axios.post(
-        "https://rollix777.com/api/color/bet-history",
-        { userId },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const latestBetHistory = response.data.betHistory[0];
-      setbetHistory(latestBetHistory);
+      if (!userId) return;
+      const numericUserId = parseInt(userId.toString(), 10);
+      if (isNaN(numericUserId)) return;
+      
+      const response = await getBetHistory(numericUserId);
+      const latestBetHistory = response.betHistory[0];
+      setBetHistory(latestBetHistory);
 
       if (latestBetHistory.periodNumber === currentPeriod) {
         if (latestBetHistory.status === "won") {
@@ -172,18 +166,19 @@ const BigSmall = () => {
         }
       }
     } catch (error) {
-      // Handle error silently
+      console.error("Error checking win/lose:", error);
     }
   };
 
   const handleBet = async () => {
     try {
-      const checkResponse = await axios.post(
-        "https://rollix777.com/api/color/checkValidBet",
-        { userId }
-      );
+      if (!userId || currentPeriod === undefined) return;
+      const numericUserId = parseInt(userId.toString(), 10);
+      if (isNaN(numericUserId)) return;
+      
+      const checkResponse = await checkValidBet(numericUserId);
   
-      if (checkResponse.data?.pendingBets > 0) {
+      if (checkResponse?.pendingBets > 0) {
         alert("You have already placed a bet for this period.");
         return;
       }
@@ -205,22 +200,19 @@ const BigSmall = () => {
       }
   
       const payload = {
-        userId,
+        userId: numericUserId,
         betType,
         betValue,
         amount: contractMoney,
         periodNumber: currentPeriod,
       };
 
-      const response = await axios.post(
-        "https://rollix777.com/api/color/place-bet",
-        payload
-      );
+      const response = await placeBet(payload);
 
       if (response.status === 200) {
         const bet: Bet = {
           period: currentPeriod,
-          number: selectedNumber !== null ? selectedNumber : null,
+          number: selectedNumber,
           color: selectedColor || undefined,
           big_small: selectedSize || undefined,
           amount: contractMoney,
@@ -234,7 +226,7 @@ const BigSmall = () => {
         setAgreed(false);
       }
     } catch (error) {
-      // Handle error silently
+      console.error("Error placing bet:", error);
     }
   };
 
@@ -649,13 +641,13 @@ const BigSmall = () => {
                   {popup === "won" ? (
                     <>
                       Congratulations <br />
-                      BetAmount: {betHistory.amount} <br />
-                      AmountReceived: {betHistory.amountReceived}
+                      BetAmount: {betHistory?.amount} <br />
+                      AmountReceived: {betHistory?.amountReceived}
                     </>
                   ) : (
                     <>
                       Better luck next time! <br />
-                      BetAmount: {betHistory.amount}
+                      BetAmount: {betHistory?.amount}
                     </>
                   )}
                 </label>

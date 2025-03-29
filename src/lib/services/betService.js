@@ -21,5 +21,4 @@ const request = async (endpoint, data) => {
     throw error;
   }
 };
-
 export const betHistory = async data => request("/api/color/bet-history", data);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Bell, Lock, Moon, Globe, Shield, X, EyeOff, Eye, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { updatePassword } from "../../lib/services/securityService.js";
@@ -11,7 +11,9 @@ const Settings = () => {
     security: true
   });
 
-  const [darkMode, setDarkMode] = useState(true);
+
+
+  const [darkMode, setDarkMode] = useState(false);
   const [language, setLanguage] = useState('en');
   const [PasswordPopup, setPasswordPopup] = useState(false);
   const [TwoFactorPopup, setTwoFactorPopup] = useState(false);
@@ -19,10 +21,12 @@ const Settings = () => {
   const [email, setEmail] = useState('');
   const [currentPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false)
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+ 
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setError('');
@@ -159,7 +163,7 @@ const Settings = () => {
             >
               <option value="en">English</option>
               <option value="es">Español</option>
-              <option value="fr">Français</option>
+              <option value="fr">Hindi</option>
               <option value="de">Deutsch</option>
             </select>
           </div>
@@ -228,55 +232,59 @@ const Settings = () => {
               )}
               <div className="space-y-2">
                 <label className="text-gray-300 text-sm">Old Password</label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="oldPassword"
-                  value={currentPassword}
-                  placeholder='Old Password'
-                  onChange={(e) => setOldPassword(e.target.value)}
-                  className="w-full py-2 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <Eye className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
+                <div className="relative">
+                  <input
+                    type={showOldPassword ? "text" : "password"}
+                    name="oldPassword"
+                    value={currentPassword}
+                    placeholder='Old Password'
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full py-2 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500 pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showOldPassword ? (
+                      <Eye className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <EyeOff className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-gray-300 text-sm">New Password</label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="newPassword"
-                  value={newPassword}
-                  placeholder='New Password'
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full py-2 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <Eye className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    name="newPassword"
+                    value={newPassword}
+                    placeholder='New Password'
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full py-2 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500 pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showNewPassword ? (
+                      <Eye className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <EyeOff className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors"
+                  className="w-full py-2 px-4 bg-gradient-to-br from-[#c319b2] to-[#1c1cbe] rounded-lg text-white transition-colors"
                 >
                   Change Password
                 </button>

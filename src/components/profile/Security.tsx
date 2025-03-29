@@ -19,7 +19,7 @@ const Security = () => {
       setPassword('');
       setTimeout(() => {
         setSuccess('');
-      }, 1500);
+      }, 2000);
     } catch (err) {
       setError('Failed to update password. Please try again.');
     }
