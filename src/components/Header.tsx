@@ -11,11 +11,19 @@ import {
 } from "lucide-react";
 import AuthModal from "./AuthModal.tsx";
 import SideNav from "./SideNav.tsx";
-import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store.ts";
 import { logout } from "../slices/authSlice.ts";
 import { setWallets } from "../slices/walletSlice.ts";
+import { getWalletBalance } from "../lib/services/WalletService";
+
+interface CryptoCurrency {
+  name: string;
+  symbol: string;
+  color: string;
+  cryptoname: string;
+  balance: string;
+}
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,7 +31,6 @@ const Header: React.FC = () => {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
-  // const [wallets, setWallets] = useState([]);
   const { wallets } = useSelector((state: RootState) => state.wallet);
   const { isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
@@ -32,14 +39,15 @@ const Header: React.FC = () => {
     name: "INR",
     symbol: "₹",
     color: "bg-black",
-    balance: "0", // Initially 0 until API fetches data
+    balance: "0",
   });
-  // Ensure selected currency updates
+
   const dispatch = useDispatch();
-  const handleCurrencySelect = (crypto) => {
+
+  const handleCurrencySelect = (crypto: CryptoCurrency) => {
     setSelectedCurrency({
       name: crypto.name,
-      symbol: crypto.symbol, // Update symbol dynamically
+      symbol: crypto.symbol,
       color: crypto.color,
       balance: crypto.balance,
     });
@@ -49,16 +57,17 @@ const Header: React.FC = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axios.get(
-          `https://rollix777.com/api/user/wallet/${user.id}`
-        );
-        dispatch(setWallets(response.data));
+        if (user?.id) {
+          const walletData = await getWalletBalance(user.id);
+          dispatch(setWallets(walletData));
+        }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching wallet data:", error);
       }
     }
     fetchData();
-  }, [user?.id]);
+  }, [user?.id, dispatch]);
+
   const updatedCryptos = [
     { name: "Bitcoin", symbol: "₿", color: "bg-yellow-500", cryptoname: "BTC" },
     { name: "Litecoin", symbol: "Ł", color: "bg-gray-500", cryptoname: "LTC" },
@@ -114,7 +123,7 @@ const Header: React.FC = () => {
     setIsModalOpen(true);
     setIsMenuOpen(false);
   };
-  // console.log("authmode", authMode);
+
   const toggleWallet = () => {
     setIsWalletOpen(!isWalletOpen);
   };

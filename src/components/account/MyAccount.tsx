@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Wallet, 
@@ -12,12 +12,47 @@ import {
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { getWalletBalance } from '../../lib/services/WalletService';
+import toast from 'react-hot-toast';
+import { logout } from '../../slices/authSlice';
+
 // Import your logout action if you have one
 // import { logout } from '../../store/slices/authSlice';
 
 const MyAccount: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [balance, setBalance] = useState('0');
+  const [bonusBalance, setBonusBalance] = useState('0');
+  const name = localStorage.getItem("userName") || "User";
+  const id = localStorage.getItem("userId");
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        if (id) {
+          const numericId = parseInt(id, 10);
+          if (!isNaN(numericId)) {
+            const walletData = await getWalletBalance(numericId);
+            const inrWallet = walletData.find(w => w.cryptoname === 'INR');
+            const bonusWallet = walletData.find(w => w.cryptoname === 'BONUS');
+            
+            if (inrWallet) {
+              setBalance(inrWallet.balance);
+            }
+            if (bonusWallet) {
+              setBonusBalance(bonusWallet.balance);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+        toast.error('Failed to fetch balance');
+      }
+    };
+
+    fetchBalance();
+  }, [id]);
 
   const menuItems = [
     { 
@@ -53,16 +88,37 @@ const MyAccount: React.FC = () => {
   ];
 
   const handleLogout = () => {
-    // Add your logout logic here
-    // dispatch(logout());
-    localStorage.removeItem('userId');
-    navigate('/login');
+    // Clear all localStorage items
+    localStorage.clear();
+    
+    // Remove specific items
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("isAuthenticated");
+    
+    // Dispatch logout action
+    dispatch(logout());
+    
+    // Show success message
+    toast.success('Logged out successfully', {
+      position: 'top-center',
+      duration: 2000,
+      style: {
+        background: '#1A1A2E',
+        color: '#fff',
+        border: '1px solid #8B5CF6',
+      },
+    });
+
+    // Navigate to home page
+    navigate("/");
   };
 
   return (
     <div className="pt-16 pb-24 bg-[#0F0F19]">
       <div className="px-4 py-6 space-y-6">
-        {/* Header - Updated to match Profile */}
+        {/* Header */}
         <div className="flex items-center gap-4">
           <Link 
             to="/" 
@@ -78,8 +134,8 @@ const MyAccount: React.FC = () => {
             <User className="w-10 h-10 text-purple-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">John Doe</h2>
-            <p className="text-gray-400">ID: 123456789</p>
+            <h2 className="text-2xl font-bold text-white">{name}</h2>
+            <p className="text-gray-400">ID: {id}</p>
           </div>
         </div>
 
@@ -88,11 +144,15 @@ const MyAccount: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-4">
               <p className="text-white/80 text-sm">Available Balance</p>
-              <h2 className="text-2xl font-bold text-white mt-1">$1,234.56</h2>
+              <h2 className="text-2xl font-bold text-white mt-1">
+                ₹{parseFloat(balance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </h2>
             </div>
             <div className="bg-gradient-to-r from-[#252547] to-[#1A1A2E] rounded-xl p-4 border border-purple-500/20">
               <p className="text-white/80 text-sm">Bonus Balance</p>
-              <h2 className="text-2xl font-bold text-white mt-1">$50.00</h2>
+              <h2 className="text-2xl font-bold text-white mt-1">
+                ₹{parseFloat(bonusBalance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </h2>
             </div>
           </div>
         </div>

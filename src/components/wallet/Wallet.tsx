@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Wallet as WalletIcon, 
@@ -9,21 +9,58 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { getWalletBalance } from '../../lib/services/WalletService';
+import toast from 'react-hot-toast';
 
 const Wallet: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount, setAmount] = useState('');
+  const [balance, setBalance] = useState('0');
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { wallets } = useSelector((state: RootState) => state.wallet);
 
   const quickAmounts = ['500', '1000', '2000', '5000', '10000', '20000'];
 
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        if (user?.id) {
+          const walletData = await getWalletBalance(user.id);
+          const inrWallet = walletData.find(w => w.cryptoname === 'INR');
+          if (inrWallet) {
+            setBalance(inrWallet.balance);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+        toast.error('Failed to fetch balance');
+      }
+    };
+
+    fetchBalance();
+  }, [user?.id]);
+
   const handleCopyUpi = () => {
     navigator.clipboard.writeText('test@paytm');
-    // Add toast notification here if you have one
-    alert('UPI ID copied to clipboard');
+    toast.success('UPI ID copied to clipboard');
   };
 
-  const handleRefresh = () => {
-    // Add balance refresh logic here
+  const handleRefresh = async () => {
+    try {
+      if (user?.id) {
+        const walletData = await getWalletBalance(user.id);
+        const inrWallet = walletData.find(w => w.cryptoname === 'INR');
+        if (inrWallet) {
+          setBalance(inrWallet.balance);
+          toast.success('Balance refreshed');
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing balance:', error);
+      toast.error('Failed to refresh balance');
+    }
   };
 
   return (
@@ -42,12 +79,20 @@ const Wallet: React.FC = () => {
 
         {/* Balance Card - Updated styling */}
         <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
-          <div className="p-4 border-b border-purple-500/10 flex items-center gap-3">
-            <WalletIcon className="w-5 h-5 text-purple-400" />
-            <h2 className="text-lg font-semibold text-white">Available Balance</h2>
+          <div className="p-4 border-b border-purple-500/10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <WalletIcon className="w-5 h-5 text-purple-400" />
+              <h2 className="text-lg font-semibold text-white">Available Balance</h2>
+            </div>
+            <button
+              onClick={handleRefresh}
+              className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
+            >
+              <RefreshCw size={18} />
+            </button>
           </div>
           <div className="p-6">
-            <h2 className="text-3xl font-bold text-white">₹1,234.56</h2>
+            <h2 className="text-3xl font-bold text-white">₹{parseFloat(balance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
           </div>
         </div>
 

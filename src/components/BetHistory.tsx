@@ -1,33 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { Search, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import {betHistory} from '../lib/services/betService'
+import { betHistory, Bet } from '../lib/services/betService';
 
 const BetHistory = () => {
   const [statusFilter, setStatusFilter] = useState('all');
-  const [bets, setBets] = useState([]);
+  const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const fetchBetHistory = async () => {
       try {
-        const response = await betHistory({ userId: 29 });
-
-        console.log("Full API Response:", response); 
-        const betData = response.betHistory || []; 
-
-        if (!Array.isArray(betData)) {
-            console.error("Unexpected data format:", betData);
+        // Get user ID from localStorage
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          throw new Error("User not logged in");
         }
 
-        setBets(betData); // Set the correct data
-    } catch (err) {
-        console.error("Error fetching data:", err.message);
-        setError(err.message);
-    } finally {
+        const response = await betHistory({ 
+          userId: parseInt(userId),
+          page: 1,
+          limit: 10
+        });
+
+        if (!response || !Array.isArray(response.betHistory)) {
+          throw new Error("Invalid response format");
+        }
+
+        setBets(response.betHistory);
+      } catch (err: any) {
+        console.error("Error fetching bet history:", err);
+        setError(err.message || "Failed to fetch bet history. Please try again later.");
+      } finally {
         setLoading(false);
-    }
+      }
     };
 
     fetchBetHistory();
