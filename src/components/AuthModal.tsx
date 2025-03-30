@@ -37,7 +37,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [referalCode, setReferalCode] = useState("");
+  const [dob, setDob] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -120,43 +122,101 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    // Generate referral code using username and phone number
-    const generatedReferralCode = generateReferralCode(username, phoneNumber);
+    if (!dob) {
+      setError("Please enter your date of birth");
+      return;
+    }
 
-    // Create payload
+    // Validate required fields
+    if (!username.trim() || !email.trim() || !password.trim() || !phoneNumber.trim()) {
+      setError("Please fill in all required fields");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Validate phone number
+    if (phoneNumber.length !== 10) {
+      setError("Phone number must be 10 digits");
+      return;
+    }
+
+    // Create payload with trimmed values
     const registerPayload = {
-      username,
-      email,
-      password,
-      phoneNumber,
-      referalCode: referalCode || '', // Existing referral code if any
-      myReferralCode: generatedReferralCode // New generated referral code
+      name: username.trim(),
+      email: email.trim().toLowerCase(),
+      password: password.trim(),
+      phoneNumber: phoneNumber.trim(),
+      dob: dob.trim(),
+      referalCode: generateReferralCode(username, phoneNumber)
     };
 
     console.log("Register Payload:", registerPayload);
 
     try {
       const data = await register(registerPayload);
-      localStorage.setItem("userToken", data.token);
-      localStorage.setItem("userId", data.user.id);
-      localStorage.setItem("userName", data.user.username);
-      localStorage.removeItem('pendingReferralCode');
+      
+      // Check if registration was successful
+      if (data && data.message === 'User registered and wallet initialized successfully') {
+        // Show success message
+        setSuccess("Registration successful! Please login.");
+        setError("");
+        
+        // Store email and password for auto-fill
+        const registeredEmail = email;
+        const registeredPassword = password;
+        
+        // Clear form fields
+        setUsername("");
+        setEmail("");
+        setPassword("");
+        setPhoneNumber("");
+        setDob("");
+        setReferalCode("");
+        setAcceptTerms(false);
+        
+        // Switch to login mode after 2 seconds and auto-fill credentials
+        setTimeout(() => {
+          setMode("login");
+          setEmail(registeredEmail);
+          setPassword(registeredPassword);
+          setSuccess("");
+        }, 2000);
+      } else {
+        throw new Error("Registration failed. Please try again.");
+      }
 
-      dispatch(
-        login({
-          user: { id: data.user.id, name: data.user.username },
-          token: data.token,
-        })
-      );
-
-      onLoginSuccess();
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Registration failed:", error.message);
-      setError(error.message);
+    } catch (error: any) {
+      console.error("Registration failed:", error);
+      setSuccess("");
+      
+      // Handle specific error cases
+      if (error.response) {
+        // Server responded with error
+        const errorMessage = error.response.data?.message || error.response.data?.error || "Registration failed";
+        setError(errorMessage);
+      } else if (error.request) {
+        // Request made but no response
+        setError("Network error. Please check your connection and try again.");
+      } else {
+        // Something else went wrong
+        setError(error.message || "An unexpected error occurred. Please try again.");
+      }
     }
   };
-
+     
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div
@@ -185,6 +245,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
           {error && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 text-sm">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg text-green-200 text-sm">
+              {success}
             </div>
           )}
 
@@ -251,6 +317,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </form>
           ) : (
             <form className="space-y-4" onSubmit={handleRegister}>
+              {/* Username Field */}
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">Username</label>
                 <div className="relative">
@@ -263,10 +330,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Choose a username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    required
                   />
                 </div>
               </div>
 
+              {/* Email Field */}
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">Email</label>
                 <div className="relative">
@@ -279,12 +348,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                 </div>
               </div>
 
-          
-
+              {/* Phone Number Field */}
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">Phone Number</label>
                 <div className="relative">
@@ -311,6 +380,53 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 )}
               </div>
 
+              {/* Password Field */}
+              <div className="space-y-1">
+                <label className="text-sm text-gray-300">Password</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Lock className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="w-full py-3 pl-10 pr-10 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <Eye className="w-5 h-5 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* DOB Field */}
+              <div className="space-y-1">
+                <label className="text-sm text-gray-300">Date of Birth</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <User className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <input
+                    type="date"
+                    className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Referral Code Field */}
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">
                   Referral Code (Optional)
@@ -330,33 +446,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Lock className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    className="w-full py-3 pl-10 pr-10 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                    placeholder="Create a password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5 text-gray-400" />
-                    ) : (
-                      <Eye className="w-5 h-5 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
+              {/* Terms and Conditions */}
               <div className="flex items-center">
                 <div
                   className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
@@ -378,6 +468,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 </label>
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
                 className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"

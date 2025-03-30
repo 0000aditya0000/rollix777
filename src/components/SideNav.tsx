@@ -23,7 +23,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
   // console.log(onLogout);
  const navigate = useNavigate()
   if (!isOpen) return null;
-const name = localStorage.getItem("userName");
+  const name = localStorage.getItem("userName") || "User";
 
   const menuItems = [
     { icon: <User size={20} />, label: 'My Profile', path: '/profile' },
