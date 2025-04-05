@@ -111,7 +111,7 @@ const BigSmall = () => {
 
   const fetchTableData = async () => {
     try {
-      const response = await axios.get("https://rollix777.com/api/color/results");
+      const response = await axios.get("http://localhost:5000/api/color/results");
       setCurrentPeriod(response.data.results[0].period_number+1);
       setRecords(response.data.results);
     } catch (error) {
@@ -122,7 +122,7 @@ const BigSmall = () => {
   const getResult = async () => {
     try {
       const response = await axios.post(
-        "https://rollix777.com/api/color/generate-result",
+        "http://localhost:5000/api/color/generate-result",
         {
           periodNumber: currentPeriod,
         }
@@ -144,7 +144,7 @@ const BigSmall = () => {
   const checkWinLose = async (result: any) => {
     try {
       const response = await axios.post(
-        "https://rollix777.com/api/color/bet-history",
+        "http://localhost:5000/api/color/bet-history",
         { userId },
         {
           headers: {
@@ -179,7 +179,7 @@ const BigSmall = () => {
   const handleBet = async () => {
     try {
       const checkResponse = await axios.post(
-        "https://rollix777.com/api/color/checkValidBet",
+        "http://localhost:5000/api/color/checkValidBet",
         { userId }
       );
   
@@ -213,7 +213,7 @@ const BigSmall = () => {
       };
 
       const response = await axios.post(
-        "https://rollix777.com/api/color/place-bet",
+        "http://localhost:5000/api/color/place-bet",
         payload
       );
 

@@ -50,7 +50,7 @@ const Header: React.FC = () => {
     async function fetchData() {
       try {
         const response = await axios.get(
-          `https://rollix777.com/api/user/wallet/${user.id}`
+          `http://localhost:5000/api/user/wallet/${user.id}`
         );
         dispatch(setWallets(response.data));
       } catch (error) {

@@ -35,6 +35,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState("");
   const [referalCode, setReferalCode] = useState("");
@@ -97,6 +98,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
       localStorage.setItem("userToken", data.token);
       localStorage.setItem("userId", data.user.id);
       localStorage.setItem("userName", data.user.username);
+      localStorage.setItem("referralCode", data.user.referalCode);
       dispatch(
         login({
           user: { id: data.user.id, name: data.user.username },
@@ -105,7 +107,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
       );
       onLoginSuccess();
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error.message);
       setError(error.message);
       dispatch(logout());
@@ -120,11 +122,23 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    // Generate referral code using username and phone number
-    const generatedReferralCode = generateReferralCode(username, phoneNumber);
+    // Validate required fields
+    if (!name.trim() || !username.trim() || !email.trim() || !phoneNumber.trim() || !password.trim()) {
+      setError("Please fill in all required fields");
+      return;
+    }
+
+    if (phoneNumber.length !== 10) {
+      setError("Phone number must be 10 digits");
+      return;
+    }
+
+    // Generate referral code using name and phone number
+    const generatedReferralCode = generateReferralCode(name, phoneNumber);
 
     // Create payload
     const registerPayload = {
+      name,
       username,
       email,
       password,
@@ -137,21 +151,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       const data = await register(registerPayload);
-      localStorage.setItem("userToken", data.token);
-      localStorage.setItem("userId", data.user.id);
-      localStorage.setItem("userName", data.user.username);
-      localStorage.removeItem('pendingReferralCode');
-
-      dispatch(
-        login({
-          user: { id: data.user.id, name: data.user.username },
-          token: data.token,
-        })
-      );
-
       onLoginSuccess();
-      navigate("/dashboard");
-    } catch (error) {
+    
+    } catch (error: any) {
       console.error("Registration failed:", error.message);
       setError(error.message);
     }
@@ -252,6 +254,23 @@ const AuthModal: React.FC<AuthModalProps> = ({
           ) : (
             <form className="space-y-4" onSubmit={handleRegister}>
               <div className="space-y-1">
+                <label className="text-sm text-gray-300">Full Name</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <User className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <input
+                    type="text"
+                    className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                    placeholder="Enter your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
                 <label className="text-sm text-gray-300">Username</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -263,6 +282,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Choose a username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    required
                   />
                 </div>
               </div>
@@ -279,11 +299,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                 </div>
               </div>
-
-          
 
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">Phone Number</label>
@@ -342,6 +361,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Create a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
                   <button
                     type="button"

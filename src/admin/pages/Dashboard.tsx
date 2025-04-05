@@ -10,7 +10,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('https://rollix777.com/api/user/allusers');
+        const response = await axios.get('http://localhost:5000/api/user/allusers');
         setUsers(response.data); // Set the fetched data to the state
 
       } catch (error) {

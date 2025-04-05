@@ -1,14 +1,27 @@
-import React from 'react';
+import React , {useEffect} from 'react';
 import { Copy, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AgentProgram: React.FC = () => {
-  const [invitationCode] = React.useState('646726816732');
+  // const [invitationCode] = React.useState('646726816732');
+  const [referralCode, setReferralCode] = React.useState('');
+  
 
+  useEffect(() => {
+    const referralCode = localStorage.getItem('referralCode');
+    console.log(referralCode);
+    setReferralCode(referralCode || '');
+  }, []);
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(invitationCode);
+    navigator.clipboard.writeText(referralCode);
     // Add toast notification here if you have one
     alert('Invitation code copied to clipboard');
+  };
+
+  const handleCopyLink = () => {
+    const invitationLink = `https://www.rollix777.com/refer/${referralCode}`;
+    navigator.clipboard.writeText(invitationLink);
+    alert('Invitation link copied to clipboard');
   };
 
   return (
@@ -87,6 +100,24 @@ const AgentProgram: React.FC = () => {
             INVITATION LINK
           </button>
 
+          {/* Invitation Link Card */}
+          <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 mr-3">
+                <p className="text-sm text-gray-400 mb-1">Copy invitation link</p>
+                <p className="text-white font-medium break-all">
+                  https://www.rollix777.com/refer/{referralCode}
+                </p>
+              </div>
+              <button 
+                onClick={handleCopyLink}
+                className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors flex-shrink-0"
+              >
+                <Copy size={16} />
+              </button>
+            </div>
+          </div>
+
           {/* Copy Code Card */}
           <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4">
             <div className="flex items-center justify-between">
@@ -96,7 +127,7 @@ const AgentProgram: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Copy invitation code</p>
-                  <p className="text-white font-medium">{invitationCode}</p>
+                  <p className="text-white font-medium">{referralCode}</p>
                 </div>
               </div>
               <button 

@@ -1,114 +1,104 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import referralService from '../../lib/services/referralService';
 
-interface TeamMember {
-  id: string;
+interface ReferralMember {
+  id: number;
   name: string;
-  uid: string;
-  depositAmount: number;
-  totalBet: number;
-  firstDeposit: number;
-  profilePic?: string;
-  joinDate: string;
+  username: string;
+  email: string;
+  level: number;
+  // Additional fields with dummy values
+  depositAmount?: number;
+  totalBet?: number;
+  firstDeposit?: number;
+  joinDate?: string;
+}
+
+interface ReferralResponse {
+  userId: string;
+  totalReferrals: number;
+  referralsByLevel: {
+    level1: ReferralMember[];
+    level2: ReferralMember[];
+    level3: ReferralMember[];
+    level4: ReferralMember[];
+    level5: ReferralMember[];
+  };
 }
 
 const TeamReport: React.FC = () => {
   const [searchId, setSearchId] = useState('');
+  const [referralData, setReferralData] = useState<ReferralResponse | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Dummy data for team members
-  const dummyTeamMembers: TeamMember[] = [
-    {
-      id: '1',
-      name: 'John Doe',
-      uid: 'UID78945',
-      depositAmount: 5000,
-      totalBet: 15000,
-      firstDeposit: 1000,
-      joinDate: '2024-03-25'
-    },
-    {
-      id: '2',
-      name: 'Alice Smith',
-      uid: 'UID78946',
-      depositAmount: 7500,
-      totalBet: 25000,
-      firstDeposit: 2000,
-      joinDate: '2024-03-24'
-    },
-    {
-      id: '3',
-      name: 'Bob Johnson',
-      uid: 'UID78947',
-      depositAmount: 3000,
-      totalBet: 10000,
-      firstDeposit: 500,
-      joinDate: '2024-03-23'
-    },
-    {
-      id: '4',
-      name: 'Emma Wilson',
-      uid: 'UID78948',
-      depositAmount: 8500,
-      totalBet: 30000,
-      firstDeposit: 2500,
-      joinDate: '2024-03-22'
-    },
-    {
-      id: '5',
-      name: 'Michael Brown',
-      uid: 'UID78949',
-      depositAmount: 12000,
-      totalBet: 45000,
-      firstDeposit: 3000,
-      joinDate: '2024-03-21'
-    },
-    {
-      id: '6',
-      name: 'Sarah Davis',
-      uid: 'UID78950',
-      depositAmount: 6000,
-      totalBet: 20000,
-      firstDeposit: 1500,
-      joinDate: '2024-03-20'
-    },
-    {
-      id: '7',
-      name: 'David Lee',
-      uid: 'UID78951',
-      depositAmount: 9500,
-      totalBet: 35000,
-      firstDeposit: 2000,
-      joinDate: '2024-03-19'
-    },
-    {
-      id: '8',
-      name: 'Lisa Anderson',
-      uid: 'UID78952',
-      depositAmount: 4000,
-      totalBet: 12000,
-      firstDeposit: 800,
-      joinDate: '2024-03-18'
-    },
-    {
-      id: '9',
-      name: 'James Wilson',
-      uid: 'UID78953',
-      depositAmount: 11000,
-      totalBet: 40000,
-      firstDeposit: 2800,
-      joinDate: '2024-03-17'
-    },
-    {
-      id: '10',
-      name: 'Maria Garcia',
-      uid: 'UID78954',
-      depositAmount: 7000,
-      totalBet: 25000,
-      firstDeposit: 1800,
-      joinDate: '2024-03-16'
+  useEffect(() => {
+    const fetchReferrals = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          console.error('User ID not found in localStorage');
+          return;
+        }
+        
+        const data = await referralService.getReferrals(userId);
+        console.log('Referral data:', data); // For debugging
+        setReferralData(data);
+      } catch (error) {
+        console.error('Error fetching referrals:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReferrals();
+  }, []);
+
+  // Modified getAllMembers function with debug logs
+  const getAllMembers = () => {
+    if (!referralData) {
+      console.log('No referral data available');
+      return [];
     }
-  ];
+
+    console.log('Processing referral data:', referralData); // Debug log
+
+    const allLevels = [
+      ...(referralData.referralsByLevel.level1 || []),
+      ...(referralData.referralsByLevel.level2 || []),
+      ...(referralData.referralsByLevel.level3 || []),
+      ...(referralData.referralsByLevel.level4 || []),
+      ...(referralData.referralsByLevel.level5 || []),
+    ];
+
+    console.log('Combined levels:', allLevels); // Debug log
+
+    const membersWithDummyData = allLevels.map(member => ({
+      ...member,
+      depositAmount: Math.floor(Math.random() * 10000) + 1000,
+      totalBet: Math.floor(Math.random() * 30000) + 5000,
+      firstDeposit: Math.floor(Math.random() * 3000) + 500,
+      joinDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString().split('T')[0],
+    }));
+
+    console.log('Members with dummy data:', membersWithDummyData); // Debug log
+    return membersWithDummyData;
+  };
+
+  // Calculate total stats
+  const calculateTotalStats = () => {
+    const members = getAllMembers();
+    return {
+      depositAmount: members.reduce((sum, member) => sum + (member.depositAmount || 0), 0),
+      totalBet: members.reduce((sum, member) => sum + (member.totalBet || 0), 0),
+      firstDeposit: members.reduce((sum, member) => sum + (member.firstDeposit || 0), 0),
+    };
+  };
+
+  // Modified render section
+  const members = getAllMembers();
+  const totals = calculateTotalStats();
 
   return (
     <div className="min-h-screen bg-[#0F0F19]">
@@ -144,9 +134,9 @@ const TeamReport: React.FC = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { title: 'Deposit Amount', value: '₹15,500' },
-            { title: 'Total Bet', value: '₹50,000' },
-            { title: 'First Deposit', value: '₹3,500' }
+            { title: 'Deposit Amount', value: `₹${totals.depositAmount.toLocaleString()}` },
+            { title: 'Total Bet', value: `₹${totals.totalBet.toLocaleString()}` },
+            { title: 'First Deposit', value: `₹${totals.firstDeposit.toLocaleString()}` }
           ].map((stat, index) => (
             <div 
               key={index}
@@ -160,54 +150,50 @@ const TeamReport: React.FC = () => {
 
         {/* Team Members List */}
         <div className="space-y-3">
-          {dummyTeamMembers.map((member) => (
-            <div
-              key={member.id}
-              className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4"
-            >
-              <div className="flex items-center gap-4">
-                {/* Profile Picture */}
-                <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
-                  {member.profilePic ? (
-                    <img 
-                      src={member.profilePic} 
-                      alt={member.name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
+          {loading ? (
+            <div className="text-center text-gray-400">Loading...</div>
+          ) : members.length > 0 ? (
+            members.map((member) => (
+              <div
+                key={member.id}
+                className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
                     <User className="w-6 h-6 text-purple-400" />
-                  )}
-                </div>
-
-                {/* Member Details */}
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-white font-medium">{member.name}</h3>
-                      <p className="text-gray-400 text-sm">UID: {member.uid}</p>
-                    </div>
-                    <p className="text-gray-400 text-xs">{member.joinDate}</p>
                   </div>
-                  
-                  {/* Member Stats */}
-                  <div className="grid grid-cols-3 gap-2 mt-3">
-                    <div>
-                      <p className="text-gray-400 text-xs">Deposit</p>
-                      <p className="text-white">₹{member.depositAmount}</p>
+
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-white font-medium">{member.name}</h3>
+                        <p className="text-gray-400 text-sm">Username: {member.username}</p>
+                        <p className="text-gray-400 text-sm">Level: {member.level}</p>
+                      </div>
+                      <p className="text-gray-400 text-xs">{member.joinDate}</p>
                     </div>
-                    <div>
-                      <p className="text-gray-400 text-xs">Total Bet</p>
-                      <p className="text-white">₹{member.totalBet}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-xs">First Deposit</p>
-                      <p className="text-white">₹{member.firstDeposit}</p>
+                    
+                    <div className="grid grid-cols-3 gap-2 mt-3">
+                      <div>
+                        <p className="text-gray-400 text-xs">Deposit</p>
+                        <p className="text-white">₹{member.depositAmount?.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-xs">Total Bet</p>
+                        <p className="text-white">₹{member.totalBet?.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-xs">First Deposit</p>
+                        <p className="text-white">₹{member.firstDeposit?.toLocaleString()}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center text-gray-400">No team members found</div>
+          )}
         </div>
       </div>
     </div>

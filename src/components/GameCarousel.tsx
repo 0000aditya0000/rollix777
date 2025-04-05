@@ -32,7 +32,7 @@ const generateRandom10Digits = () => {
 const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
   
   const userId = localStorage.getItem("userId");
-  const response = await axios.get(`https://rollix777.com/api/user/wallet/${userId}`);
+  const response = await axios.get(`http://localhost:5000/api/user/wallet/${userId}`);
   const balance = response.data[10].balance;
   console.log(balance);
 
@@ -53,7 +53,7 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
       currency_code: "BRL",
       language: "en",
       platform: "2",
-      home_url: "https://rollix777.com",
+      home_url: "http://localhost:5000",
       transfer_id: transferId,
     };
 
