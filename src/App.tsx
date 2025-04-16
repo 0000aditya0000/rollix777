@@ -51,14 +51,15 @@ function App() {
         {/* Admin Routes - Full width */}
         <Route path="/admin/*" element={<AdminRoutes />} />
 
-        {/* Main App Routes - Mobile width */}
+        {/* Main App Routes - Modified for responsive width */}
         <Route
           path="/*"
           element={
             <div className="fixed inset-0 bg-[#0F0F19] overflow-y-auto hide-scrollbar">
-              <div className="mx-auto w-[100%] max-w-[430px] relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E]">
+              {/* Remove max-width constraint for desktop, only apply it for mobile */}
+              <div className="mx-auto w-full md:w-full max-w-[430px] md:max-w-none relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E]">
                 <Header />
-                <main>
+                <main className="min-h-screen">
                   <Routes>
                     <Route path="/" element={<Home />} />
                   

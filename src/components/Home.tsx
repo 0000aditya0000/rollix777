@@ -31,13 +31,15 @@ const Home = () => {
   return (
     <div>
       <div className="fixed inset-0 bg-[#0F0F19] overflow-y-auto hide-scrollbar">
-        <div className="mx-auto w-[100%] max-w-[430px] relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E]">
+        <div>
           <Header onLogout={"hiii"}/>
           <main>
             <Hero />
             <GameCarousel title="Featured Games" type="featured" />
             <TrendingGames />
+            <div className='md:hidden'>
             <ColorGame />
+            </div>
             <HotGames />
             <Promotions />
             <Features />

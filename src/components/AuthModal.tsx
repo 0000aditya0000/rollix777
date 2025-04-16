@@ -253,158 +253,165 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </form>
           ) : (
             <form className="space-y-4" onSubmit={handleRegister}>
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Full Name</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <User className="w-5 h-5 text-purple-400" />
+              <div className="space-y-4">
+                {/* Full Name - Full width */}
+                <div>
+                  <label className="text-sm text-gray-300 block mb-1">Full Name</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <User className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <input
+                      type="text"
+                      className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                      placeholder="Enter your full name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
                   </div>
-                  <input
-                    type="text"
-                    className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                    placeholder="Enter your full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
+                </div>
+
+                {/* Username and Email - Two columns */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-300 block mb-1">Username</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <User className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <input
+                        type="text"
+                        className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                        placeholder="Choose a username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-300 block mb-1">Email</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Mail className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <input
+                        type="email"
+                        className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Phone and Referral - Two columns */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-300 block mb-1">Phone Number</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Phone className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <input
+                        type="tel"
+                        className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                        placeholder="Enter your phone number"
+                        value={phoneNumber}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').substring(0, 10);
+                          setPhoneNumber(value);
+                        }}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-300 block mb-1">
+                      Referral Code (Optional)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Gift className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <input
+                        type="text"
+                        className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                        placeholder="Enter referral code"
+                        value={referalCode}
+                        onChange={(e) => setReferalCode(e.target.value)}
+                        disabled={!!localStorage.getItem('pendingReferralCode')}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Password - Full width */}
+                <div>
+                  <label className="text-sm text-gray-300 block mb-1">Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Lock className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="w-full py-3 pl-10 pr-10 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                      placeholder="Create a password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Username</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <User className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <input
-                    type="text"
-                    className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                    placeholder="Choose a username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Email</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Mail className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <input
-                    type="email"
-                    className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Phone Number</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Phone className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <input
-                    type="tel"
-                    className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                    placeholder="Enter your phone number"
-                    value={phoneNumber}
-                    onChange={(e) => {
-                      // Only allow numbers and limit to 10 digits
-                      const value = e.target.value.replace(/\D/g, '').substring(0, 10);
-                      setPhoneNumber(value);
-                    }}
-                    required
-                  />
-                </div>
-                {phoneNumber && phoneNumber.length !== 10 && (
-                  <p className="text-red-400 text-xs mt-1">
-                    Phone number must be 10 digits
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">
-                  Referral Code (Optional)
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Gift className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <input
-                    type="text"
-                    className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                    placeholder="Enter referral code if you have one"
-                    value={referalCode}
-                    onChange={(e) => setReferalCode(e.target.value)}
-                    disabled={!!localStorage.getItem('pendingReferralCode')}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Lock className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    className="w-full py-3 pl-10 pr-10 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                    placeholder="Create a password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+              {/* Terms and Register Button */}
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <div
+                    className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
+                      acceptTerms
+                        ? "bg-purple-600"
+                        : "bg-[#1A1A2E] border border-purple-500/20"
+                    }`}
+                    onClick={() => setAcceptTerms(!acceptTerms)}
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5 text-gray-400" />
-                    ) : (
-                      <Eye className="w-5 h-5 text-gray-400" />
-                    )}
-                  </button>
+                    {acceptTerms && <Check className="w-4 h-4 text-white" />}
+                  </div>
+                  <label
+                    className="text-sm text-gray-300 cursor-pointer"
+                    onClick={() => setAcceptTerms(!acceptTerms)}
+                  >
+                    I accept the{" "}
+                    <span className="text-purple-400">Terms of Service</span> and{" "}
+                    <span className="text-purple-400">Privacy Policy</span>
+                  </label>
                 </div>
-              </div>
 
-              <div className="flex items-center">
-                <div
-                  className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
-                    acceptTerms
-                      ? "bg-purple-600"
-                      : "bg-[#1A1A2E] border border-purple-500/20"
-                  }`}
-                  onClick={() => setAcceptTerms(!acceptTerms)}
+                <button
+                  type="submit"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                  disabled={!acceptTerms || phoneNumber.length !== 10}
                 >
-                  {acceptTerms && <Check className="w-4 h-4 text-white" />}
-                </div>
-                <label
-                  className="text-sm text-gray-300 cursor-pointer"
-                  onClick={() => setAcceptTerms(!acceptTerms)}
-                >
-                  I accept the{" "}
-                  <span className="text-purple-400">Terms of Service</span> and{" "}
-                  <span className="text-purple-400">Privacy Policy</span>
-                </label>
+                  Register
+                </button>
               </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-                disabled={!acceptTerms || phoneNumber.length !== 10}
-              >
-                Register
-              </button>
             </form>
           )}
         </div>

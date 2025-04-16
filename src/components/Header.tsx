@@ -8,7 +8,12 @@ import {
   ChevronDown,
   Bell,
   LogOut,
+  Home,
+  Gamepad2,
+  Gift,
+  User,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import AuthModal from "./AuthModal.tsx";
 import SideNav from "./SideNav.tsx";
 import axios from "axios";
@@ -145,9 +150,120 @@ const Header: React.FC = () => {
     }
   }, [wallets]);
 
+  const location = useLocation();
+
+  const navItems = [
+    { icon: Home, label: "Home", path: "/" },
+    { icon: Gamepad2, label: "Games", path: "/games" },
+    { icon: Gift, label: "Promotions", path: "/promotions" },
+    { 
+      icon: User, 
+      label: isAuthenticated ? "Account" : "Login", 
+      path: "/account" 
+    },
+  ];
+
   return (
     <>
-      <header className="fixed top-0 w-full max-w-[430px] z-40">
+      {/* Desktop Header */}
+      <header className="hidden md:block fixed top-0 left-0 right-0 z-50">
+        <div className="bg-[#1A1A2E]/95 backdrop-blur-lg border-b border-purple-500/10">
+          <div className="container mx-auto px-6">
+            <div className="h-16 flex items-center justify-between">
+              {/* Logo */}
+              <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Rollix777
+              </Link>
+
+              {/* Center Section - Wallet */}
+              {isAuthenticated && (
+                <div className="absolute left-1/2 transform -translate-x-1/2">
+                  <div className="relative" ref={walletRef}>
+                    <button
+                      onClick={toggleWallet}
+                      className="py-2 px-4 rounded-lg bg-[#252547] text-white font-medium hover:bg-[#2f2f5a] transition-colors flex items-center gap-2 border border-purple-500/20"
+                    >
+                      <Wallet className="w-4 h-4 text-purple-400" />
+                      <span>{selectedCurrency.symbol} {selectedCurrency.balance}</span>
+                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isWalletOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {isWalletOpen && (
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-[#252547] rounded-xl border border-purple-500/20 shadow-lg animate-fadeIn z-50">
+                        <div className="p-3 border-b border-purple-500/10">
+                          <h3 className="text-white font-semibold">My Wallet</h3>
+                        </div>
+                        <div className="p-3 space-y-3 max-h-48 overflow-y-auto hide-scrollbar">
+                          {updatedCryptos.map((crypto, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-2 hover:bg-[#2f2f5a] rounded-lg cursor-pointer"
+                              onClick={() => handleCurrencySelect(crypto)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-8 h-8 rounded-full ${crypto.color} flex items-center justify-center text-white font-bold`}
+                                >
+                                  {crypto.symbol}
+                                </div>
+                                <span className="text-white">{crypto.name}</span>
+                              </div>
+                              <span className="text-white">
+                                {crypto.balance} {crypto.cryptoname}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Right Section */}
+              {isAuthenticated ? (
+                <div className="flex items-center gap-4">
+                  {/* Notification Bell */}
+                  <button className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors border border-purple-500/10">
+                    <Bell size={20} />
+                    <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
+                      3
+                    </span>
+                  </button>
+
+                  {/* Hamburger Menu */}
+                  <button
+                    onClick={() => setIsSideNavOpen(true)}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors border border-purple-500/10"
+                  >
+                    <Menu size={20} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={openLoginModal}
+                    className="py-2 px-4 rounded-lg bg-[#252547] text-purple-400 font-medium hover:bg-[#2f2f5a] transition-colors flex items-center gap-2 border border-purple-500/10"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Login</span>
+                  </button>
+                  <button
+                    onClick={openRegisterModal}
+                    className="py-2 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Register</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Header - Your existing mobile header code */}
+      <header className="md:hidden fixed top-0 w-full max-w-[430px] z-40">
         <div className="px-4 py-3 bg-[#1A1A2E]/95 backdrop-blur-lg border-b border-purple-500/10">
           <div className="flex items-center justify-between">
             {isAuthenticated ? (

@@ -7,6 +7,7 @@ import { RootState } from "../store";
 import { useDispatch } from "react-redux";
 import { current } from "@reduxjs/toolkit";
 import { deposit, withdraw } from "../slices/walletSlice";
+import { baseUrl } from "../lib/config/server.js";
 
 type Record = {
   id: number;
@@ -111,7 +112,7 @@ const BigSmall = () => {
 
   const fetchTableData = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/color/results");
+      const response = await axios.get(`${baseURL}/api/color/results`);
       setCurrentPeriod(response.data.results[0].period_number+1);
       setRecords(response.data.results);
     } catch (error) {
@@ -122,7 +123,7 @@ const BigSmall = () => {
   const getResult = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/color/generate-result",
+        `${baseURL}/api/color/generate-result`,
         {
           periodNumber: currentPeriod,
         }
@@ -144,7 +145,7 @@ const BigSmall = () => {
   const checkWinLose = async (result: any) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/color/bet-history",
+        `${baseURL}/api/color/bet-history`,
         { userId },
         {
           headers: {
@@ -179,7 +180,7 @@ const BigSmall = () => {
   const handleBet = async () => {
     try {
       const checkResponse = await axios.post(
-        "http://localhost:5000/api/color/checkValidBet",
+        `${baseURL}/api/color/checkValidBet`,
         { userId }
       );
   
@@ -213,7 +214,7 @@ const BigSmall = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/color/place-bet",
+        `${baseURL}/api/color/place-bet`,
         payload
       );
 
@@ -549,7 +550,7 @@ const BigSmall = () => {
                   step={10}
                   type="number"
                   placeholder="Enter amount (Minimum ₹10)"
-                  value={contractMoney}
+                  value={contractMoney || ''}
                   onChange={(e) => {
                     const value = Number(e.target.value);
                     if (value > 100000) {
