@@ -25,35 +25,40 @@ const MyAccount: React.FC = () => {
       label: 'My Wallet', 
       route: '/wallet',
       description: 'Manage your balance and transactions',
-      color: 'from-blue-500 to-cyan-400'
+      bgColor: 'from-purple-600/10 to-pink-500/10',
+      hoverBg: 'from-purple-600/20 to-pink-500/20'
     },
     { 
       icon: History, 
       label: 'Transaction History', 
       route: '/bet-history',
       description: 'View your gaming history',
-      color: 'from-purple-500 to-indigo-500'
+      bgColor: 'from-blue-600/10 to-cyan-500/10',
+      hoverBg: 'from-blue-600/20 to-cyan-500/20'
     },
     { 
       icon: Gift, 
       label: 'My Rewards', 
       route: '/rewards',
       description: 'Check your rewards and bonuses',
-      color: 'from-pink-500 to-rose-400'
+      bgColor: 'from-amber-600/10 to-yellow-500/10',
+      hoverBg: 'from-amber-600/20 to-yellow-500/20'
     },
     { 
       icon: Settings, 
       label: 'Settings', 
       route: '/settings',
       description: 'Account preferences and security',
-      color: 'from-amber-500 to-orange-400'
+      bgColor: 'from-emerald-600/10 to-teal-500/10',
+      hoverBg: 'from-emerald-600/20 to-teal-500/20'
     },
     { 
       icon: HelpCircle, 
       label: 'Help Center', 
       route: '/help',
       description: '24/7 customer support',
-      color: 'from-emerald-500 to-teal-400'
+      bgColor: 'from-rose-600/10 to-red-500/10',
+      hoverBg: 'from-rose-600/20 to-red-500/20'
     },
   ];
 
@@ -65,89 +70,118 @@ const MyAccount: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F0F19] to-[#1a1a2e]">
-      <div className="max-w-7xl mx-auto px-8 py-12">
-        {/* Header Section */}
-        <div className="flex mt-8 justify-between items-center mb-12">
-          <div className="flex items-center gap-6">
+    <div className="min-h-screen bg-[#0F0F19]">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 bg-[#1A1A2E]/95 backdrop-blur-lg border-b border-purple-500/10 z-50">
+        <div className="max-w-[1400px] mx-auto px-4 h-16 md:h-20 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <Link 
               to="/" 
-              className="p-3 rounded-xl bg-white/5 text-purple-400 hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
+              className="p-2 rounded-lg bg-purple-600/10 text-purple-400 hover:bg-purple-600/20 transition-all"
             >
-              <ArrowLeft size={24} />
+              <ArrowLeft size={20} />
             </Link>
-            <h1 className="text-4xl font-bold text-white tracking-tight">My Account</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-white">My Account</h1>
           </div>
+          
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all duration-300"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-all"
           >
-            <LogOut className="w-5 h-5 text-red-400" />
-            <span className="text-red-400 font-medium">Logout</span>
+            <LogOut className="w-4 h-4 md:w-5 md:h-5 text-red-400" />
+            <span className="text-sm md:text-base text-red-400 font-medium hidden md:inline">Logout</span>
           </button>
         </div>
+      </header>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-12 gap-8">
-          {/* Left Column - Profile & Balance */}
-          <div className="col-span-4 space-y-8">
-            {/* Profile Card */}
-            <div className="bg-white/5 rounded-2xl p-8 backdrop-blur-sm">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 p-1">
-                  <div className="w-full h-full rounded-full bg-[#1a1a2e] flex items-center justify-center">
-                    <User className="w-16 h-16 text-purple-400" />
-                  </div>
+      {/* Main Content */}
+      <main className="max-w-[1400px] mx-auto px-4 pt-24 md:pt-28 pb-8">
+        {/* Profile & Balance Card */}
+        <div className="bg-[#1A1A2E] rounded-2xl p-6 md:p-8 mb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
+            {/* Profile Info */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-[2px]">
+                <div className="w-full h-full rounded-2xl bg-[#1A1A2E] flex items-center justify-center">
+                  <User className="w-8 h-8 md:w-10 md:h-10 text-purple-400" />
                 </div>
-                <h2 className="text-3xl font-bold text-white mt-6">John Doe</h2>
-                <p className="text-gray-400 mt-2">ID: 123456789</p>
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold text-white">John Doe</h2>
+                <p className="text-sm text-gray-400">ID: 123456789</p>
               </div>
             </div>
 
-            {/* Balance Cards */}
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 shadow-lg shadow-purple-500/20">
-                <p className="text-white/90 text-lg font-medium">Available Balance</p>
-                <h2 className="text-4xl font-bold text-white mt-2">$1,234.56</h2>
+            {/* Balance Info */}
+            <div className="grid grid-cols-2 gap-4 w-full md:w-auto md:flex-1">
+              <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl p-4">
+                <p className="text-gray-400 text-sm mb-1">Available Balance</p>
+                <h3 className="text-xl md:text-2xl font-bold text-white">$1,234.56</h3>
               </div>
-              <div className="bg-white/5 rounded-2xl p-6 border border-purple-500/20 backdrop-blur-sm">
-                <p className="text-white/90 text-lg font-medium">Bonus Balance</p>
-                <h2 className="text-4xl font-bold text-white mt-2">$50.00</h2>
+              <div className="bg-[#252547] rounded-xl p-4 border border-purple-500/20">
+                <p className="text-gray-400 text-sm mb-1">Bonus Balance</p>
+                <h3 className="text-xl md:text-2xl font-bold text-white">$50.00</h3>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Right Column - Menu Items */}
-          <div className="col-span-8">
-            <div className="grid grid-cols-2 gap-6">
-              {menuItems.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => navigate(item.route)}
-                  className="group relative overflow-hidden bg-white/5 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
-                >
-                  <div className="relative z-10">
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${item.color} flex items-center justify-center mb-6`}>
-                      <item.icon className="w-8 h-8 text-white" />
+        {/* Services Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-white px-1">Services</h2>
+            <div className="hidden md:block text-sm text-gray-400">5 services available</div>
+          </div>
+          
+          {/* Mobile Layout */}
+          <div className="md:hidden space-y-4">
+            {menuItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => navigate(item.route)}
+                className="w-full flex items-center gap-4 p-4 bg-[#252547] rounded-xl hover:bg-[#2f2f5a] transition-all group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-purple-600/10 flex items-center justify-center group-hover:bg-purple-600/20 transition-all">
+                  <item.icon className="w-6 h-6 text-purple-400" />
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="text-lg font-semibold text-white mb-1">{item.label}</h3>
+                  <p className="text-sm text-gray-400">{item.description}</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition-colors" />
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden md:grid grid-cols-3 gap-6">
+            {menuItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => navigate(item.route)}
+                className={`group relative overflow-hidden bg-gradient-to-br ${item.bgColor} hover:${item.hoverBg} rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02]`}
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl transform translate-x-16 -translate-y-16 group-hover:translate-x-20 transition-transform"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center">
+                      <item.icon className="w-7 h-7 text-white" />
                     </div>
-                    <div className="text-left">
-                      <span className="text-xl font-semibold text-white block mb-2">{item.label}</span>
-                      <p className="text-gray-400">{item.description}</p>
-                    </div>
-                    <ChevronRight className="absolute top-6 right-6 w-6 h-6 text-gray-400 group-hover:translate-x-1 transition-transform duration-300" />
+                    <ChevronRight className="w-6 h-6 text-white/60 group-hover:text-white transition-colors transform group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-                </button>
-              ))}
-            </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">{item.label}</h3>
+                  <p className="text-white/60 group-hover:text-white/80 transition-colors">{item.description}</p>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Version Info */}
-        <div className="mt-12 text-center">
-          <p className="text-gray-500">Version 1.0.0</p>
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-500">Version 1.0.0</p>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

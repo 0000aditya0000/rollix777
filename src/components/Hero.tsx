@@ -4,34 +4,70 @@ import {
   Star, 
   Users, 
   Trophy, 
-  Layout  // For Casino
+  Layout,
+  ArrowRight,
+  Play,
+  Flame,
+  Sparkles,
+  Zap,
+  Crown,
+  Timer,
+  Heart,
+  ChevronRight,
+  Dice1,
+  Gem,
+  TrendingUp
 } from "lucide-react";
-import ColorGame from "./ColorGame"; // Import the ColorGame component
+import ColorGame from "./ColorGame";
 
 // Import games data
 import gamesData from "../gamesData/gamesData.json";
 
+// Define types for our game data
+interface GameData {
+  game_name: string;
+  game_uid: string;
+  game_type: string;
+  icon: string;
+  game_category: string;
+}
+
+interface FeaturedGame {
+  id: string;
+  title: string;
+  image: string;
+  provider: string;
+  category: string;
+}
+
 const Hero: React.FC = () => {
-  // State to store featured games
-  const [featuredGames, setFeaturedGames] = useState([]);
+  const [featuredGames, setFeaturedGames] = useState<FeaturedGame[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("featured");
+  const [hoveredGame, setHoveredGame] = useState<string | null>(null);
 
   // Load games from the JSON file
   useEffect(() => {
-    // Get 6 random games from the data instead of 3
     if (gamesData && gamesData.length > 0) {
-      const randomGames = [...gamesData]
+      const randomGames = [...(gamesData as GameData[])]
         .sort(() => 0.5 - Math.random())
-        .slice(0, 6) // Increased to 6 games
+        .slice(0, 6)
         .map(game => ({
-          id: game.id || Math.random().toString(),
-          title: game.name || "Game",
-          image: game.icon || "", // Use the icon key for the image
-          provider: game.provider || "Provider"
+          id: game.game_uid,
+          title: game.game_name,
+          image: game.icon,
+          provider: game.game_type,
+          category: game.game_category
         }));
       
       setFeaturedGames(randomGames);
     }
   }, []);
+
+  const tabs = [
+    { id: "featured", name: "Featured", icon: Crown, color: "from-violet-600 to-indigo-600" },
+    { id: "trending", name: "Trending", icon: Flame, color: "from-rose-600 to-pink-600" },
+    { id: "hot", name: "Hot Games", icon: Zap, color: "from-amber-500 to-orange-600" },
+  ];
 
   return (
     <>
@@ -85,101 +121,278 @@ const Hero: React.FC = () => {
         </div>
       </section>
 
-      {/* Enhanced Desktop Hero */}
-      <section className="hidden md:block bg-[#1A1A2E] relative overflow-hidden rounded-2xl mt-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-pink-500/10 rounded-full blur-3xl" />
+      {/* Premium Modern Desktop Hero */}
+      <section className="hidden md:block bg-[#080810] relative overflow-hidden rounded-[2rem] mt-8">
+        {/* Enhanced animated background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/5 via-violet-600/5 to-fuchsia-600/5" />
+          <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-indigo-500/5 rounded-full blur-3xl animate-pulse-slow" />
+          <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-fuchsia-500/5 rounded-full blur-3xl animate-pulse-slow" />
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
+          
+          {/* Animated glow effects */}
+          <div className="absolute inset-0">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full animate-glow-slow"
+                style={{
+                  width: `${300 + i * 100}px`,
+                  height: `${300 + i * 100}px`,
+                  background: `radial-gradient(circle, ${
+                    i === 0 ? 'rgba(129, 140, 248, 0.1)' :
+                    i === 1 ? 'rgba(167, 139, 250, 0.1)' :
+                    'rgba(217, 70, 239, 0.1)'
+                  } 0%, transparent 70%)`,
+                  left: '50%',
+                  top: '30%',
+                  transform: 'translate(-50%, -50%)',
+                  animationDelay: `${i * 2}s`
+                }}
+              />
+            ))}
+          </div>
+        </div>
 
-        <div className="relative py-16 px-8">
-          <div className="grid grid-cols-12 gap-8">
-            {/* Left Column - Text Content */}
-            <div className="col-span-5 flex flex-col justify-center">
-              <h1 className="text-6xl font-bold mb-6 text-left">
-                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                World's largest and most trusted 
-                </span>
-              </h1>
-              <h2 className="text-4xl font-bold text-white mb-8 text-left">
-              Gaming Platform
-              </h2>
-              
-              <button className="py-4 px-12 rounded-xl bg-[#0066FF] text-white font-medium text-lg hover:bg-[#0052cc] transition-colors w-48">
-                Register
-              </button>
-            </div>
-
-            {/* Right Column - Game Categories */}
-            <div className="col-span-7">
-              <div className="grid grid-cols-2 gap-6">
-                {/* Casino Card - Improved */}
-                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#252547] to-[#1A1A2E] border border-purple-500/10">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="p-2 bg-purple-500/10 rounded-xl">
-                        <Layout className="w-6 h-6 text-purple-400" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                        <span className="text-gray-400">64,414</span>
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-1">Casino</h3>
-                    <p className="text-gray-400 text-sm mb-4">Experience the thrill of live casino games</p>
-                    
-                    {/* Game Images - Better Grid Layout */}
-                    <div className="grid grid-cols-3 gap-3">
-                      {featuredGames.length > 0 ? (
-                        featuredGames.map(game => (
-                          <div key={game.id} className="group/game aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-[#252547] to-[#1A1A2E] border border-purple-500/10 relative">
-                            {/* Image with better sizing */}
-                            <img 
-                              src={game.image} 
-                              alt={game.title}
-                              className="absolute inset-0 w-full h-full object-contain p-1"
-                              onError={(e) => {
-                                // If image fails to load, show game title
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                            
-                            {/* Fallback if image fails */}
-                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-500/10 to-pink-500/10 z-0">
-                              <span className="text-white text-xs font-medium text-center">{game.title}</span>
-                            </div>
-                            
-                            {/* Game Info on Hover */}
-                            <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center opacity-0 group-hover/game:opacity-100 transition-opacity z-20 p-2">
-                              <p className="text-white text-xs font-medium text-center mb-1">{game.title}</p>
-                              <p className="text-gray-400 text-[10px] text-center">{game.provider}</p>
-                              <button className="mt-2 px-3 py-1 bg-purple-500/20 text-purple-400 text-[10px] rounded-full hover:bg-purple-500/30 transition-colors">
-                                Play Now
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        // Fallback placeholders
-                        Array(6).fill(0).map((_, index) => (
-                          <div 
-                            key={index} 
-                            className={`aspect-square rounded-lg overflow-hidden bg-${['pink', 'purple', 'blue', 'indigo', 'cyan', 'green'][index % 6]}-500/20`}
-                          ></div>
-                        ))
-                      )}
-                    </div>
+        <div className="relative py-20 px-16">
+          {/* Featured Wingo Game Section */}
+          <div className="mb-24">
+            {/* Header Section */}
+            <div className="flex items-center justify-between mb-12">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-indigo-500/10 rounded-full border border-indigo-500/20">
+                    <Crown className="w-4 h-4 text-indigo-400" />
+                    <span className="text-indigo-400 text-sm font-medium">Featured Game</span>
+                  </div>
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-green-500/10 rounded-full border border-green-500/20">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-green-400 text-sm font-medium">Live</span>
+                  </div>
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-fuchsia-500/10 rounded-full border border-fuchsia-500/20">
+                    <TrendingUp className="w-4 h-4 text-fuchsia-400" />
+                    <span className="text-fuchsia-400 text-sm font-medium">Trending Now</span>
                   </div>
                 </div>
+                <h2 className="text-6xl font-bold tracking-tight">
+                  <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+                    Wingo Game
+                  </span>
+                </h2>
+                <p className="text-gray-400 text-xl max-w-2xl">
+                  Experience the next evolution of gaming with our signature multiplayer game
+                </p>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <button className="group relative px-6 py-3 bg-white/5 rounded-xl overflow-hidden hover:bg-white/10 transition-colors">
+                  <span className="text-gray-300 font-medium">How to Play</span>
+                </button>
+                <button className="group relative px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-violet-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative flex items-center space-x-2">
+                    <Play className="w-5 h-5 text-white" />
+                    <span className="text-white font-medium">Play Now</span>
+                  </div>
+                </button>
+              </div>
+            </div>
 
-                {/* ColorGame Component - Remains the same */}
-                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#252547] to-[#1A1A2E] border border-purple-500/10">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative p-5">
+            {/* Main Game Content */}
+            <div className="grid grid-cols-12 gap-8">
+              {/* Game Preview */}
+              <div className="col-span-8">
+                <div className="group relative aspect-[16/9] rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-fuchsia-500/10 backdrop-blur-xl border border-white/10">
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-violet-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  {/* Game Component */}
+                  <div className="relative h-full">
                     <ColorGame />
+                  </div>
+
+                  {/* Game Info Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-6">
+                        <div className="flex items-center space-x-8">
+                          <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-indigo-500/20 rounded-lg">
+                              <Users className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">2.5k Playing</p>
+                              <p className="text-gray-400 text-sm">Active Players</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-violet-500/20 rounded-lg">
+                              <Timer className="w-5 h-5 text-violet-400" />
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">Next Round</p>
+                              <p className="text-gray-400 text-sm">Starting in 1:30</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-fuchsia-500/20 rounded-lg">
+                              <Trophy className="w-5 h-5 text-fuchsia-400" />
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">$10,000</p>
+                              <p className="text-gray-400 text-sm">Prize Pool</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-4">
+                          <button className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center space-x-2">
+                            <Play className="w-4 h-4" />
+                            <span>Quick Play</span>
+                          </button>
+                          <button className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors flex items-center space-x-2">
+                            <Dice1 className="w-4 h-4 text-violet-400" />
+                            <span>Practice Mode</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="flex items-center justify-end space-x-2 mb-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-5 h-5 text-yellow-400" fill="#FBBF24" />
+                          ))}
+                        </div>
+                        <p className="text-white font-medium">15k+ Reviews</p>
+                        <p className="text-gray-400 text-sm">4.9 Average Rating</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Stats Cards */}
+              <div className="col-span-4 grid grid-rows-3 gap-6">
+                <div className="group relative bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-transparent backdrop-blur-xl rounded-2xl p-6 border border-white/10 overflow-hidden hover:border-indigo-500/20 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-violet-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative flex items-start space-x-4">
+                    <div className="p-3 bg-indigo-500/20 rounded-xl">
+                      <Gem className="w-8 h-8 text-indigo-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-white mb-1">$250,000</p>
+                      <p className="text-gray-400">Total Prize Pool</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="group relative bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-transparent backdrop-blur-xl rounded-2xl p-6 border border-white/10 overflow-hidden hover:border-violet-500/20 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-600/10 via-fuchsia-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative flex items-start space-x-4">
+                    <div className="p-3 bg-violet-500/20 rounded-xl">
+                      <Users className="w-8 h-8 text-violet-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-white mb-1">50,000+</p>
+                      <p className="text-gray-400">Active Players</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="group relative bg-gradient-to-br from-fuchsia-500/10 via-pink-500/10 to-transparent backdrop-blur-xl rounded-2xl p-6 border border-white/10 overflow-hidden hover:border-fuchsia-500/20 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-600/10 via-pink-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative flex items-start space-x-4">
+                    <div className="p-3 bg-fuchsia-500/20 rounded-xl">
+                      <TrendingUp className="w-8 h-8 text-fuchsia-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-white mb-1">98.5%</p>
+                      <p className="text-gray-400">Win Rate</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Games Section */}
+          <div>
+            {/* Section Header */}
+            <div className="flex items-center justify-between mb-10">
+              <div className="space-y-2">
+                <h3 className="text-3xl font-bold text-white">Popular Games</h3>
+                <p className="text-gray-400">Discover our most played games</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <button className="px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors text-gray-400 hover:text-white flex items-center space-x-2">
+                  <span>View All Games</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Games Grid */}
+            <div className="grid grid-cols-3 gap-6">
+              {featuredGames.map(game => (
+                <div
+                  key={game.id}
+                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-fuchsia-500/10 backdrop-blur-xl border border-white/10"
+                  onMouseEnter={() => setHoveredGame(game.id)}
+                  onMouseLeave={() => setHoveredGame(null)}
+                >
+                  {/* Background Effects */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-violet-600/20 to-fuchsia-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Game Image */}
+                  <img
+                    src={game.image}
+                    alt={game.title}
+                    className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                  
+                  {/* Game Info Overlay */}
+                  <div className={`absolute inset-0 flex flex-col justify-end p-6 transition-all duration-300 ${
+                    hoveredGame === game.id
+                      ? 'bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-100'
+                      : 'bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0'
+                  }`}>
+                    <div className={`transform transition-all duration-300 ${
+                      hoveredGame === game.id ? 'translate-y-0' : 'translate-y-4'
+                    }`}>
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-xl font-bold text-white mb-1">{game.title}</h3>
+                          <p className="text-gray-400 text-sm">{game.provider}</p>
+                        </div>
+                        <button className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                          <Heart className="w-5 h-5 text-rose-400" />
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center space-x-4">
+                        <button className="flex-1 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-xl transition-opacity hover:opacity-90 flex items-center justify-center space-x-2">
+                          <Play className="w-4 h-4" />
+                          <span>Play Now</span>
+                        </button>
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 text-yellow-400" fill="#FBBF24" />
+                          <span className="text-white text-sm font-medium">4.8</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Badges */}
+                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-2 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full border border-white/10">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-white text-xs font-medium">1.2k Playing</span>
+                    </div>
+                    <div className="px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full border border-white/10">
+                      <span className="text-white text-xs font-medium">{game.category}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -189,3 +402,5 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
+
+

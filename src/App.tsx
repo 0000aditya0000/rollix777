@@ -63,16 +63,17 @@ function App() {
                   <main className="min-h-screen">
                     <Routes>
                       <Route path="/" element={<Home />} />
-                    
                       <Route path="/bigsmall" element={<BigSmall />} />
-                      <Route path="/promotions" element={<AgentProgram />} />
-                      <Route path="/promotions/team-report" element={<TeamReport />} />
+                      <Route path="/agent-program" element={<AgentProgram />} />
+                      <Route path="/team-report" element={<TeamReport />} />
                       <Route path="/bet-history" element={<BetHistory />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/payment-methods" element={<PaymentMethods />} />
                       <Route path="/referrals" element={<Referrals />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/security" element={<Security />} />
+                      <Route path="/promotions" element={<AgentProgram />} />
+                      <Route path="/program" element={<Promotions />} />
                       {authenticated ? (
                         <Route path="/dashboard" element={<Dashboard />} />
                       ) : (
@@ -89,11 +90,13 @@ function App() {
                           />
                           <Route
                             path="/trending-games"
-                            element={<TrendingGames />}
+                            element={<TrendingGames title="Trending Games" type="trending" />}
                           />
                           <Route path="/color-game" element={<ColorGame />} />
-                          <Route path="/hot-games" element={<HotGames />} />
-                          <Route path="/promotions" element={<Promotions />} />
+                          <Route 
+                            path="/hot-games" 
+                            element={<HotGames title="Hot Games" type="hot" />}
+                          />
                           <Route path="/features" element={<Features />} />
                         </>
                       )}

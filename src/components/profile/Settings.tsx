@@ -73,31 +73,31 @@ const Settings = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        <div className="space-y-4 sm:space-y-6">
           {/* Notifications Card */}
-          <div className="bg-[#1f1f3a] rounded-2xl overflow-hidden">
-            <div className="p-6 border-b border-purple-500/10">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-500/10 rounded-xl">
-                  <Bell className="w-6 h-6 text-purple-400" />
+          <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
+            <div className="p-4 sm:p-6 border-b border-purple-500/10">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg sm:rounded-xl">
+                  <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Notifications</h2>
-                  <p className="text-gray-400 text-sm mt-1">Control your notification preferences</p>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">Notifications</h2>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Control your notification preferences</p>
                 </div>
               </div>
             </div>
-            <div className="p-6">
-              <div className="grid gap-4">
+            <div className="p-4 sm:p-6">
+              <div className="grid gap-3 sm:gap-4">
                 {Object.entries(notifications).map(([key, value]) => (
                   <div 
                     key={key} 
-                    className="flex items-center justify-between p-4 bg-[#252547] rounded-xl hover:bg-[#2a2a5a] transition-all"
+                    className="flex items-center justify-between p-3 sm:p-4 bg-[#252547] rounded-lg sm:rounded-xl hover:bg-[#2a2a5a] transition-all"
                   >
                     <div>
-                      <h3 className="text-white font-medium capitalize">{key.replace('_', ' ')}</h3>
-                      <p className="text-gray-400 text-sm mt-1">Receive {key.replace('_', ' ')} notifications</p>
+                      <h3 className="text-white text-sm sm:text-base font-medium capitalize">{key.replace('_', ' ')}</h3>
+                      <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Receive {key.replace('_', ' ')} notifications</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -106,7 +106,7 @@ const Settings = () => {
                         onChange={(e) => setNotifications({ ...notifications, [key]: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-14 h-7 bg-[#1A1A2E] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-purple-600"></div>
+                      <div className="w-11 sm:w-14 h-6 sm:h-7 bg-[#1A1A2E] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 sm:after:h-6 after:w-5 sm:after:w-6 after:transition-all peer-checked:bg-purple-600"></div>
                     </label>
                   </div>
                 ))}
@@ -115,26 +115,26 @@ const Settings = () => {
           </div>
 
           {/* Settings Grid */}
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Appearance Card */}
-            <div className="bg-[#1f1f3a] rounded-2xl overflow-hidden">
-              <div className="p-6 border-b border-purple-500/10">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-purple-500/10 rounded-xl">
-                    <Moon className="w-6 h-6 text-purple-400" />
+            <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
+              <div className="p-4 sm:p-6 border-b border-purple-500/10">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg sm:rounded-xl">
+                    <Moon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Appearance</h2>
-                    <p className="text-gray-400 text-sm mt-1">Customize your interface</p>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">Appearance</h2>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Customize your interface</p>
                   </div>
                 </div>
               </div>
-              <div className="p-6">
-                <div className="p-4 bg-[#252547] rounded-xl hover:bg-[#2a2a5a] transition-all">
+              <div className="p-4 sm:p-6">
+                <div className="p-3 sm:p-4 bg-[#252547] rounded-lg sm:rounded-xl hover:bg-[#2a2a5a] transition-all">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-white font-medium">Dark Mode</h3>
-                      <p className="text-gray-400 text-sm mt-1">Toggle dark mode</p>
+                      <h3 className="text-white text-sm sm:text-base font-medium">Dark Mode</h3>
+                      <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Toggle dark mode</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -143,7 +143,7 @@ const Settings = () => {
                         onChange={(e) => setDarkMode(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-14 h-7 bg-[#1A1A2E] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-purple-600"></div>
+                      <div className="w-11 sm:w-14 h-6 sm:h-7 bg-[#1A1A2E] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 sm:after:h-6 after:w-5 sm:after:w-6 after:transition-all peer-checked:bg-purple-600"></div>
                     </label>
                   </div>
                 </div>
@@ -151,24 +151,24 @@ const Settings = () => {
             </div>
 
             {/* Language Card */}
-            <div className="bg-[#1f1f3a] rounded-2xl overflow-hidden">
-              <div className="p-6 border-b border-purple-500/10">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-purple-500/10 rounded-xl">
-                    <Globe className="w-6 h-6 text-purple-400" />
+            <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
+              <div className="p-4 sm:p-6 border-b border-purple-500/10">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg sm:rounded-xl">
+                    <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Language</h2>
-                    <p className="text-gray-400 text-sm mt-1">Select your language</p>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">Language</h2>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Select your language</p>
                   </div>
                 </div>
               </div>
-              <div className="p-6">
-                <div className="p-4 bg-[#252547] rounded-xl hover:bg-[#2a2a5a] transition-all">
+              <div className="p-4 sm:p-6">
+                <div className="p-3 sm:p-4 bg-[#252547] rounded-lg sm:rounded-xl hover:bg-[#2a2a5a] transition-all">
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full py-3 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-xl text-white focus:outline-none focus:border-purple-500 text-base appearance-none cursor-pointer"
+                    className="w-full py-2.5 sm:py-3 px-3 sm:px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-white focus:outline-none focus:border-purple-500 text-sm sm:text-base appearance-none cursor-pointer"
                   >
                     <option value="en">English</option>
                     <option value="es">Español</option>
@@ -180,45 +180,45 @@ const Settings = () => {
             </div>
 
             {/* Security Card */}
-            <div className="bg-[#1f1f3a] rounded-2xl overflow-hidden">
-              <div className="p-6 border-b border-purple-500/10">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-purple-500/10 rounded-xl">
-                    <Shield className="w-6 h-6 text-purple-400" />
+            <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
+              <div className="p-4 sm:p-6 border-b border-purple-500/10">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg sm:rounded-xl">
+                    <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Security</h2>
-                    <p className="text-gray-400 text-sm mt-1">Manage security</p>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">Security</h2>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Manage security</p>
                   </div>
                 </div>
               </div>
-              <div className="p-6">
-                <div className="space-y-4">
+              <div className="p-4 sm:p-6">
+                <div className="space-y-3 sm:space-y-4">
                   <button
                     onClick={() => setPasswordPopup(true)}
-                    className="w-full p-4 bg-[#252547] rounded-xl hover:bg-[#2a2a5a] transition-all group text-left"
+                    className="w-full p-3 sm:p-4 bg-[#252547] rounded-lg sm:rounded-xl hover:bg-[#2a2a5a] transition-all group text-left"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-purple-500/10 rounded-xl group-hover:bg-purple-500/20 transition-colors">
-                        <Lock className="w-6 h-6 text-purple-400" />
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg sm:rounded-xl group-hover:bg-purple-500/20 transition-colors">
+                        <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                       </div>
                       <div>
-                        <h3 className="text-white font-medium">Password</h3>
-                        <p className="text-gray-400 text-sm mt-1">Change password</p>
+                        <h3 className="text-white text-sm sm:text-base font-medium">Password</h3>
+                        <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Change password</p>
                       </div>
                     </div>
                   </button>
                   <button
                     onClick={() => setTwoFactorPopup(true)}
-                    className="w-full p-4 bg-[#252547] rounded-xl hover:bg-[#2a2a5a] transition-all group text-left"
+                    className="w-full p-3 sm:p-4 bg-[#252547] rounded-lg sm:rounded-xl hover:bg-[#2a2a5a] transition-all group text-left"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-purple-500/10 rounded-xl group-hover:bg-purple-500/20 transition-colors">
-                        <Shield className="w-6 h-6 text-purple-400" />
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg sm:rounded-xl group-hover:bg-purple-500/20 transition-colors">
+                        <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                       </div>
                       <div>
-                        <h3 className="text-white font-medium">Two-Factor</h3>
-                        <p className="text-gray-400 text-sm mt-1">Enable 2FA</p>
+                        <h3 className="text-white text-sm sm:text-base font-medium">Two-Factor</h3>
+                        <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Enable 2FA</p>
                       </div>
                     </div>
                   </button>
@@ -229,7 +229,7 @@ const Settings = () => {
 
           {/* Version Info */}
           <div className="text-center">
-            <span className="text-gray-500 text-sm bg-[#252547] px-4 py-2 rounded-full">Version 1.0.0</span>
+            <span className="text-gray-500 text-xs sm:text-sm bg-[#252547] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">Version 1.0.0</span>
           </div>
         </div>
       </div>
