@@ -193,7 +193,7 @@ const MyAccount: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-lg ${selectedCurrency.color} flex items-center justify-center text-white font-bold text-2xl`}>
-                      {selectedCurrency.symbol}
+                      {selectedCurrency.symbol} 
                     </div>
                     <div className="text-left">
                       <p className="text-gray-400 text-sm">Available Balance</p>
