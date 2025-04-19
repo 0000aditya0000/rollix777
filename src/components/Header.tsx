@@ -16,11 +16,19 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import AuthModal from "./AuthModal.tsx";
 import SideNav from "./SideNav.tsx";
-import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store.ts";
 import { logout } from "../slices/authSlice.ts";
 import { setWallets } from "../slices/walletSlice.ts";
+import { fetchUserWallets } from "../lib/services/WalletServices.js";
+
+interface CryptoType {
+  name: string;
+  symbol: string;
+  color: string;
+  cryptoname: string;
+  balance: string;
+}
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,25 +49,25 @@ const Header: React.FC = () => {
   });
   // Ensure selected currency updates
   const dispatch = useDispatch();
-  const handleCurrencySelect = (crypto) => {
+  const handleCurrencySelect = (crypto: CryptoType) => {
     setSelectedCurrency({
       name: crypto.name,
-      symbol: crypto.symbol, // Update symbol dynamically
+      symbol: crypto.symbol,
       color: crypto.color,
       balance: crypto.balance,
     });
     setIsWalletOpen(false);
   };
-
+// fetch user wallets data from api 
   useEffect(() => {
     async function fetchData() {
-      try {
-        const response = await axios.get(
-          `http://localhost:5000/api/user/wallet/${user.id}`
-        );
-        dispatch(setWallets(response.data));
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      if (user?.id) {
+        try {
+          const data = await fetchUserWallets(user.id);
+          dispatch(setWallets(data)); 
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
       }
     }
     fetchData();

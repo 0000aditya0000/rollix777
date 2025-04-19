@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   User, 
   Wallet, 
@@ -8,16 +8,88 @@ import {
   HelpCircle, 
   LogOut,
   ChevronRight,
-  ArrowLeft
+  ArrowLeft,
+  ChevronDown
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-// Import your logout action if you have one
-// import { logout } from '../../store/slices/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { setWallets } from '../../slices/walletSlice';
+import { fetchUserWallets } from '../../lib/services/WalletServices.js';
+
+interface CryptoType {
+  name: string;
+  symbol: string;
+  color: string;
+  cryptoname: string;
+  balance: string;
+}
 
 const MyAccount: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { wallets } = useSelector((state: RootState) => state.wallet);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState({
+    name: "INR",
+    symbol: "₹",
+    color: "bg-black",
+    balance: "0",
+  });
+
+  const updatedCryptos = [
+    { name: "Bitcoin", symbol: "₿", color: "bg-yellow-500", cryptoname: "BTC" },
+    { name: "Litecoin", symbol: "Ł", color: "bg-gray-500", cryptoname: "LTC" },
+    { name: "Ethereum", symbol: "E", color: "bg-blue-500", cryptoname: "ETH" },
+    { name: "Tether", symbol: "₮", color: "bg-green-800", cryptoname: "USDT" },
+    { name: "Solana", symbol: "◎", color: "bg-green-300", cryptoname: "SOL" },
+    { name: "Dogecoin", symbol: "Ð", color: "bg-yellow-800", cryptoname: "DOGE" },
+    { name: "Bitcoin Cash", symbol: "Ƀ", color: "bg-green-700", cryptoname: "BCH" },
+    { name: "Ripple", symbol: "✕", color: "bg-gray-900", cryptoname: "XRP" },
+    { name: "Tron", symbol: "Ṯ", color: "bg-pink-700", cryptoname: "TRX" },
+    { name: "EOS", symbol: "ε", color: "bg-black", cryptoname: "EOS" },
+    { name: "Rupees", symbol: "₹", color: " bg-black", cryptoname: "INR" },
+  ].map((crypto) => {
+    const wallet = wallets.find((w) => w.cryptoname === crypto.cryptoname);
+    return { ...crypto, balance: wallet ? wallet.balance : "0" };
+  });
+
+  const handleCurrencySelect = (crypto: CryptoType) => {
+    setSelectedCurrency({
+      name: crypto.name,
+      symbol: crypto.symbol,
+      color: crypto.color,
+      balance: crypto.balance,
+    });
+    setIsWalletOpen(false);
+  };
+
+  useEffect(() => {
+    async function fetchData() {
+      if (user?.id) {
+        try {
+          const data = await fetchUserWallets(user.id);
+          dispatch(setWallets(data));
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+    }
+    fetchData();
+  }, [user?.id]);
+
+  useEffect(() => {
+    const inrWallet = wallets.find((w) => w.cryptoname === "INR");
+    if (inrWallet) {
+      setSelectedCurrency({
+        name: "INR",
+        symbol: "₹",
+        color: " bg-black",
+        balance: inrWallet.balance,
+      });
+    }
+  }, [wallets]);
 
   const menuItems = [
     { 
@@ -107,20 +179,73 @@ const MyAccount: React.FC = () => {
                 </div>
               </div>
               <div>
-                <h2 className="text-xl md:text-2xl font-bold text-white">John Doe</h2>
-                <p className="text-sm text-gray-400">ID: 123456789</p>
+                <h2 className="text-xl md:text-2xl font-bold text-white">{user?.name || 'User'}</h2>
+                <p className="text-sm text-gray-400">ID: {user?.id || 'N/A'}</p>
               </div>
             </div>
 
             {/* Balance Info */}
-            <div className="grid grid-cols-2 gap-4 w-full md:w-auto md:flex-1">
-              <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl p-4">
-                <p className="text-gray-400 text-sm mb-1">Available Balance</p>
-                <h3 className="text-xl md:text-2xl font-bold text-white">$1,234.56</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full md:w-auto md:flex-1">
+              <div className="relative">
+                <button
+                  onClick={() => setIsWalletOpen(!isWalletOpen)}
+                  className="w-full h-full py-4 px-6 rounded-xl bg-gradient-to-br from-purple-600/20 to-pink-600/20 flex items-center justify-between group hover:from-purple-600/30 hover:to-pink-600/30 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg ${selectedCurrency.color} flex items-center justify-center text-white font-bold text-2xl`}>
+                      {selectedCurrency.symbol}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-gray-400 text-sm">Available Balance</p>
+                      <h3 className="text-xl font-bold text-white">
+                        {selectedCurrency.symbol} {selectedCurrency.balance}
+                      </h3>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isWalletOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {isWalletOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-[#252547] rounded-xl border border-purple-500/20 shadow-lg animate-fadeIn z-50">
+                    <div className="p-4 border-b border-purple-500/10">
+                      <h3 className="text-white font-semibold">My Wallet</h3>
+                    </div>
+                    <div className="p-4 space-y-3 max-h-[300px] overflow-y-auto hide-scrollbar">
+                      {updatedCryptos.map((crypto, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 hover:bg-[#2f2f5a] rounded-lg cursor-pointer"
+                          onClick={() => handleCurrencySelect(crypto)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-lg ${crypto.color} flex items-center justify-center text-white font-bold`}>
+                              {crypto.symbol}
+                            </div>
+                            <span className="text-white">{crypto.name}</span>
+                          </div>
+                          <span className="text-white">
+                            {crypto.balance} {crypto.cryptoname}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="bg-[#252547] rounded-xl p-4 border border-purple-500/20">
-                <p className="text-gray-400 text-sm mb-1">Bonus Balance</p>
-                <h3 className="text-xl md:text-2xl font-bold text-white">$50.00</h3>
+
+              {/* Bonus Balance */}
+              <div className="py-4 px-6 rounded-xl bg-gradient-to-br from-amber-600/20 to-yellow-600/20 flex items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center text-white">
+                    <Gift className="w-6 h-6" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-gray-400 text-sm">Bonus Balance</p>
+                    <h3 className="text-xl font-bold text-white">
+                      {selectedCurrency.symbol} {wallets.find(w => w.cryptoname === "CP")?.balance || "0"}
+                    </h3>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
