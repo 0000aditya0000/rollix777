@@ -25,6 +25,7 @@ import MyAccount from './components/account/MyAccount';
 import Wallet from './components/wallet/Wallet';
 import AgentProgram from './components/promotions/AgentProgram';
 import TeamReport from './components/promotions/TeamReport';
+import { HelpCenter } from "./components/HelpCenter";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -73,7 +74,9 @@ function App() {
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/security" element={<Security />} />
                       <Route path="/promotions" element={<AgentProgram />} />
-                      <Route path="/program" element={<Promotions />} />
+                      <Route path="/rewards" element={<Promotions />} />
+                      <Route path="/support" element={<HelpCenter />} />
+                      <Route path="/promotions/team-report" element={<TeamReport />} />
                       {authenticated ? (
                         <Route path="/dashboard" element={<Dashboard />} />
                       ) : (

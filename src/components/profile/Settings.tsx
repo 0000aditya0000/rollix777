@@ -51,14 +51,14 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1A2E]">
+    <div className="min-h-screen  bg-[#1A1A2E]">
       {/* Header Section */}
       <div className="bg-[#252547] mt-16  border-b border-purple-500/20 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="h-20 flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Link
-                to="/"
+                to="/account"
                 className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
               >
                 <ArrowLeft size={22} />

@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { Copy, ArrowLeft, Users, Wallet, Scroll, Headphones, ChevronRight, TrendingUp } from 'lucide-react';
+import { Copy, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AgentProgram: React.FC = () => {
   const [referralCode, setReferralCode] = React.useState('');
+  const [isHovered, setIsHovered] = React.useState('');
 
   useEffect(() => {
     const referralCode = localStorage.getItem('referralCode');
@@ -22,160 +23,199 @@ const AgentProgram: React.FC = () => {
     alert('Invitation link copied to clipboard');
   };
 
-  const StatCard = ({ title, value, change }: { title: string; value: string; change?: string }) => (
-    <div className="bg-[#1A1A2E] rounded-2xl p-6 hover:bg-[#1E1E35] transition-all duration-300 border border-white/5">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-gray-400 text-sm">{title}</h3>
-        {change && (
-          <span className="text-emerald-400 text-xs flex items-center bg-emerald-400/10 px-2 py-1 rounded-full">
-            <TrendingUp size={12} className="mr-1" />
-            {change}
-          </span>
-        )}
-      </div>
-      <p className="text-3xl font-bold text-white">{value}</p>
-    </div>
-  );
-
-  const MenuItem = ({ icon: Icon, title, subtitle, route }: { icon: any; title: string; subtitle: string; route: string }) => (
-    <Link
-      to={route}
-      className="flex items-center gap-4 p-4 rounded-2xl bg-[#1A1A2E] hover:bg-[#1E1E35] transition-all duration-300 border border-white/5"
-    >
-      <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-        <Icon className="w-5 h-5 text-purple-400" />
-      </div>
-      <div className="flex-grow">
-        <h3 className="text-white font-medium">{title}</h3>
-        <p className="text-sm text-gray-400">{subtitle}</p>
-      </div>
-      <ChevronRight className="w-5 h-5 text-gray-400" />
-    </Link>
-  );
-
   return (
-    <div className="w-full">
-      {/* Page Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <Link 
-          to="/" 
-          className="p-2 rounded-xl bg-white/5 text-white hover:bg-white/10 transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </Link>
-        <h1 className="text-xl font-semibold text-white">Agent Program</h1>
-      </div>
-
-      {/* Hero Section */}
-      <section className="mb-8">
-        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl p-8 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
-          <div className="relative">
-            <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-white text-sm mb-4">
-              Yesterday's Earnings
-            </span>
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-2">₹0.00</h2>
-            <p className="text-white/80">
-              Increase your earnings by growing your team
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-[#0F0F19] via-[#1A1A2E] to-[#252547]">
+      {/* Header
+      <div className="fixed top-10 left-0 right-0 z-10 bg-[#0F0F19]/90 backdrop-blur-lg border-b border-purple-500/10">
+        <div className="max-w-7xl mx-auto">
+          <div className="px-4 md:px-6 py-4 md:py-6 flex items-center gap-4">
+            <Link 
+              to="/" 
+              className="p-2.5 md:p-3 rounded-xl bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 
+                       transition-all duration-300 hover:scale-105 active:scale-95"
+            >
+              <ArrowLeft size={20} className="md:w-6 md:h-6" />
+            </Link>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">Agent Program</h1>
           </div>
         </div>
-      </section>
+      </div> */}
 
-      {/* Stats Grid */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard 
-          title="Direct Members" 
-          value="0" 
-          change="+0%" 
-        />
-        <StatCard 
-          title="Team Size" 
-          value="0" 
-          change="+0%" 
-        />
-        <StatCard 
-          title="Total Deposits" 
-          value="₹0" 
-        />
-        <StatCard 
-          title="Active Members" 
-          value="0" 
-        />
-      </section>
-
-      {/* Invitation Section */}
-      <section className="mb-8">
-        <div className="bg-[#1A1A2E] rounded-2xl p-6 space-y-6 border border-white/5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">Share & Earn</h2>
-            <span className="text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-full">
-              Level 1
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            <div className="bg-[#0F0F19] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Your Referral Link</span>
-                <button 
-                  onClick={handleCopyLink}
-                  className="p-2 rounded-lg bg-white/5 text-white hover:bg-white/10 transition-colors"
-                >
-                  <Copy size={16} />
-                </button>
+      {/* Main Content */}
+      <div className="pt-20 md:pt-24 pb-24 max-w-7xl mx-auto px-4 md:px-6">
+        {/* Commission Card */}
+        <div className="max-w-[430px] md:max-w-none mx-auto">
+          <div className="bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] rounded-2xl 
+                         border border-purple-500/20 overflow-hidden shadow-xl shadow-purple-500/5
+                         transition-all duration-300 hover:border-purple-500/30 hover:shadow-purple-500/10">
+            <div className="p-6 md:p-8 lg:p-10 text-center border-b border-purple-500/10
+                          bg-gradient-to-r from-purple-500/5 via-transparent to-pink-500/5">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
+                           bg-gradient-to-r from-purple-400 to-pink-400 mb-3">₹0</h2>
+              <div className="inline-block bg-purple-500/10 rounded-full px-4 md:px-6 py-1.5 md:py-2 mb-2
+                            backdrop-blur-sm">
+                <span className="text-sm md:text-base text-white/90">Yesterday's total commission</span>
               </div>
-              <p className="text-white text-sm break-all font-mono">
-                https://www.rollix777.com/refer/{referralCode}
+              <p className="text-sm md:text-base text-white/60">
+                Upgrade the level to increase commission income
               </p>
             </div>
 
-            <div className="bg-[#0F0F19] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Referral Code</span>
-                <button 
-                  onClick={handleCopyCode}
-                  className="p-2 rounded-lg bg-white/5 text-white hover:bg-white/10 transition-colors"
-                >
-                  <Copy size={16} />
-                </button>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-purple-500/10">
+              {/* Direct Subordinates */}
+              <div className="col-span-1 md:col-span-2 p-4 md:p-6 lg:p-8">
+                <h3 className="text-center text-white font-medium mb-4 md:mb-6">Direct subordinates</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                  {[
+                    { label: 'Number of register', value: '0' },
+                    { label: 'Deposit number', value: '0' },
+                    { label: 'Deposit amount', value: '0' },
+                    { label: 'First deposit users', value: '0' }
+                  ].map((item, index) => (
+                    <div key={index} className="text-center group transition-all duration-300 hover:scale-105">
+                      <p className="text-xl md:text-2xl lg:text-3xl font-bold text-white group-hover:text-purple-400 
+                                  transition-colors duration-300">{item.value}</p>
+                      <p className="text-sm text-white/60 mt-1 group-hover:text-white/80 
+                                  transition-colors duration-300">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p className="text-white text-lg font-mono">{referralCode}</p>
+
+              {/* Team Subordinates */}
+              <div className="col-span-1 md:col-span-2 p-4 md:p-6 lg:p-8">
+                <h3 className="text-center text-white font-medium mb-4 md:mb-6">Team subordinates</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                  {[
+                    { label: 'Number of register', value: '0' },
+                    { label: 'Deposit number', value: '0' },
+                    { label: 'Deposit amount', value: '0' },
+                    { label: 'First deposit users', value: '0' }
+                  ].map((item, index) => (
+                    <div key={index} className="text-center group transition-all duration-300 hover:scale-105">
+                      <p className="text-xl md:text-2xl lg:text-3xl font-bold text-white group-hover:text-purple-400 
+                                  transition-colors duration-300">{item.value}</p>
+                      <p className="text-sm text-white/60 mt-1 group-hover:text-white/80 
+                                  transition-colors duration-300">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Quick Actions */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
-        <MenuItem 
-          icon={Users} 
-          title="Team Overview" 
-          subtitle="View your team's performance and statistics"
-          route="/promotions/team-report" 
-        />
-        <MenuItem 
-          icon={Wallet} 
-          title="Commission History" 
-          subtitle="Track your earnings and payment history"
-          route="#" 
-        />
-        <MenuItem 
-          icon={Scroll} 
-          title="Program Rules" 
-          subtitle="Learn about commission rates and requirements"
-          route="#" 
-        />
-        <MenuItem 
-          icon={Headphones} 
-          title="Agent Support" 
-          subtitle="Get help from our dedicated support team"
-          route="#" 
-        />
-      </section>
+        {/* Invitation Section */}
+        <div className="mt-6 md:mt-8 lg:mt-10 max-w-[430px] md:max-w-none mx-auto">
+          <div className="grid md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
+            {/* Left Column */}
+            <div className="space-y-4">
+              {/* Invitation Link Button */}
+              <button 
+                className="w-full py-4 md:py-5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl 
+                         text-white font-medium shadow-lg shadow-purple-500/20
+                         transition-all duration-300 hover:shadow-purple-500/30 hover:scale-[1.02] 
+                         active:scale-[0.98]"
+                onMouseEnter={() => setIsHovered('button')}
+                onMouseLeave={() => setIsHovered('')}
+              >
+                INVITATION LINK
+              </button>
+
+              {/* Invitation Link Card */}
+              <div 
+                className="bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] rounded-xl 
+                         border border-purple-500/20 p-4 md:p-5 lg:p-6
+                         transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
+                         hover:shadow-purple-500/10"
+                onMouseEnter={() => setIsHovered('link')}
+                onMouseLeave={() => setIsHovered('')}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 mr-3">
+                    <p className="text-sm md:text-base text-white/60 mb-1 md:mb-2">Copy invitation link</p>
+                    <p className="text-white font-medium break-all">
+                      https://www.rollix777.com/refer/{referralCode}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={handleCopyLink}
+                    className={`p-2.5 md:p-3 rounded-xl bg-purple-500/10 text-purple-400 
+                             transition-all duration-300 flex-shrink-0
+                             ${isHovered === 'link' ? 'bg-purple-500/20 scale-110' : 'hover:bg-purple-500/15'}`}
+                  >
+                    <Copy size={18} className="md:w-5 md:h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Copy Code Card */}
+              <div 
+                className="bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] rounded-xl 
+                         border border-purple-500/20 p-4 md:p-5 lg:p-6
+                         transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
+                         hover:shadow-purple-500/10"
+                onMouseEnter={() => setIsHovered('code')}
+                onMouseLeave={() => setIsHovered('')}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/10 
+                                  flex items-center justify-center">
+                      <Copy className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm md:text-base text-white/60">Copy invitation code</p>
+                      <p className="text-white font-medium">{referralCode}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={handleCopyCode}
+                    className={`p-2.5 md:p-3 rounded-xl bg-purple-500/10 text-purple-400 
+                             transition-all duration-300
+                             ${isHovered === 'code' ? 'bg-purple-500/20 scale-110' : 'hover:bg-purple-500/15'}`}
+                  >
+                    <Copy size={18} className="md:w-5 md:h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Menu Items */}
+            <div className="space-y-3 md:space-y-4">
+              {[
+                { title: 'Subordinate data', icon: '👥', route: '/promotions/team-report' },
+                { title: 'Commission detail', icon: '💰', route: '#' },
+                { title: 'Invitation rules', icon: '📜', route: '#' },
+                { title: 'Agent line customer service', icon: '🎮', route: '#' }
+              ].map((item, index) => (
+                <Link
+                  key={index}
+                  to={item.route}
+                  className="block bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] 
+                           rounded-xl border border-purple-500/20 overflow-hidden
+                           transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
+                           hover:shadow-purple-500/10 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <div className="w-full p-4 md:p-5 lg:p-6 flex items-center justify-between">
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/10 
+                                    flex items-center justify-center">
+                        <span className="text-xl md:text-2xl">{item.icon}</span>
+                      </div>
+                      <span className="text-white font-medium">{item.title}</span>
+                    </div>
+                    <span className="text-white/40 text-xl md:text-2xl">›</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default AgentProgram; 
+export default AgentProgram;

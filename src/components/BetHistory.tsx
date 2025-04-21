@@ -16,7 +16,6 @@ interface Bet {
 const BetHistory = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [bets, setBets] = useState<Bet[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
@@ -35,8 +34,6 @@ const BetHistory = () => {
       } catch (err: any) {
         console.error("Error fetching data:", err.message);
         setError(err.message);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -92,10 +89,6 @@ const BetHistory = () => {
     .filter(bet => bet.status === "lost")
     .reduce((sum, bet) => sum + parseFloat(bet.amount || 0), 0);
 
-  if (loading) {
-    return <div className="pt-16 pb-24 text-center text-white">Loading...</div>;
-  }
-
   if (error) {
     return (
       <div className="pt-16 pb-24 text-center text-red-500">
@@ -110,7 +103,7 @@ const BetHistory = () => {
         {/* Header - Mobile design for small screens, enhanced for desktop */}
         <div className="flex mt-4 items-center gap-4 md:bg-gradient-to-r md:from-purple-900/50 md:to-[#252547] md:rounded-2xl md:p-6">
           <Link 
-            to="/" 
+            to="/account" 
             className="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-[#252547] md:bg-white/10 text-purple-400 hover:bg-[#2f2f5a] md:hover:bg-white/20 transition-colors md:transition-all md:duration-200 md:backdrop-blur-sm"
           >
             <ArrowLeft size={20} />

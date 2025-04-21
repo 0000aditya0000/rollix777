@@ -1,5 +1,6 @@
 import React from 'react';
-import { Gift, Sparkles, Zap, RefreshCw, ArrowRight } from 'lucide-react';
+import { Gift, Sparkles, Zap, RefreshCw, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Promotions = () => {
   return (
@@ -14,13 +15,8 @@ const Promotions = () => {
         <div className="relative pb-8">
           <div className="flex items-center justify-between mb-8 mt-8">
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="absolute inset-0 bg-purple-500/20 blur-[10px] rounded-lg" />
-                <div className="relative p-2 bg-purple-500/10 rounded-lg backdrop-blur-xl border border-purple-500/20">
-                  <Gift className="w-6 h-6 text-purple-400" />
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold text-white">Rewards</h2>
+            
+              <Link to="/account" className="text-2xl font-bold text-white"><ArrowLeft className="w-6 h-6 text-purple-400 inline mr-2" />Rewards <Gift className="w-6 h-6 text-purple-400 inline ml-2" /></Link >
             </div>
             <button className="text-purple-400 text-sm flex items-center gap-2 hover:text-purple-300 transition-colors">
               View All <ArrowRight className="w-4 h-4" />
@@ -94,16 +90,11 @@ const Promotions = () => {
 
         <div className="relative container mx-auto max-w-7xl mt-4">
           <div className="flex items-center justify-between mb-12">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-purple-500/20 blur-[10px] rounded-xl" />
-                <div className="relative p-3 bg-purple-500/10 rounded-xl backdrop-blur-xl border border-purple-500/20">
-                  <Gift className="w-8 h-8 text-purple-400" />
-                </div>
-              </div>
+            <div className="flex items-center mt-4 gap-4">
+             
               <div>
-                <h2 className="text-4xl font-bold text-white mb-2">Exclusive Rewards</h2>
-                <p className="text-gray-400">Unlock premium bonuses and special offers</p>
+                <Link to="/account" className="text-4xl font-bold text-white mb-2"><ArrowLeft className="w-8 h-8 text-purple-400 inline mr-2" />Exclusive Rewards <Gift className="w-8 h-8 text-purple-400 inline ml-2" /></Link >
+                <p className="text-gray-400 ml-10">Unlock premium bonuses and special offers</p>
               </div>
             </div>
             <button className="px-6 py-3 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-xl flex items-center gap-2 transition-colors backdrop-blur-xl">

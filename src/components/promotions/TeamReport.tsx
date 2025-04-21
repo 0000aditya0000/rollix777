@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search, User } from 'lucide-react';
+import { ArrowLeft, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import referralService from '../../lib/services/referralService';
 
@@ -29,7 +29,7 @@ interface ReferralResponse {
 }
 
 const TeamReport: React.FC = () => {
-  const [searchId, setSearchId] = useState('');
+  const [activeFilter, setActiveFilter] = useState('today');
   const [referralData, setReferralData] = useState<ReferralResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,7 +43,7 @@ const TeamReport: React.FC = () => {
         }
         
         const data = await referralService.getReferrals(userId);
-        console.log('Referral data:', data); // For debugging
+        console.log('Referral data:', data);
         setReferralData(data);
       } catch (error) {
         console.error('Error fetching referrals:', error);
@@ -55,14 +55,11 @@ const TeamReport: React.FC = () => {
     fetchReferrals();
   }, []);
 
-  // Modified getAllMembers function with debug logs
   const getAllMembers = () => {
     if (!referralData) {
       console.log('No referral data available');
       return [];
     }
-
-    console.log('Processing referral data:', referralData); // Debug log
 
     const allLevels = [
       ...(referralData.referralsByLevel.level1 || []),
@@ -72,8 +69,6 @@ const TeamReport: React.FC = () => {
       ...(referralData.referralsByLevel.level5 || []),
     ];
 
-    console.log('Combined levels:', allLevels); // Debug log
-
     const membersWithDummyData = allLevels.map(member => ({
       ...member,
       depositAmount: Math.floor(Math.random() * 10000) + 1000,
@@ -82,11 +77,9 @@ const TeamReport: React.FC = () => {
       joinDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString().split('T')[0],
     }));
 
-    console.log('Members with dummy data:', membersWithDummyData); // Debug log
     return membersWithDummyData;
   };
 
-  // Calculate total stats
   const calculateTotalStats = () => {
     const members = getAllMembers();
     return {
@@ -96,14 +89,13 @@ const TeamReport: React.FC = () => {
     };
   };
 
-  // Modified render section
   const members = getAllMembers();
   const totals = calculateTotalStats();
 
   return (
     <div className="min-h-screen bg-[#0F0F19]">
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-10 bg-[#0F0F19] max-w-[430px] mx-auto">
+      <div className="absolute   top-0 left-0 right-0 z-10 bg-[#0F0F19] max-w-[430px] mx-auto">
         <div className="px-4 py-6 flex items-center gap-4">
           <Link 
             to="/agent-program" 
@@ -114,18 +106,38 @@ const TeamReport: React.FC = () => {
           <h1 className="text-2xl font-bold text-white">Team Report</h1>
         </div>
 
-        {/* Search Bar */}
-        <div className="px-4 pb-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by UID"
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value)}
-              className="w-full py-3 pl-10 pr-4 bg-[#252547] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-            />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          </div>
+        {/* Time Filter Buttons */}
+        <div className="px-4 pb-4 flex gap-2">
+          <button
+            onClick={() => setActiveFilter('yesterday')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeFilter === 'yesterday' 
+                ? 'bg-purple-600 text-white' 
+                : 'bg-[#252547] text-gray-400 hover:bg-[#2f2f5a]'
+            }`}
+          >
+            Yesterday
+          </button>
+          <button
+            onClick={() => setActiveFilter('today')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeFilter === 'today' 
+                ? 'bg-purple-600 text-white' 
+                : 'bg-[#252547] text-gray-400 hover:bg-[#2f2f5a]'
+            }`}
+          >
+            Today
+          </button>
+          <button
+            onClick={() => setActiveFilter('month')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeFilter === 'month' 
+                ? 'bg-purple-600 text-white' 
+                : 'bg-[#252547] text-gray-400 hover:bg-[#2f2f5a]'
+            }`}
+          >
+            Month
+          </button>
         </div>
       </div>
 
@@ -200,4 +212,4 @@ const TeamReport: React.FC = () => {
   );
 };
 
-export default TeamReport; 
+export default TeamReport;

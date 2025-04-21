@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { setWallets } from '../../slices/walletSlice';
 import { fetchUserWallets } from '../../lib/services/WalletServices.js';
+import { logout } from '../../slices/authSlice';
 
 interface CryptoType {
   name: string;
@@ -135,10 +136,17 @@ const MyAccount: React.FC = () => {
   ];
 
   const handleLogout = () => {
-    // Add your logout logic here
-    // dispatch(logout());
+    // Clear all items from localStorage
+    localStorage.removeItem('userToken');
     localStorage.removeItem('userId');
-    navigate('/login');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('referralCode');
+    
+    // Dispatch logout action
+    dispatch(logout());
+    
+    // Navigate to home page
+    navigate('/');
   };
 
   return (

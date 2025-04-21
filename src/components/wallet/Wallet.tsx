@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Wallet as WalletIcon, 
@@ -11,12 +11,33 @@ import {
   CreditCard
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../store';
+import { setWallets } from '../../slices/walletSlice';
+import { fetchUserWallets } from '../../lib/services/WalletServices.js';
 
 const Wallet: React.FC = () => {
+  const dispatch = useDispatch();
+  const { wallets } = useSelector((state: RootState) => state.wallet);
+  const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount, setAmount] = useState('');
 
   const quickAmounts = ['500', '1000', '2000', '5000', '10000', '20000'];
+
+  useEffect(() => {
+    async function fetchData() {
+      if (user?.id) {
+        try {
+          const data = await fetchUserWallets(user.id);
+          dispatch(setWallets(data));
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+    }
+    fetchData();
+  }, [user?.id]);
 
   const handleCopyUpi = () => {
     navigator.clipboard.writeText('test@paytm');
@@ -24,9 +45,19 @@ const Wallet: React.FC = () => {
     alert('UPI ID copied to clipboard');
   };
 
-  const handleRefresh = () => {
-    // Add balance refresh logic here
+  const handleRefresh = async () => {
+    if (user?.id) {
+      try {
+        const data = await fetchUserWallets(user.id);
+        dispatch(setWallets(data));
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+      }
+    }
   };
+
+  const mainBalance = wallets.find(w => w.cryptoname === "INR")?.balance || "0";
+  const bonusBalance = wallets.find(w => w.cryptoname === "CP")?.balance || "0";
 
   return (
     <div className="min-h-screen bg-[#0F0F19] p-4 sm:p-8">
@@ -63,7 +94,7 @@ const Wallet: React.FC = () => {
                   </div>
                   <h2 className="text-base sm:text-lg font-semibold text-white">Available Balance</h2>
                 </div>
-                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">₹1,234.56</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">₹{mainBalance}</h2>
                 <p className="text-sm text-gray-400">Last updated: 2 mins ago</p>
               </div>
 
@@ -73,18 +104,10 @@ const Wallet: React.FC = () => {
                   <div className="p-2 sm:p-3 bg-pink-500/10 rounded-lg">
                     <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400" />
                   </div>
-                  <h2 className="text-base sm:text-lg font-semibold text-white">Monthly Activity</h2>
+                  <h2 className="text-base sm:text-lg font-semibold text-white">Bonus Balance</h2>
                 </div>
-                <div className="space-y-2 sm:space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Total Deposits</span>
-                    <span className="text-sm sm:text-base text-green-500 font-semibold">+₹5,000</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Total Withdrawals</span>
-                    <span className="text-sm sm:text-base text-red-500 font-semibold">-₹3,500</span>
-                  </div>
-                </div>
+                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">₹{bonusBalance}</h2>
+                <p className="text-sm text-gray-400">Available for use</p>
               </div>
             </div>
 
