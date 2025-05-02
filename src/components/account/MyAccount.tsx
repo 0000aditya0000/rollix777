@@ -151,31 +151,26 @@ const MyAccount: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0F0F19]">
-      {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 bg-[#1A1A2E]/95 backdrop-blur-lg border-b border-purple-500/10 z-50">
-        <div className="max-w-[1400px] mx-auto px-4 h-16 md:h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      {/* Header Section */}
+      <div className="max-w-[1400px] mx-auto px-4">
+        <div className="mt-10">
+          <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-6">
             <Link 
               to="/" 
-              className="p-2 rounded-lg bg-purple-600/10 text-purple-400 hover:bg-purple-600/20 transition-all"
+              className="p-2 sm:p-3 mt-2 rounded-xl bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all duration-300 hover:scale-105 transform"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
             </Link>
-            <h1 className="text-xl md:text-2xl font-bold text-white">My Account</h1>
+            <div>
+              <h1 className="text-2xl sm:text-4xl font-bold text-white mt-6">My Account</h1>
+              <p className="text-sm sm:text-base text-purple-300/60 mt-2">Manage your account settings and preferences</p>
+            </div>
           </div>
-          
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-all"
-          >
-            <LogOut className="w-4 h-4 md:w-5 md:h-5 text-red-400" />
-            <span className="text-sm md:text-base text-red-400 font-medium hidden md:inline">Logout</span>
-          </button>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-[1400px] mx-auto px-4 pt-24 md:pt-28 pb-8">
+      <div className="max-w-[1400px] mx-auto px-4 pb-8">
         {/* Profile & Balance Card */}
         <div className="bg-[#1A1A2E] rounded-2xl p-6 md:p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
@@ -314,7 +309,7 @@ const MyAccount: React.FC = () => {
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">Version 1.0.0</p>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

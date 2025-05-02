@@ -108,109 +108,104 @@ const AgentProgram: React.FC = () => {
 
         {/* Invitation Section */}
         <div className="mt-6 md:mt-8 lg:mt-10 max-w-[430px] md:max-w-none mx-auto">
-          <div className="grid md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
-            {/* Left Column */}
-            <div className="space-y-4">
-              {/* Invitation Link Button */}
-              <button 
-                className="w-full py-4 md:py-5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl 
-                         text-white font-medium shadow-lg shadow-purple-500/20
-                         transition-all duration-300 hover:shadow-purple-500/30 hover:scale-[1.02] 
-                         active:scale-[0.98]"
-                onMouseEnter={() => setIsHovered('button')}
-                onMouseLeave={() => setIsHovered('')}
-              >
-                INVITATION LINK
-              </button>
+          <div className="space-y-4 md:space-y-6 lg:space-y-8">
+            {/* Invitation Link Button */}
+            <button 
+              className="w-full py-4 md:py-5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl 
+                       text-white font-medium shadow-lg shadow-purple-500/20
+                       transition-all duration-300 hover:shadow-purple-500/30 hover:scale-[1.02] 
+                       active:scale-[0.98]"
+              onMouseEnter={() => setIsHovered('button')}
+              onMouseLeave={() => setIsHovered('')}
+            >
+              INVITATION LINK
+            </button>
 
-              {/* Invitation Link Card */}
-              <div 
-                className="bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] rounded-xl 
-                         border border-purple-500/20 p-4 md:p-5 lg:p-6
-                         transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
-                         hover:shadow-purple-500/10"
-                onMouseEnter={() => setIsHovered('link')}
-                onMouseLeave={() => setIsHovered('')}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 mr-3">
-                    <p className="text-sm md:text-base text-white/60 mb-1 md:mb-2">Copy invitation link</p>
-                    <p className="text-white font-medium break-all">
-                      https://www.rollix777.com/refer/{referralCode}
-                    </p>
-                  </div>
-                  <button 
-                    onClick={handleCopyLink}
-                    className={`p-2.5 md:p-3 rounded-xl bg-purple-500/10 text-purple-400 
-                             transition-all duration-300 flex-shrink-0
-                             ${isHovered === 'link' ? 'bg-purple-500/20 scale-110' : 'hover:bg-purple-500/15'}`}
-                  >
-                    <Copy size={18} className="md:w-5 md:h-5" />
-                  </button>
+            {/* Invitation Link Card */}
+            <div 
+              className="bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] rounded-xl 
+                       border border-purple-500/20 p-4 md:p-5 lg:p-6
+                       transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
+                       hover:shadow-purple-500/10"
+              onMouseEnter={() => setIsHovered('link')}
+              onMouseLeave={() => setIsHovered('')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1 mr-3">
+                  <p className="text-sm md:text-base text-white/60 mb-1 md:mb-2">Copy invitation link</p>
+                  <p className="text-white font-medium break-all">
+                    https://www.rollix777.com/refer/{referralCode}
+                  </p>
                 </div>
+                <button 
+                  onClick={handleCopyLink}
+                  className={`p-2.5 md:p-3 rounded-xl bg-purple-500/10 text-purple-400 
+                           transition-all duration-300 flex-shrink-0
+                           ${isHovered === 'link' ? 'bg-purple-500/20 scale-110' : 'hover:bg-purple-500/15'}`}
+                >
+                  <Copy size={18} className="md:w-5 md:h-5" />
+                </button>
               </div>
+            </div>
 
-              {/* Copy Code Card */}
-              <div 
-                className="bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] rounded-xl 
-                         border border-purple-500/20 p-4 md:p-5 lg:p-6
-                         transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
-                         hover:shadow-purple-500/10"
-                onMouseEnter={() => setIsHovered('code')}
-                onMouseLeave={() => setIsHovered('')}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 md:gap-4">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/10 
-                                  flex items-center justify-center">
-                      <Copy className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm md:text-base text-white/60">Copy invitation code</p>
-                      <p className="text-white font-medium">{referralCode}</p>
-                    </div>
+            {/* Copy Code Card */}
+            <div 
+              className="bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] rounded-xl 
+                       border border-purple-500/20 p-4 md:p-5 lg:p-6
+                       transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
+                       hover:shadow-purple-500/10"
+              onMouseEnter={() => setIsHovered('code')}
+              onMouseLeave={() => setIsHovered('')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/10 
+                                flex items-center justify-center">
+                    <Copy className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
                   </div>
-                  <button 
-                    onClick={handleCopyCode}
-                    className={`p-2.5 md:p-3 rounded-xl bg-purple-500/10 text-purple-400 
-                             transition-all duration-300
-                             ${isHovered === 'code' ? 'bg-purple-500/20 scale-110' : 'hover:bg-purple-500/15'}`}
-                  >
-                    <Copy size={18} className="md:w-5 md:h-5" />
-                  </button>
+                  <div>
+                    <p className="text-sm md:text-base text-white/60">Copy invitation code</p>
+                    <p className="text-white font-medium">{referralCode}</p>
+                  </div>
                 </div>
+                <button 
+                  onClick={handleCopyCode}
+                  className={`p-2.5 md:p-3 rounded-xl bg-purple-500/10 text-purple-400 
+                           transition-all duration-300
+                           ${isHovered === 'code' ? 'bg-purple-500/20 scale-110' : 'hover:bg-purple-500/15'}`}
+                >
+                  <Copy size={18} className="md:w-5 md:h-5" />
+                </button>
               </div>
             </div>
 
             {/* Menu Items */}
-            <div className="space-y-3 md:space-y-4">
-              {[
-                { title: 'Subordinate data', icon: '👥', route: '/promotions/team-report' },
-                { title: 'Commission detail', icon: '💰', route: '#' },
-                { title: 'Invitation rules', icon: '📜', route: '#' },
-                { title: 'Agent line customer service', icon: '🎮', route: '#' }
-              ].map((item, index) => (
-                <Link
-                  key={index}
-                  to={item.route}
-                  className="block bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] 
-                           rounded-xl border border-purple-500/20 overflow-hidden
-                           transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
-                           hover:shadow-purple-500/10 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <div className="w-full p-4 md:p-5 lg:p-6 flex items-center justify-between">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/10 
-                                    flex items-center justify-center">
-                        <span className="text-xl md:text-2xl">{item.icon}</span>
-                      </div>
-                      <span className="text-white font-medium">{item.title}</span>
+            {[
+              { title: 'Subordinate data', icon: '👥', route: '/promotions/team-report' },
+              { title: 'Commission detail', icon: '💰', route: '#' },
+              { title: 'Invitation rules', icon: '📜', route: '#' },
+              { title: 'Agent line customer service', icon: '🎮', route: '#' }
+            ].map((item, index) => (
+              <Link
+                key={index}
+                to={item.route}
+                className="block bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] 
+                         rounded-xl border border-purple-500/20 overflow-hidden
+                         transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
+                         hover:shadow-purple-500/10 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="w-full p-4 md:p-5 lg:p-6 flex items-center justify-between">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-500/10 
+                                  flex items-center justify-center">
+                      <span className="text-xl md:text-2xl">{item.icon}</span>
                     </div>
-                    <span className="text-white/40 text-xl md:text-2xl">›</span>
+                    <span className="text-white font-medium">{item.title}</span>
                   </div>
-                </Link>
-              ))}
-            </div>
+                  <span className="text-white/40 text-xl md:text-2xl">›</span>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
