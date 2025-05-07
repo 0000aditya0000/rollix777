@@ -25,6 +25,7 @@ import MyAccount from './components/account/MyAccount';
 import Wallet from './components/wallet/Wallet';
 import AgentProgram from './components/promotions/AgentProgram';
 import TeamReport from './components/promotions/TeamReport';
+import { HelpCenter } from "./components/HelpCenter";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -56,52 +57,59 @@ function App() {
           path="/*"
           element={
             <div className="fixed inset-0 bg-[#0F0F19] overflow-y-auto hide-scrollbar">
-              {/* Remove max-width constraint for desktop, only apply it for mobile */}
-              <div className="mx-auto w-full md:w-full max-w-[430px] md:max-w-none relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E]">
-                <Header />
-                <main className="min-h-screen">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                  
-                    <Route path="/bigsmall" element={<BigSmall />} />
-                    <Route path="/promotions" element={<AgentProgram />} />
-                    <Route path="/promotions/team-report" element={<TeamReport />} />
-                    <Route path="/bet-history" element={<BetHistory />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/payment-methods" element={<PaymentMethods />} />
-                    <Route path="/referrals" element={<Referrals />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/security" element={<Security />} />
-                    {authenticated ? (
-                      <Route path="/dashboard" element={<Dashboard />} />
-                    ) : (
-                      <>
-                        <Route path="/hero" element={<Hero />} />
-                        <Route
-                          path="/featured-games"
-                          element={
-                            <GameCarousel
-                              title="Featured Games"
-                              type="featured"
-                            />
-                          }
-                        />
-                        <Route
-                          path="/trending-games"
-                          element={<TrendingGames />}
-                        />
-                        <Route path="/color-game" element={<ColorGame />} />
-                        <Route path="/hot-games" element={<HotGames />} />
-                        <Route path="/promotions" element={<Promotions />} />
-                        <Route path="/features" element={<Features />} />
-                      </>
-                    )}
-                    <Route path="/games" element={<AllGames />} />
-                    <Route path="/account" element={<MyAccount />} />
-                    <Route path="/wallet" element={<Wallet />} />
-                  </Routes>
-                </main>
-                <Footer />
+              {/* Container with responsive padding and width */}
+              <div className="mx-auto w-full relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E] min-h-screen">
+                <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+                  <Header />
+                  <main className="min-h-screen">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/bigsmall" element={<BigSmall />} />
+                      <Route path="/agent-program" element={<AgentProgram />} />
+                      <Route path="/team-report" element={<TeamReport />} />
+                      <Route path="/bet-history" element={<BetHistory />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/payment-methods" element={<PaymentMethods />} />
+                      <Route path="/referrals" element={<Referrals />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/security" element={<Security />} />
+                      <Route path="/promotions" element={<AgentProgram />} />
+                      <Route path="/rewards" element={<Promotions />} />
+                      <Route path="/support" element={<HelpCenter />} />
+                      <Route path="/promotions/team-report" element={<TeamReport />} />
+                      {authenticated ? (
+                        <Route path="/dashboard" element={<Dashboard />} />
+                      ) : (
+                        <>
+                          <Route path="/hero" element={<Hero />} />
+                          <Route
+                            path="/featured-games"
+                            element={
+                              <GameCarousel
+                                title="Featured Games"
+                                type="featured"
+                              />
+                            }
+                          />
+                          <Route
+                            path="/trending-games"
+                            element={<TrendingGames title="Trending Games" type="trending" />}
+                          />
+                          <Route path="/color-game" element={<ColorGame />} />
+                          <Route 
+                            path="/hot-games" 
+                            element={<HotGames title="Hot Games" type="hot" />}
+                          />
+                          <Route path="/features" element={<Features />} />
+                        </>
+                      )}
+                      <Route path="/games" element={<AllGames />} />
+                      <Route path="/account" element={<MyAccount />} />
+                      <Route path="/wallet" element={<Wallet />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </div>
               </div>
             </div>
           }

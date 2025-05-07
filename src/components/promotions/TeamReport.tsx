@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search, User } from 'lucide-react';
+import { ArrowLeft, User, ChevronDown, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import referralService from '../../lib/services/referralService';
+import { referralService } from '../../lib/services/referralService';
+import { filter } from 'framer-motion/client';
 
 interface ReferralMember {
   id: number;
@@ -9,7 +10,6 @@ interface ReferralMember {
   username: string;
   email: string;
   level: number;
-  // Additional fields with dummy values
   depositAmount?: number;
   totalBet?: number;
   firstDeposit?: number;
@@ -29,25 +29,25 @@ interface ReferralResponse {
 }
 
 const TeamReport: React.FC = () => {
-  const [searchId, setSearchId] = useState('');
+  const [activeFilter, setActiveFilter] = useState('today');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [referralData, setReferralData] = useState<ReferralResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchReferrals = async () => {
       try {
+        // Get userId from localStorage or your auth context
         const userId = localStorage.getItem('userId');
         if (!userId) {
-          console.error('User ID not found in localStorage');
-          return;
+          throw new Error('User ID not found');
         }
-        
+
         const data = await referralService.getReferrals(userId);
-        console.log('Referral data:', data); // For debugging
         setReferralData(data);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching referrals:', error);
-      } finally {
         setLoading(false);
       }
     };
@@ -55,38 +55,33 @@ const TeamReport: React.FC = () => {
     fetchReferrals();
   }, []);
 
-  // Modified getAllMembers function with debug logs
-  const getAllMembers = () => {
-    if (!referralData) {
-      console.log('No referral data available');
-      return [];
-    }
+  // Helper function to generate mock members
+  const generateMockMembers = (count: number, level: number): ReferralMember[] => {
+    return Array.from({ length: count }, (_, i) => ({
+      id: level * 100 + i + 1,
+      name: `User ${level * 100 + i + 1}`,
+      username: `user${level * 100 + i + 1}`,
+      email: `user${level * 100 + i + 1}@example.com`,
+      level,
+      depositAmount: Math.floor(Math.random() * 10000) + 1000,
+      totalBet: Math.floor(Math.random() * 30000) + 5000,
+      firstDeposit: Math.floor(Math.random() * 3000) + 500,
+      joinDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString().split('T')[0],
+    }));
+  };
 
-    console.log('Processing referral data:', referralData); // Debug log
+  const getAllMembers = (): ReferralMember[] => {
+    if (!referralData) return [];
 
-    const allLevels = [
+    return [
       ...(referralData.referralsByLevel.level1 || []),
       ...(referralData.referralsByLevel.level2 || []),
       ...(referralData.referralsByLevel.level3 || []),
       ...(referralData.referralsByLevel.level4 || []),
       ...(referralData.referralsByLevel.level5 || []),
     ];
-
-    console.log('Combined levels:', allLevels); // Debug log
-
-    const membersWithDummyData = allLevels.map(member => ({
-      ...member,
-      depositAmount: Math.floor(Math.random() * 10000) + 1000,
-      totalBet: Math.floor(Math.random() * 30000) + 5000,
-      firstDeposit: Math.floor(Math.random() * 3000) + 500,
-      joinDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString().split('T')[0],
-    }));
-
-    console.log('Members with dummy data:', membersWithDummyData); // Debug log
-    return membersWithDummyData;
   };
 
-  // Calculate total stats
   const calculateTotalStats = () => {
     const members = getAllMembers();
     return {
@@ -96,108 +91,209 @@ const TeamReport: React.FC = () => {
     };
   };
 
-  // Modified render section
   const members = getAllMembers();
   const totals = calculateTotalStats();
 
-  return (
-    <div className="min-h-screen bg-[#0F0F19]">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-10 bg-[#0F0F19] max-w-[430px] mx-auto">
-        <div className="px-4 py-6 flex items-center gap-4">
-          <Link 
-            to="/agent-program" 
-            className="p-2 rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors"
-          >
-            <ArrowLeft size={20} />
-          </Link>
-          <h1 className="text-2xl font-bold text-white">Team Report</h1>
-        </div>
+  const filterOptions = [
+    { value: 'today', label: 'Today' },
+    { value: 'yesterday', label: 'Yesterday' },
+    { value: 'month', label: 'This Month' },
+   
+  ];
 
-        {/* Search Bar */}
-        <div className="px-4 pb-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by UID"
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value)}
-              className="w-full py-3 pl-10 pr-4 bg-[#252547] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-            />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+  const getActiveFilterLabel = () => {
+    return filterOptions.find(option => option.value === activeFilter)?.label || 'Filter';
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0F0F19] text-white">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-10 bg-[#0F0F19] border-b border-purple-500/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <Link 
+                to="/agent-program" 
+                className="p-2 rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors mr-4"
+              >
+                <ArrowLeft size={20} />
+              </Link>
+              <h1 className="text-xl font-bold">Team Report</h1>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="pt-40 px-4 h-[calc(100vh-100px)] overflow-y-auto scrollbar-hide">
+      <main className="pt-24 pb-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Filter Button */}
+        <div className="flex justify-end mb-6">
+          <div className="relative">
+            <button
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className="flex items-center gap-2 bg-[#252547] hover:bg-[#2f2f5a] text-white py-2 px-4 rounded-lg transition-colors w-full sm:w-auto"
+              aria-haspopup="true"
+              aria-expanded={showFilterDropdown}
+            >
+              <Calendar size={18} />
+              <span className="text-sm">{getActiveFilterLabel()}</span>
+              <ChevronDown size={18} className={`transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showFilterDropdown && (
+              <div 
+                className="absolute right-0 mt-2 w-48 bg-[#252547] rounded-lg shadow-lg z-20 border border-purple-500/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {filterOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setActiveFilter(option.value);
+                      setShowFilterDropdown(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm ${
+                      activeFilter === option.value
+                        ? 'bg-purple-600 text-white'
+                        : 'text-gray-300 hover:bg-[#2f2f5a]'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {[
-            { title: 'Deposit Amount', value: `₹${totals.depositAmount.toLocaleString()}` },
-            { title: 'Total Bet', value: `₹${totals.totalBet.toLocaleString()}` },
-            { title: 'First Deposit', value: `₹${totals.firstDeposit.toLocaleString()}` }
+            { title: 'Total Deposit', value: `₹${totals.depositAmount.toLocaleString()}`, trend: 'up' },
+            { title: 'Total Bet Amount', value: `₹${totals.totalBet.toLocaleString()}`, trend: 'up' },
+            { title: 'First Deposit', value: `₹${totals.firstDeposit.toLocaleString()}`, trend: 'down' }
           ].map((stat, index) => (
             <div 
               key={index}
-              className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-3"
+              className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-6 hover:border-purple-500/40 transition-colors"
             >
-              <p className="text-gray-400 text-xs mb-1">{stat.title}</p>
-              <p className="text-white font-bold">{stat.value}</p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-gray-400 text-sm mb-1">{stat.title}</p>
+                  <p className="text-white font-bold text-2xl">{stat.value}</p>
+                </div>
+                <div className={`px-2 py-1 rounded-md text-xs ${
+                  stat.trend === 'up' ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'
+                }`}>
+                  {stat.trend === 'up' ? '↑ 12%' : '↓ 5%'}
+                </div>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Team Members List */}
-        <div className="space-y-3">
-          {loading ? (
-            <div className="text-center text-gray-400">Loading...</div>
-          ) : members.length > 0 ? (
-            members.map((member) => (
-              <div
-                key={member.id}
-                className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
-                    <User className="w-6 h-6 text-purple-400" />
-                  </div>
+        {/* Team Members Table */}
+        <div className="bg-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
+          {/* Table Header */}
+          <div className="hidden md:grid grid-cols-12 bg-[#252547] px-6 py-3 text-gray-400 text-sm font-medium">
+            <div className="col-span-4">Member</div>
+            <div className="col-span-2">Level</div>
+            <div className="col-span-2 text-right">Deposit</div>
+            <div className="col-span-2 text-right">Total Bet</div>
+            <div className="col-span-2 text-right">Joined</div>
+          </div>
 
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-white font-medium">{member.name}</h3>
-                        <p className="text-gray-400 text-sm">Username: {member.username}</p>
-                        <p className="text-gray-400 text-sm">Level: {member.level}</p>
+          {loading ? (
+            <div className="text-center py-12 text-gray-400">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-2"></div>
+              <p>Loading team data...</p>
+            </div>
+          ) : members.length > 0 ? (
+            <div className="divide-y divide-purple-500/10">
+              {members.map((member) => (
+                <div 
+                  key={member.id} 
+                  className="grid grid-cols-1 md:grid-cols-12 px-4 md:px-6 py-4 hover:bg-[#252547]/50 transition-colors"
+                >
+                  {/* Mobile View */}
+                  <div className="md:hidden">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-700/20 flex items-center justify-center">
+                          <User className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-white font-medium">{member.name}</h3>
+                          <p className="text-gray-400 text-xs">@{member.username}</p>
+                        </div>
                       </div>
-                      <p className="text-gray-400 text-xs">{member.joinDate}</p>
+                      <div className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-sm">
+                        Level {member.level}
+                      </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 mt-3">
-                      <div>
-                        <p className="text-gray-400 text-xs">Deposit</p>
-                        <p className="text-white">₹{member.depositAmount?.toLocaleString()}</p>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-[#252547]/50 rounded-lg p-3">
+                        <p className="text-gray-400 text-xs mb-1">Deposit</p>
+                        <p className="text-white font-medium">₹{member.depositAmount?.toLocaleString()}</p>
                       </div>
-                      <div>
-                        <p className="text-gray-400 text-xs">Total Bet</p>
-                        <p className="text-white">₹{member.totalBet?.toLocaleString()}</p>
+                      <div className="bg-[#252547]/50 rounded-lg p-3">
+                        <p className="text-gray-400 text-xs mb-1">Total Bet</p>
+                        <p className="text-white font-medium">₹{member.totalBet?.toLocaleString()}</p>
                       </div>
-                      <div>
-                        <p className="text-gray-400 text-xs">First Deposit</p>
-                        <p className="text-white">₹{member.firstDeposit?.toLocaleString()}</p>
+                      <div className="bg-[#252547]/50 rounded-lg p-3">
+                        <p className="text-gray-400 text-xs mb-1">Joined</p>
+                        <p className="text-white font-medium text-sm">{member.joinDate}</p>
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Desktop View - Member Info */}
+                  <div className="hidden md:flex items-center col-span-4">
+                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mr-3">
+                      <User className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium">{member.name}</h3>
+                      <p className="text-gray-400 text-xs">@{member.username}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Level */}
+                  <div className="hidden md:flex items-center col-span-2 text-gray-300">
+                    Level {member.level}
+                  </div>
+                  
+                  {/* Desktop View - Deposit */}
+                  <div className="hidden md:flex items-center justify-end col-span-2">
+                    <div className="text-white">₹{member.depositAmount?.toLocaleString()}</div>
+                  </div>
+                  
+                  {/* Desktop View - Total Bet */}
+                  <div className="hidden md:flex items-center justify-end col-span-2">
+                    <div className="text-white">₹{member.totalBet?.toLocaleString()}</div>
+                  </div>
+                  
+                  {/* Desktop View - Join Date */}
+                  <div className="hidden md:flex items-center justify-end col-span-2 text-gray-300 text-sm">
+                    {member.joinDate}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
-            <div className="text-center text-gray-400">No team members found</div>
+            <div className="text-center py-12 text-gray-400">
+              <div className="mx-auto w-16 h-16 bg-[#252547] rounded-full flex items-center justify-center mb-3">
+                <User className="w-8 h-8 text-purple-400" />
+              </div>
+              <h3 className="text-lg font-medium mb-1">No team members found</h3>
+              <p className="text-sm max-w-md mx-auto">You don't have any referrals yet. Share your referral link to start building your team.</p>
+            </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };
 
-export default TeamReport; 
+export default TeamReport;

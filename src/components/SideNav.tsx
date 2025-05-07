@@ -10,6 +10,8 @@ import {
   Shield,
   History,
   Star,
+  UserCog,
+  Ticket,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
@@ -23,13 +25,14 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
   // console.log(onLogout);
  const navigate = useNavigate()
   if (!isOpen) return null;
-const name = localStorage.getItem("userName");
+const name = localStorage.getItem("userName") || "User";
 
   const menuItems = [
     { icon: <User size={20} />, label: 'My Profile', path: '/profile' },
+    { icon: <UserCog size={20} />, label: 'Account', path: '/account' },
     { icon: <History size={20} />, label: 'Transaction History', path: '/bet-history' },
     { icon: <CreditCard size={20} />, label: 'Payment Methods', path: '/payment-methods' },
-    { icon: <Star size={20} />, label: 'VIP Program', path: '/vip' },
+    { icon: <Ticket size={20} />, label: 'Promotions', path: '/promotions' },
     { icon: <Gift size={20} />, label: 'Referrals & Rewards', path: '/referrals' },
     { icon: <Settings size={20} />, label: 'Settings', path: '/settings' },
     { icon: <Shield size={20} />, label: 'Security', path: '/security' },
