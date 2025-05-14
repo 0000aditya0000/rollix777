@@ -2,17 +2,40 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import CryptoJS from 'crypto-js';
 import axios from 'axios';
-// Import JSON files
-import jdbGames from '../../gamesData/jdb.json';
+// Import all game data files
+import apexGames from '../../gamesData/apex.json';
+import amaticGames from '../../gamesData/amatic.json';
+import ainsworthGames from '../../gamesData/ainsworth.json';
+import apolloGames from '../../gamesData/apollo.json';
+import aristocratGames from '../../gamesData/aristocrat.json';
+import bingoGames from '../../gamesData/bingo.json';
+import boomingGames from '../../gamesData/booming.json';
+import egtGames from '../../gamesData/egt.json';
+import firekirinGames from '../../gamesData/firekirin.json';
+import fishGames from '../../gamesData/fish.json';
+import gclubGames from '../../gamesData/gclub.json';
+import habenaroGames from '../../gamesData/habenaro.json';
+import holibetGames from '../../gamesData/holibet.json';
+import igrosoftGames from '../../gamesData/igrosoft.json';
+import igtGames from '../../gamesData/igt.json';
 import jiliGames from '../../gamesData/jili.json';
-import pgsoftGames from '../../gamesData/pgsoft.json';
-import pgsGames from '../../gamesData/pgs.json';
-import kingmidasGames from '../../gamesData/kingmidas.json';
-import idealGames from '../../gamesData/ideal.json';
-import eazyGames from '../../gamesData/eazygaming.json';
-import cq9Games from '../../gamesData/cq9.json';
-import bflottoGames from '../../gamesData/bflotto.json';
-import v8Games from '../../gamesData/v8.json';
+import kjotGames from '../../gamesData/kjot.json';
+import kenoGames from '../../gamesData/keno.json';
+import merkurGames from '../../gamesData/merkur.json';
+import microgamingGames from '../../gamesData/microgaming.json';
+import netentGames from '../../gamesData/netent.json';
+import novomaticGames from '../../gamesData/novomatic.json';
+import playngoGames from '../../gamesData/playngo.json';
+import pragmaticGames from '../../gamesData/pragmatic.json';
+import quickspinGames from '../../gamesData/quickspin.json';
+import rouletteGames from '../../gamesData/roulette.json';
+import rubyplayGames from '../../gamesData/rubyplay.json';
+import scientificgamesGames from '../../gamesData/scientificgames.json';
+import sportbettingGames from '../../gamesData/sportbetting.json';
+import spribeGames from '../../gamesData/spribe.json';
+import vegasGames from '../../gamesData/vegas.json';
+import wazdanGames from '../../gamesData/wazdan.json';
+import zitroGames from '../../gamesData/zitro.json';
 
 const aesKey = "126c2e86c418427c4aa717f971063e0e";
 const serverUrl = "https://api.workorder.icu/proxy";
@@ -30,72 +53,27 @@ const generateRandom10Digits = () => {
   return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };
 
-const openJsGame = async (game_uid: string, element: HTMLImageElement) => {
-  const userId = localStorage.getItem("userId");
-  const response = await axios.get(`http://localhost:5000/api/user/wallet/${userId}`);
-  const balance = response.data[10].balance;
-
-  console.log(`Game UID: ${game_uid}`, `Balance: ${balance}`);
-
-  const memberAccount = `h43929rollix777${userId}`;
-  const transferId = `${memberAccount}_${generateRandom10Digits()}`;
-  const timestamp = Date.now();
-
+const openJsGame = async (id: string): Promise<void> => {
   try {
-    const initPayload = {
-      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-      member_account: memberAccount,
-      timestamp,
-      credit_amount: "0",
-      currency_code: "BRL",
-      language: "en",
-      platform: "2",
-      home_url: "http://localhost:5000",
-      transfer_id: transferId,
-    };
+    const userId = localStorage.getItem("userId");
 
-    const initEncryptedPayload = encryptAES256(JSON.stringify(initPayload), aesKey);
-    const initRequestPayload = { agency_uid: initPayload.agency_uid, timestamp, payload: initEncryptedPayload };
-    const initResponse = await axios.post(serverUrl, initRequestPayload);
-
-    if (initResponse.data.code !== 0) {
-      console.error("Initialization Error:", initResponse.data.msg);
-      alert("Failed to initialize game: " + initResponse.data.msg);
+    if (!userId) {
+      alert("User ID not found. Please log in.");
       return;
     }
 
-    const afterAmount = initResponse.data.payload.after_amount;
-    const deductPayload = { ...initPayload, credit_amount: `-${afterAmount}` };
-    const deductEncryptedPayload = encryptAES256(JSON.stringify(deductPayload), aesKey);
-    const deductRequestPayload = { ...initRequestPayload, payload: deductEncryptedPayload };
-    const deductResponse = await axios.post(serverUrl, deductRequestPayload);
+    const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+      userId,
+      id,
+    });
 
-    if (deductResponse.data.code !== 0) {
-      console.error("Deduct Error:", deductResponse.data.msg);
-      alert("Failed to deduct balance: " + deductResponse.data.msg);
-      return;
+    if (response.data.success) {
+      window.location.href = response.data.gameUrl;
+    } else {
+      alert("Failed to launch game.");
     }
-
-    const gamePayload = { ...initPayload, game_uid, credit_amount: balance.toString() };
-    const gameEncryptedPayload = encryptAES256(JSON.stringify(gamePayload), aesKey);
-    const gameRequestPayload = { ...initRequestPayload, payload: gameEncryptedPayload };
-    const gameResponse = await axios.post(serverUrl, gameRequestPayload);
-
-    if (gameResponse.data.code !== 0) {
-      console.error("Game Launch Error:", gameResponse.data.msg);
-      alert("Failed to launch game: " + gameResponse.data.msg);
-      return;
-    }
-
-    const gameLaunchUrl = gameResponse.data.payload?.game_launch_url;
-    if (!gameLaunchUrl) {
-      alert("Game launch URL not found.");
-      return;
-    }
-
-    window.open(gameLaunchUrl, "_blank");
   } catch (error) {
-    console.error("Error in game launch process:", error);
+    console.error("Error launching game:", error);
     alert("An error occurred while launching the game.");
   }
 };
@@ -108,16 +86,39 @@ interface GameProvider {
 
 const AllGames: React.FC = () => {
   const gameProviders: GameProvider[] = [
-    { id: 'jdb', name: 'JDB', games: jdbGames },
+    { id: 'apex', name: 'APEX', games: apexGames },
+    { id: 'amatic', name: 'AMATIC', games: amaticGames },
+    { id: 'ainsworth', name: 'AINSWORTH', games: ainsworthGames },
+    { id: 'apollo', name: 'APOLLO', games: apolloGames },
+    { id: 'aristocrat', name: 'ARISTOCRAT', games: aristocratGames },
+    { id: 'bingo', name: 'BINGO', games: bingoGames },
+    { id: 'booming', name: 'BOOMING', games: boomingGames },
+    { id: 'egt', name: 'EGT', games: egtGames },
+    { id: 'firekirin', name: 'FIREKIRIN', games: firekirinGames },
+    { id: 'fish', name: 'FISH', games: fishGames },
+    { id: 'gclub', name: 'GCLUB', games: gclubGames },
+    { id: 'habenaro', name: 'HABENARO', games: habenaroGames },
+    { id: 'holibet', name: 'HOLIBET', games: holibetGames },
+    { id: 'igrosoft', name: 'IGROSOFT', games: igrosoftGames },
+    { id: 'igt', name: 'IGT', games: igtGames },
     { id: 'jili', name: 'JILI', games: jiliGames },
-    { id: 'pgsoft', name: 'PGSOFT', games: pgsoftGames },
-    { id: 'pgs', name: 'PGS', games: pgsGames },
-    { id: 'kingmidas', name: 'KING MIDAS', games: kingmidasGames },
-    { id: 'ideal', name: 'IDEAL', games: idealGames },
-    { id: 'eazygaming', name: 'EAZY GAMING', games: eazyGames },
-    { id: 'cq9', name: 'CQ9', games: cq9Games },
-    { id: 'bflotto', name: 'BF LOTTO', games: bflottoGames },
-    { id: 'v8', name: 'V8', games: v8Games },
+    { id: 'kjot', name: 'KJOT', games: kjotGames },
+    { id: 'keno', name: 'KENO', games: kenoGames },
+    { id: 'merkur', name: 'MERKUR', games: merkurGames },
+    { id: 'microgaming', name: 'MICROGAMING', games: microgamingGames },
+    { id: 'netent', name: 'NETENT', games: netentGames },
+    { id: 'novomatic', name: 'NOVOMATIC', games: novomaticGames },
+    { id: 'playngo', name: 'PLAY\'N GO', games: playngoGames },
+    { id: 'pragmatic', name: 'PRAGMATIC', games: pragmaticGames },
+    { id: 'quickspin', name: 'QUICKSPIN', games: quickspinGames },
+    { id: 'roulette', name: 'ROULETTE', games: rouletteGames },
+    { id: 'rubyplay', name: 'RUBYPLAY', games: rubyplayGames },
+    { id: 'scientificgames', name: 'SCIENTIFIC GAMES', games: scientificgamesGames },
+    { id: 'sportbetting', name: 'SPORT BETTING', games: sportbettingGames },
+    { id: 'spribe', name: 'SPRIBE', games: spribeGames },
+    { id: 'vegas', name: 'VEGAS', games: vegasGames },
+    { id: 'wazdan', name: 'WAZDAN', games: wazdanGames },
+    { id: 'zitro', name: 'ZITRO', games: zitroGames },
   ];
 
   const [activeProvider, setActiveProvider] = useState(gameProviders[0].id);
@@ -167,15 +168,15 @@ const AllGames: React.FC = () => {
             .find(p => p.id === activeProvider)
             ?.games.map((game) => (
               <motion.div
-                key={game.game_uid}
+                key={game.id || game.game_uid}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="aspect-[3/4] rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <img 
-                  src={game.icon} 
+                  src={game.img || game.icon} 
                   alt={game.name || game.game_name}
-                  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
+                  onClick={() => openJsGame(game.id)}
                   className="w-full h-full object-cover"
                 />
               </motion.div>

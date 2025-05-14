@@ -21,9 +21,9 @@ const Promotions = () => {
             <button className="text-purple-400 text-sm flex items-center gap-2 hover:text-purple-300 transition-colors">
               View All <ArrowRight className="w-4 h-4" />
             </button>
-          </div>
+      </div>
 
-          <div className="space-y-4">
+      <div className="space-y-4">
             {/* Welcome Bonus Card */}
             <div className="group relative">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl blur-[6px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -74,7 +74,7 @@ const Promotions = () => {
                 <p className="text-gray-400 text-sm mb-4">50% Reload Bonus + VIP Rewards</p>
                 <button className="w-full group-hover:w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2">
                   Boost Now <ArrowRight className="w-4 h-4" />
-                </button>
+          </button>
               </div>
             </div>
           </div>
@@ -195,14 +195,14 @@ const Promotions = () => {
                 <button className="w-full py-4 bg-gradient-to-r from-indigo-500 to-violet-500 hover:opacity-90 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 group">
                   Boost Now
                   <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
-                </button>
+          </button>
               </div>
             </div>
-          </div>
         </div>
-      </section>
+      </div>
+    </section>
     </>
   );
 };
 
-export default Promotions; 
+export default Promotions;

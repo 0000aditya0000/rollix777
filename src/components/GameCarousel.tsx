@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import JDBGames from "../gamesData/gamesData.json";
+import sportBettingGames from "../gamesData/sportbetting.json";
 import axios from "axios";
 import CryptoJS from "crypto-js";
 import AuthModal from "./AuthModal";
@@ -29,142 +29,27 @@ const generateRandom10Digits = () => {
 };
 
 // Open JS Game Function
-const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
-  
-  const userId = localStorage.getItem("userId");
-  const response = await axios.get(`http://localhost:5000/api/user/wallet/${userId}`);
-  const balance = response.data[10].balance;
-  console.log(balance);
-
-  console.log(`Game UID: ${game_uid}`);
-  console.log(`Button element:`, element);
-
-  const memberAccount = `h43929rollix777${userId}`;
-  const transferId = `${memberAccount}_${generateRandom10Digits()}`;
-  const timestamp = Date.now();
-
+const openJsGame = async (id: string): Promise<void> => {
   try {
-    // Step 1: Initialize the payload with a balance of 0
-    const initPayload = {
-      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-      member_account: memberAccount,
-      timestamp,
-      credit_amount: "0", // Set balance to 0
-      currency_code: "BRL",
-      language: "en",
-      platform: "2",
-      home_url: "http://localhost:5000",
-      transfer_id: transferId,
-    };
+    const userId = localStorage.getItem("userId");
 
-    const initEncryptedPayload = encryptAES256(
-      JSON.stringify(initPayload),
-      aesKey
-    );
-
-    const initRequestPayload = {
-      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-      timestamp,
-      payload: initEncryptedPayload,
-    };
-
-    // Send the initial request to the server
-    const initResponse = await axios.post(serverUrl, initRequestPayload);
-
-    if (initResponse.data.code !== 0) {
-      console.error("Initialization Error:", initResponse.data.msg);
-      alert("Failed to initialize game: " + initResponse.data.msg);
+    if (!userId) {
+      alert("User ID not found. Please log in.");
       return;
     }
 
-    console.log("Initialization successful:", initResponse.data);
+    const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+      userId,
+      id,
+    });
 
-    // Get the amount to deduct from the user balance
-    const afterAmount = initResponse.data.payload.after_amount; // Amount to deduct
-    console.log(afterAmount);
-
-    // Step 2: Deduct the user's balance
-    const deductPayload = {
-      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-      member_account: memberAccount,
-      timestamp: Date.now(),
-      credit_amount: `-${afterAmount}`, // Deduct the current balance
-      currency_code: "BRL",
-      language: "en",
-      platform: "2",
-      home_url: "https://thalaclub.com",
-      transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
-    };
-
-    const deductEncryptedPayload = encryptAES256(
-      JSON.stringify(deductPayload),
-      aesKey
-    );
-
-    const deductRequestPayload = {
-      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-      timestamp: Date.now(),
-      payload: deductEncryptedPayload,
-    };
-
-    const deductResponse = await axios.post(serverUrl, deductRequestPayload);
-
-    if (deductResponse.data.code !== 0) {
-      console.error("Deduct Error:", deductResponse.data.msg);
-      alert("Failed to deduct balance: " + deductResponse.data.msg);
-      return;
+    if (response.data.success) {
+      window.location.href = response.data.gameUrl;
+    } else {
+      alert("Failed to launch game.");
     }
-
-    console.log("Deduct successful:", deductResponse.data);
-
-    // Step 3: Launch the game
-    const gamePayload = {
-      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-      member_account: memberAccount,
-      game_uid: game_uid,
-      timestamp: Date.now(),
-      credit_amount: "5000",
-      currency_code: "BRL",
-      language: "en",
-      platform: "2",
-      home_url: "https://thalaclub.com",
-      transfer_id: `${memberAccount}_${generateRandom10Digits()}`,
-    };
-
-    const gameEncryptedPayload = encryptAES256(
-      JSON.stringify(gamePayload),
-      aesKey
-    );
-
-    const gameRequestPayload = {
-      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-      timestamp: Date.now(),
-      payload: gameEncryptedPayload,
-    };
-
-    const gameResponse = await axios.post(serverUrl, gameRequestPayload);
-
-    if (gameResponse.data.code !== 0) {
-      console.error("Game Launch Error:", gameResponse.data.msg);
-      alert("Failed to launch game: " + gameResponse.data.msg);
-      return;
-    }
-
-    // Fetch the game launch URL
-    const gameLaunchUrl = gameResponse.data.payload?.game_launch_url;
-
-    if (!gameLaunchUrl) {
-      console.error("Game Launch URL not found.");
-      alert("Game launch URL not found.");
-      return;
-    }
-
-    console.log("Game Launch URL:", gameLaunchUrl);
-
-    // Open the game launch URL in a new tab
-    window.open(gameLaunchUrl, "_blank");
   } catch (error) {
-    console.error("Error in game launch process:", error);
+    console.error("Error launching game:", error);
     alert("An error occurred while launching the game.");
   }
 };
@@ -200,7 +85,7 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const gamesPerPage = 8; // Show only 8 games (single row)
 
-  const games = JDBGames.filter((game) => game.game_category === "popular");
+  const games = sportBettingGames;
   const totalPages = Math.ceil(games.length / gamesPerPage);
   
   const nextPage = () => {
@@ -240,17 +125,26 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
         </div>
         <div
           ref={scrollRef}
-          className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 snap-x hide-scrollbar"
+          className="flex overflow-x-auto gap-3 pb-4 -mx-4 px-4 snap-x hide-scrollbar"
         >
           {games.map((game) => (
-            <div key={game.game_uid} className="min-w-[140px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg relative">
-              <div className="relative">
+            <div key={game.id} className="min-w-[120px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg">
+              <div className="relative aspect-square">
                 <img
-                  src={game.icon}
-                  alt={game.game_name}
-                  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
-                  className="w-full h-60 object-cover cursor-pointer rounded-xl"
+                  src={game.img}
+                  alt={game.name}
+                  onClick={() => openJsGame(game.id)}
+                  className="w-full h-full object-contain cursor-pointer rounded-t-xl"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
+                  <h3 className="text-white font-medium text-xs text-center line-clamp-1 mb-3">{game.name}</h3>
+                  <button 
+                    onClick={() => openJsGame(game.id)}
+                    className="py-1.5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium text-base hover:opacity-90 transition-opacity"
+                  >
+                    Play
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -286,20 +180,20 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
         <div ref={desktopGridRef} className="grid grid-cols-8 gap-2">
           {currentGames.map((game) => (
             <div 
-              key={game.game_uid} 
+              key={game.id} 
               className="group bg-[#252547] rounded-md border border-purple-500/10 overflow-hidden transition-transform hover:scale-[1.05]"
             >
-              <div className="relative aspect-[3/4]">
+              <div className="relative aspect-square">
                 <img
-                  src={game.icon}
-                  alt={game.game_name}
-                  className="w-full h-full object-cover"
+                  src={game.img}
+                  alt={game.name}
+                  className="w-full h-full object-contain rounded-t-md"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end p-1">
-                  <h3 className="text-white font-medium text-xs mb-0.5 text-center line-clamp-1">{game.game_name}</h3>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
+                  <h3 className="text-white font-medium text-xs text-center line-clamp-1 mb-3">{game.name}</h3>
                   <button 
-                    onClick={(e) => openJsGame(game.game_uid, e.currentTarget as HTMLButtonElement)}
-                    className="py-0.5 px-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium text-[10px] hover:opacity-90 transition-opacity"
+                    onClick={(e) => openJsGame(game.id)}
+                    className="py-1.5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium text-base hover:opacity-90 transition-opacity"
                   >
                     Play
                   </button>

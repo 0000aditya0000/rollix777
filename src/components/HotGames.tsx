@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Zap } from "lucide-react";
 import CryptoJS from "crypto-js";
-import GameData from "../gamesData/gamesData.json";
+import jiliGames from "../gamesData/jili.json";
 import AuthModal from "./AuthModal";
 import axios from "axios";
 
@@ -25,82 +25,39 @@ const encryptAES256 = (data: string, key: string) => {
 const generateRandom10Digits = () => {
   return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };
-
-const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
-  const userId = localStorage.getItem("userId");
-  const response = await axios.get(`http://localhost:5000/api/user/wallet/${userId}`);
-  const balance = response.data[10].balance;
-  console.log(balance);
-  console.log(`Game UID: ${game_uid}`, `Balance: ${balance}`);
-
-  const memberAccount = `h43929rollix777${userId}`;
-  const transferId = `${memberAccount}_${generateRandom10Digits()}`;
-  const timestamp = Date.now();
-
+const openJsGame = async (id: string): Promise<void> => {
   try {
-    const initPayload = {
-      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-      member_account: memberAccount,
-      timestamp,
-      credit_amount: "0",
-      currency_code: "BRL",
-      language: "en",
-      platform: "2",
-      home_url: "http://localhost:5000",
-      transfer_id: transferId,
-    };
+    const userId = localStorage.getItem("userId");
 
-    const initEncryptedPayload = encryptAES256(JSON.stringify(initPayload), aesKey);
-    const initRequestPayload = { agency_uid: initPayload.agency_uid, timestamp, payload: initEncryptedPayload };
-    const initResponse = await axios.post(serverUrl, initRequestPayload);
-
-    if (initResponse.data.code !== 0) {
-      console.error("Initialization Error:", initResponse.data.msg);
-      alert("Failed to initialize game: " + initResponse.data.msg);
+    if (!userId) {
+      alert("User ID not found. Please log in.");
       return;
     }
 
-    const afterAmount = initResponse.data.payload.after_amount;
-    const deductPayload = { ...initPayload, credit_amount: `-${afterAmount}` };
-    const deductEncryptedPayload = encryptAES256(JSON.stringify(deductPayload), aesKey);
-    const deductRequestPayload = { ...initRequestPayload, payload: deductEncryptedPayload };
-    const deductResponse = await axios.post(serverUrl, deductRequestPayload);
+    const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+      userId,
+      id,
+    });
 
-    if (deductResponse.data.code !== 0) {
-      console.error("Deduct Error:", deductResponse.data.msg);
-      alert("Failed to deduct balance: " + deductResponse.data.msg);
-      return;
+    if (response.data.success) {
+      window.location.href = response.data.gameUrl;
+    } else {
+      alert("Failed to launch game.");
     }
-
-    const gamePayload = { ...initPayload, game_uid, credit_amount: balance.toString() };
-    const gameEncryptedPayload = encryptAES256(JSON.stringify(gamePayload), aesKey);
-    const gameRequestPayload = { ...initRequestPayload, payload: gameEncryptedPayload };
-    const gameResponse = await axios.post(serverUrl, gameRequestPayload);
-
-    if (gameResponse.data.code !== 0) {
-      console.error("Game Launch Error:", gameResponse.data.msg);
-      alert("Failed to launch game: " + gameResponse.data.msg);
-      return;
-    }
-
-    const gameLaunchUrl = gameResponse.data.payload?.game_launch_url;
-    if (!gameLaunchUrl) {
-      alert("Game launch URL not found.");
-      return;
-    }
-
-    window.open(gameLaunchUrl, "_blank");
   } catch (error) {
-    console.error("Error in game launch process:", error);
+    console.error("Error launching game:", error);
     alert("An error occurred while launching the game.");
   }
 };
+
+
+
 
 const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const desktopGridRef = useRef<HTMLDivElement>(null);
-  const hotGames = GameData.filter((game) => game.game_category === "hot");
+  const hotGames = jiliGames;
 
   // For mobile scrolling
   const scrollLeft = () => {
@@ -162,21 +119,30 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
 
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto hide-scrollbar px-1"
+          className="flex gap-3 overflow-x-auto hide-scrollbar px-1"
         >
           {hotGames.length > 0 ? (
             hotGames.map((game) => (
               <div
-                key={game.game_uid}
-                className="min-w-[140px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg relative"
+                key={game.id}
+                className="min-w-[100px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg relative"
               >
-                <div className="relative">
+                <div className="relative aspect-square">
                   <img
-                    src={game.icon}
-                    alt={game.game_name}
-                    onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
-                    className="w-full h-60 object-cover cursor-pointer rounded-xl"
+                    src={game.img}
+                    alt={game.name}
+                    onClick={() => openJsGame(game.id)}
+                    className="w-full h-full object-contain cursor-pointer rounded-t-xl"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
+                    <h3 className="text-white font-medium text-xs text-center line-clamp-1 mb-3">{game.name}</h3>
+                    <button 
+                      onClick={() => openJsGame(game.id)}
+                      className="py-1.5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium text-base hover:opacity-90 transition-opacity"
+                    >
+                      Play
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
@@ -218,20 +184,20 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
         <div ref={desktopGridRef} className="grid grid-cols-8 gap-2">
           {currentGames.map((game) => (
             <div 
-              key={game.game_uid} 
+              key={game.id} 
               className="group bg-[#252547] rounded-md border border-purple-500/10 overflow-hidden transition-transform hover:scale-[1.05]"
             >
-              <div className="relative aspect-[3/4]">
+              <div className="relative aspect-square">
                 <img
-                  src={game.icon}
-                  alt={game.game_name}
-                  className="w-full h-full object-cover"
+                  src={game.img}
+                  alt={game.name}
+                  className="w-full h-full object-contain"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end p-1">
-                  <h3 className="text-white font-medium text-xs mb-0.5 text-center line-clamp-1">{game.game_name}</h3>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
+                  <h3 className="text-white font-medium text-xs text-center line-clamp-1 mb-3">{game.name}</h3>
                   <button 
-                    onClick={(e) => openJsGame(game.game_uid, e.currentTarget as HTMLButtonElement)}
-                    className="py-0.5 px-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium text-[10px] hover:opacity-90 transition-opacity"
+                    onClick={() => openJsGame(game.id)}
+                    className="py-1.5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium text-base hover:opacity-90 transition-opacity"
                   >
                     Play
                   </button>

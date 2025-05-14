@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Zap } from "lucide-react";
 import CryptoJS from "crypto-js";
-import GameData from "../gamesData/gamesData.json";
+import vegasGames from "../gamesData/vegas.json";
 import AuthModal from "./AuthModal";
 import axios from "axios";
 
@@ -26,72 +26,27 @@ const generateRandom10Digits = () => {
   return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };
 
-const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
-  const userId = localStorage.getItem("userId");
-  const response = await axios.get(`http://localhost:5000/api/user/wallet/${userId}`);
-  const balance = response.data[10].balance;
-  console.log(balance);
-  console.log(`Game UID: ${game_uid}`, `Balance: ${balance}`);
-
-  const memberAccount = `h43929rollix777${userId}`;
-  const transferId = `${memberAccount}_${generateRandom10Digits()}`;
-  const timestamp = Date.now();
-
+const openJsGame = async (id: string): Promise<void> => {
   try {
-    const initPayload = {
-      agency_uid: "fd37fafd6af3eb5af8dee92101100347",
-      member_account: memberAccount,
-      timestamp,
-      credit_amount: "0",
-      currency_code: "BRL",
-      language: "en",
-      platform: "2",
-      home_url: "http://localhost:5000",
-      transfer_id: transferId,
-    };
+    const userId = localStorage.getItem("userId");
 
-    const initEncryptedPayload = encryptAES256(JSON.stringify(initPayload), aesKey);
-    const initRequestPayload = { agency_uid: initPayload.agency_uid, timestamp, payload: initEncryptedPayload };
-    const initResponse = await axios.post(serverUrl, initRequestPayload);
-
-    if (initResponse.data.code !== 0) {
-      console.error("Initialization Error:", initResponse.data.msg);
-      alert("Failed to initialize game: " + initResponse.data.msg);
+    if (!userId) {
+      alert("User ID not found. Please log in.");
       return;
     }
 
-    const afterAmount = initResponse.data.payload.after_amount;
-    const deductPayload = { ...initPayload, credit_amount: `-${afterAmount}` };
-    const deductEncryptedPayload = encryptAES256(JSON.stringify(deductPayload), aesKey);
-    const deductRequestPayload = { ...initRequestPayload, payload: deductEncryptedPayload };
-    const deductResponse = await axios.post(serverUrl, deductRequestPayload);
+    const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+      userId,
+      id,
+    });
 
-    if (deductResponse.data.code !== 0) {
-      console.error("Deduct Error:", deductResponse.data.msg);
-      alert("Failed to deduct balance: " + deductResponse.data.msg);
-      return;
+    if (response.data.success) {
+      window.location.href = response.data.gameUrl;
+    } else {
+      alert("Failed to launch game.");
     }
-
-    const gamePayload = { ...initPayload, game_uid, credit_amount: balance.toString() };
-    const gameEncryptedPayload = encryptAES256(JSON.stringify(gamePayload), aesKey);
-    const gameRequestPayload = { ...initRequestPayload, payload: gameEncryptedPayload };
-    const gameResponse = await axios.post(serverUrl, gameRequestPayload);
-
-    if (gameResponse.data.code !== 0) {
-      console.error("Game Launch Error:", gameResponse.data.msg);
-      alert("Failed to launch game: " + gameResponse.data.msg);
-      return;
-    }
-
-    const gameLaunchUrl = gameResponse.data.payload?.game_launch_url;
-    if (!gameLaunchUrl) {
-      alert("Game launch URL not found.");
-      return;
-    }
-
-    window.open(gameLaunchUrl, "_blank");
   } catch (error) {
-    console.error("Error in game launch process:", error);
+    console.error("Error launching game:", error);
     alert("An error occurred while launching the game.");
   }
 };
@@ -99,7 +54,7 @@ const openJsGame = async (game_uid: string, element: HTMLButtonElement) => {
 const LatestGames: React.FC<LatestGamesProps> = ({ title, type }) => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const latestGames = GameData.filter((game) => game.game_category === "latest");
+  const latestGames = vegasGames;
 
   const scrollLeft = () => {
     if (scrollRef.current) {
@@ -145,14 +100,14 @@ const LatestGames: React.FC<LatestGamesProps> = ({ title, type }) => {
         {latestGames.length > 0 ? (
           latestGames.map((game) => (
             <div
-              key={game.game_uid}
+              key={game.id}
               className="min-w-[140px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg relative"
             >
               <div className="relative">
                 <img
-                  src={game.icon}
-                  alt={game.game_name}
-                  onClick={(e) => openJsGame(game.game_uid, e.currentTarget)}
+                  src={game.img}
+                  alt={game.name}
+                  onClick={() => openJsGame(game.id)}
                   className="w-full h-full object-cover cursor-pointer rounded-xl"
                 />
                 {/* Game Name Overlay */}

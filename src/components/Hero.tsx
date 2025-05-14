@@ -19,17 +19,18 @@ import {
   TrendingUp
 } from "lucide-react";
 import ColorGame from "./ColorGame";
+import axios from "axios";
 
 // Import games data
-import gamesData from "../gamesData/gamesData.json";
+import apexgames from "../gamesData/apex.json";
 
 // Define types for our game data
 interface GameData {
-  game_name: string;
-  game_uid: string;
-  game_type: string;
-  icon: string;
-  game_category: string;
+  id: string;
+  name: string;
+  img: string;
+  title: string;
+  categories: string;
 }
 
 interface FeaturedGame {
@@ -40,6 +41,31 @@ interface FeaturedGame {
   category: string;
 }
 
+const openJsGame = async (id: string): Promise<void> => {
+  try {
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      alert("User ID not found. Please log in.");
+      return;
+    }
+
+    const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+      userId,
+      id,
+    });
+
+    if (response.data.success) {
+      window.open(response.data.gameUrl, "_blank");
+    } else {
+      alert("Failed to launch game.");
+    }
+  } catch (error) {
+    console.error("Error launching game:", error);
+    alert("An error occurred while launching the game.");
+  }
+};
+
 const Hero: React.FC = () => {
   const [featuredGames, setFeaturedGames] = useState<FeaturedGame[]>([]);
   const [activeTab, setActiveTab] = useState<string>("featured");
@@ -47,16 +73,16 @@ const Hero: React.FC = () => {
 
   // Load games from the JSON file
   useEffect(() => {
-    if (gamesData && gamesData.length > 0) {
-      const randomGames = [...(gamesData as GameData[])]
+    if (apexgames && apexgames.length > 0) {
+      const randomGames = [...apexgames]
         .sort(() => 0.5 - Math.random())
         .slice(0, 6)
         .map(game => ({
-          id: game.game_uid,
-          title: game.game_name,
-          image: game.icon,
-          provider: game.game_type,
-          category: game.game_category
+          id: game.id,
+          title: game.name,
+          image: game.img,
+          provider: game.title,
+          category: game.categories
         }));
       
       setFeaturedGames(randomGames);
@@ -192,7 +218,7 @@ const Hero: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-violet-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="relative flex items-center space-x-2">
                     <Play className="w-5 h-5 text-white" />
-                    <span className="text-white font-medium">Play Now</span>
+                    <span className="text-white font-medium" onClick={() => openJsGame(featuredGames[0].id)}>Play Now</span>
                   </div>
                 </button>
               </div>
@@ -319,7 +345,7 @@ const Hero: React.FC = () => {
             {/* Section Header */}
             <div className="flex items-center justify-between mb-10">
               <div className="space-y-2">
-                <h3 className="text-3xl font-bold text-white">Popular Games</h3>
+                <h3 className="text-3xl font-bold text-white">  r Games</h3>
                 <p className="text-gray-400">Discover our most played games</p>
               </div>
               <div className="flex items-center space-x-4">
@@ -331,65 +357,30 @@ const Hero: React.FC = () => {
             </div>
 
             {/* Games Grid */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-8 gap-2">
               {featuredGames.map(game => (
                 <div
                   key={game.id}
-                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-fuchsia-500/10 backdrop-blur-xl border border-white/10"
+                  className="group relative aspect-square rounded-md overflow-hidden bg-[#252547] border border-purple-500/10"
                   onMouseEnter={() => setHoveredGame(game.id)}
                   onMouseLeave={() => setHoveredGame(null)}
                 >
-                  {/* Background Effects */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-violet-600/20 to-fuchsia-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
                   {/* Game Image */}
                   <img
                     src={game.image}
                     alt={game.title}
-                    className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-contain"
                   />
                   
                   {/* Game Info Overlay */}
-                  <div className={`absolute inset-0 flex flex-col justify-end p-6 transition-all duration-300 ${
-                    hoveredGame === game.id
-                      ? 'bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-100'
-                      : 'bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0'
-                  }`}>
-                    <div className={`transform transition-all duration-300 ${
-                      hoveredGame === game.id ? 'translate-y-0' : 'translate-y-4'
-                    }`}>
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-white mb-1">{game.title}</h3>
-                          <p className="text-gray-400 text-sm">{game.provider}</p>
-                        </div>
-                        <button className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
-                          <Heart className="w-5 h-5 text-rose-400" />
-                        </button>
-                      </div>
-                      
-                      <div className="flex items-center space-x-4">
-                        <button className="flex-1 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-xl transition-opacity hover:opacity-90 flex items-center justify-center space-x-2">
-                          <Play className="w-4 h-4" />
-                          <span>Play Now</span>
-                        </button>
-                        <div className="flex items-center space-x-1">
-                          <Star className="w-4 h-4 text-yellow-400" fill="#FBBF24" />
-                          <span className="text-white text-sm font-medium">4.8</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Top Badges */}
-                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-2 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full border border-white/10">
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-white text-xs font-medium">1.2k Playing</span>
-                    </div>
-                    <div className="px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full border border-white/10">
-                      <span className="text-white text-xs font-medium">{game.category}</span>
-                    </div>
+                  <div className={`absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1`}>
+                    <h3 className="text-white font-medium text-xs text-center line-clamp-1 mb-3">{game.title}</h3>
+                    <button 
+                      onClick={() => openJsGame(game.id)}
+                      className="py-1.5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium text-base hover:opacity-90 transition-opacity"
+                    >
+                      Play
+                    </button>
                   </div>
                 </div>
               ))}

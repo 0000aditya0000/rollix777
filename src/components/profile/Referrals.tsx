@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const Referrals = () => {
   const [copied, setCopied] = React.useState(false);
   const referralCode = 'JOHN777';
-  const referralLink = `http://localhost:5000/ref/${referralCode}`;
+  const referralLink = `https://rollix777.com/ref/${referralCode}`;
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
