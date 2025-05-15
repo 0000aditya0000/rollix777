@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { ArrowLeft, Camera, Mail, Phone, User, Shield, Edit2, Upload, Check } from "lucide-react";
+import { ArrowLeft, Camera, Mail, Phone, User, Shield, Edit2, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import { fetchUserData, updateUserData } from "../../lib/services/userService.js";
 import Toast from "../Toast";
@@ -217,7 +217,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1A1A2E] via-[#14142B] to-[#1A1A2E] py-12">
+    <div className="pt-16 pb-24">
       {toast && (
         <Toast
           message={toast.message}
@@ -225,150 +225,104 @@ const Profile = () => {
           onClose={() => setToast(null)}
         />
       )}
-      
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Header Section */}
-        <div className="mb-10">
-          <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-6">
-            <Link 
-              to="/" 
-              className="p-2 sm:p-3 mt-2 rounded-xl bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all duration-300 hover:scale-105 transform"
-            >
-              <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
-            </Link>
-            <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-white mt-6">Profile Settings</h1>
-              <p className="text-sm sm:text-base text-purple-300/60 mt-2">View and update your personal information</p>
+      <div className="px-4 py-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <Link to="/" className="p-2 rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors">
+            <ArrowLeft size={20} />
+          </Link>
+          <h1 className="text-2xl font-bold text-white">My Profile</h1>
+        </div>
+        
+        {/* Profile Picture Section */}
+        <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
+          <div className="p-4 border-b border-purple-500/10 flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-white">Profile Picture</h3>
+          </div>
+          <div className="p-6 flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="w-32 h-32 rounded-full overflow-hidden bg-[#1A1A2E] border-4 border-purple-500/20">
+                {profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-600 to-pink-600">
+                    <User className="w-16 h-16 text-white" />
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="absolute bottom-0 right-0 p-2 bg-purple-600 rounded-full text-white hover:bg-purple-700 transition-colors disabled:opacity-50"
+              >
+                {isUploading ? (
+                  <Upload className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Camera className="w-5 h-5" />
+                )}
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
             </div>
+            <p className="text-gray-400 text-sm text-center">
+              {isUploading ? "Uploading..." : "Click the camera icon to upload a new profile picture"}
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-8">
-          {/* Left Column - Profile Card */}
-          <div className="col-span-12 lg:col-span-4 space-y-6 h-fit lg:h-full">
-            <div className="bg-[#252547]/50 backdrop-blur-xl rounded-2xl border border-purple-500/20 overflow-hidden shadow-2xl h-full">
-              <div className="relative h-24 sm:h-32 bg-gradient-to-r from-purple-600/20 to-pink-600/20">
-                <div className="absolute -bottom-12 sm:-bottom-16 w-full flex justify-center">
-                  <div className="relative group">
-                    <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-4 border-[#252547] transition-all duration-300 transform group-hover:scale-105 shadow-xl">
-                      {profileImage ? (
-                        <img
-                          src={profileImage}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-600 to-pink-600">
-                          <User className="w-16 h-16 text-white/80" />
-                        </div>
-                      )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
+            <div className="p-4 border-b border-purple-500/10 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-white">Personal Information</h3>
+              <button
+                type="button"
+                onClick={() => setIsEditing(!isEditing)}
+                className="p-2 rounded-lg bg-[#1A1A2E] text-purple-400 hover:bg-purple-500/10 transition-colors"
+              >
+                <Edit2 size={18} />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              {["fullName", "email", "phone", "username"].map((field, index) => (
+                <div key={index} className="space-y-1">
+                  <label className="text-sm text-gray-400">{field.replace(/([A-Z])/g, " $1").trim()}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                      {field === "username" && <Shield className="w-5 h-5 text-purple-400" />}
+                      {field === "fullName" && <User className="w-5 h-5 text-purple-400" />}
+                      {field === "email" && <Mail className="w-5 h-5 text-purple-400" />}
+                      {field === "phone" && <Phone className="w-5 h-5 text-purple-400" />}
                     </div>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="absolute -bottom-1 right-0 p-2 sm:p-3 bg-purple-600 rounded-full text-white hover:bg-purple-700 transition-all duration-300 transform hover:scale-110 disabled:opacity-50 shadow-lg group-hover:translate-y-0 translate-y-2"
-                    >
-                      {isUploading ? (
-                        <Upload className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                      ) : (
-                        <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
-                      )}
-                    </button>
                     <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageUpload}
-                      accept="image/*"
-                      className="hidden"
+                      type={field === "email" ? "email" : field === "phone" ? "tel" : "text"}
+                      value={formData[field as keyof FormData]}
+                      onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                      disabled={!isEditing}
+                      className="w-full py-2 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500 disabled:opacity-50"
                     />
                   </div>
                 </div>
-              </div>
+              ))}
 
-              <div className="px-4 sm:px-6 pt-16 sm:pt-20 pb-4 sm:pb-6">
-                <div className="text-center space-y-1 sm:space-y-2">
-                  <h3 className="text-xl sm:text-2xl font-semibold text-white">{formData.fullName || "Your Name"}</h3>
-                  <p className="text-sm text-purple-300/60">@{formData.username || "username"}</p>
-                </div>
-              </div>
-            </div>
-
-            
-          </div>
-
-          {/* Right Column - Edit Form */}
-          <div className="col-span-12 lg:col-span-8 h-fit lg:h-full">
-            <div className="bg-[#252547]/50 backdrop-blur-xl rounded-2xl border border-purple-500/20 overflow-hidden shadow-2xl h-full">
-              <div className="p-4 sm:p-6 border-b border-purple-500/10 flex flex-row justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <h3 className="text-lg sm:text-xl font-semibold text-white">Personal Information</h3>
-                </div>
+              {isEditing && (
                 <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base transition-all duration-300 flex items-center gap-2 whitespace-nowrap
-                    ${isEditing 
-                      ? 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20' 
-                      : 'bg-purple-600 text-white hover:bg-purple-700'}`}
+                  type="submit"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity"
                 >
-                  {isEditing ? (
-                    <>Cancel</>
-                  ) : (
-                    <>
-                      <Edit2 size={16} className="sm:w-[18px] sm:h-[18px]" />
-                      <span>Edit Profile</span>
-                    </>
-                  )}
+                  Save Changes
                 </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { field: "fullName", icon: User, label: "Full Name", placeholder: "Enter your full name" },
-                    { field: "username", icon: Shield, label: "Username", placeholder: "Choose a username" },
-                    { field: "email", icon: Mail, label: "Email Address", placeholder: "Enter your email" },
-                    { field: "phone", icon: Phone, label: "Phone Number", placeholder: "Enter your phone number" }
-                  ].map(({ field, icon: Icon, label, placeholder }) => (
-                    <div key={field} className="space-y-2">
-                      <label className="text-sm font-medium text-purple-300/80 flex items-center gap-2">
-                        <Icon className="w-4 h-4" />
-                        {label}
-                      </label>
-                      <input
-                        type={field === "email" ? "email" : field === "phone" ? "tel" : "text"}
-                        value={formData[field as keyof FormData]}
-                        onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-                        disabled={!isEditing}
-                        placeholder={placeholder}
-                        className={`w-full py-3.5 px-4 rounded-xl text-white placeholder-purple-300/30
-                          transition-all duration-300 ${
-                            isEditing
-                              ? 'bg-purple-900/20 border border-purple-500/20 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20'
-                              : 'bg-purple-900/10 border border-transparent'
-                          } disabled:opacity-75`}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {isEditing && (
-                  <div className="mt-8">
-                    <button
-                      type="submit"
-                      className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-medium 
-                        hover:opacity-90 transition-all duration-300 transform hover:scale-[1.01] 
-                        focus:outline-none focus:ring-2 focus:ring-purple-500/50 shadow-xl
-                        flex items-center justify-center gap-2"
-                    >
-                      <Check size={20} />
-                      Save Changes
-                    </button>
-                  </div>
-                )}
-              </form>
+              )}
             </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
