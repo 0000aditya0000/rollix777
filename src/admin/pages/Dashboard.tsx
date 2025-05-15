@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { Users, DollarSign, Eye, Check, X, User } from 'lucide-react';
-import axios from 'axios';
+import { AdminUserService } from '../../lib/services/AdminUser';
+
+interface User {
+  id: string;
+  [key: string]: any;
+}
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'kyc' | 'withdrawals'>('kyc');
-  const [users, setUsers] = useState([]); // State to store fetched users
-    const [error, setError] = useState(null); 
+  const [users, setUsers] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
      
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/user/allusers');
-        setUsers(response.data); // Set the fetched data to the state
-
+        const data = await AdminUserService.getAllUsers();
+        setUsers(data);
+        console.log(data);
       } catch (error) {
-        setError(error); // Set error if the request fails
+        setError(error instanceof Error ? error.message : 'Failed to fetch users');
       }
     };
 
@@ -41,9 +46,9 @@ const Dashboard = () => {
     { id: 'WD-005', user: 'Eva Mendes', amount: '$2,500.00', method: 'Bank Transfer', date: '2025-04-06', status: 'pending' },
   ];
 // Display error state
-  if (error) {
-    return <div className="text-red-500 text-center py-6">Error: {error.message}</div>;
-  }
+  // if (error) {
+  //   return <div className="text-red-500 text-center py-6">Error: {error.message}</div>;
+  // }
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
@@ -56,7 +61,7 @@ const Dashboard = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-gray-400 mb-1">Total Users</p>
-                <h2 className="text-3xl font-bold text-white">{totalUsers?.toLocaleString()}</h2>
+                <h2 className="text-3xl font-bold text-white">{totalUsers}</h2>
                 <p className="text-green-400 text-sm mt-2">+124 this week</p>
               </div>
               <div className="p-3 bg-purple-500/20 rounded-xl">

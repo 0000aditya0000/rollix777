@@ -1,25 +1,45 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Filter, Plus, Edit, Trash2, Eye, User, Mail, Phone, Calendar } from 'lucide-react';
-import axios from 'axios';
+import { AdminUserService } from '../../lib/services/AdminUser';
+
+interface UserData {
+  id: number;
+  username: string;
+  email: string;
+  phone: string;
+  dob: string;
+  status?: string;
+  balance?: number;
+}
+
+interface PopupProps {
+  onClose: () => void;
+  onAddUser: (userData: Omit<UserData, 'id'> & { password: string }) => Promise<void>;
+}
+
+interface EditPopupProps {
+  onClose: () => void;
+  onUpdateUser: (id: number, userData: Partial<UserData> & { password?: string }) => Promise<void>;
+  user: UserData;
+}
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [users, setUsers] = useState<any[]>([]);
-  const [error, setError] = useState(null);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [error, setError] = useState<Error | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  // const [loading, setLoading] = useState(true);
 
   // Get All Users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/user/allusers');
-        setUsers(response.data);
-        console.log(response.data);
+        const data = await AdminUserService.getAllUsers();
+        setUsers(data);
       } catch (error) {
-        setError(error);
+        setError(error instanceof Error ? error : new Error('An error occurred'));
       } finally {
         setLoading(false);
       }
@@ -29,9 +49,9 @@ const Users = () => {
   }, []);
 
   // Delete User
-  const deleteUser = async (id) => {
+  const deleteUser = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:5000/api/user/user/${id}`);
+      await AdminUserService.deleteUser(id);
       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
       alert("User deleted successfully.");
     } catch (err) {
@@ -41,10 +61,10 @@ const Users = () => {
   };
 
   // Add New User
-  const addNewUser = async (userData) => {
+  const addNewUser = async (userData: Omit<UserData, 'id'> & { password: string }) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/user', userData);
-      setUsers((prevUsers) => [...prevUsers, response.data]);
+      const newUser = await AdminUserService.addUser(userData);
+      setUsers((prevUsers) => [...prevUsers, newUser]);
       alert("User added successfully.");
     } catch (err) {
       console.error("Error adding user:", err);
@@ -53,11 +73,11 @@ const Users = () => {
   };
 
   // Update User
-  const updateUser = async (id, userData) => {
+  const updateUser = async (id: number, userData: Partial<UserData> & { password?: string }) => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/user/user/${id}`, userData);
+      const updatedUser = await AdminUserService.updateUser(id, userData);
       setUsers((prevUsers) =>
-        prevUsers.map((user) => (user.id === id ? response.data : user))
+        prevUsers.map((user) => (user.id === id ? updatedUser : user))
       );
       alert("User updated successfully.");
     } catch (err) {
@@ -66,7 +86,7 @@ const Users = () => {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string = 'inactive') => {
     switch (status) {
       case 'active': return 'bg-green-500/20 text-green-400';
       case 'inactive': return 'bg-gray-500/20 text-gray-400';
@@ -75,23 +95,20 @@ const Users = () => {
     }
   };
 
-  if (loading) {
-    return <div className="text-white text-center py-6">Loading...</div>;
-  }
-
+  
   if (error) {
     return <div className="text-red-500 text-center py-6">Error: {error.message}</div>;
   }
 
   // Popup Component for Adding User
-  const Popup = ({ onClose, onAddUser }) => {
+  const Popup: React.FC<PopupProps> = ({ onClose, onAddUser }) => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [phone, setPhone] = useState('');
     const [dob, setDob] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
 
       const userData = {
@@ -217,20 +234,20 @@ const Users = () => {
   };
 
   // Edit Popup Component
-  const EditPopup = ({ onClose, onUpdateUser, user }) => {
+  const EditPopup: React.FC<EditPopupProps> = ({ onClose, onUpdateUser, user }) => {
     const [username, setUsername] = useState(user.username);
     const [email, setEmail] = useState(user.email);
     const [password, setPassword] = useState('');
     const [phone, setPhone] = useState(user.phone);
     const [dob, setDob] = useState(user.dob);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
 
       const userData = {
         username,
         email,
-        password,
+        ...(password && { password }),
         phone,
         dob,
       };
@@ -362,7 +379,7 @@ const Users = () => {
       </div>
 
       {showPopup && <Popup onClose={() => setShowPopup(false)} onAddUser={addNewUser} />}
-      {showEditPopup && (
+      {showEditPopup && selectedUser && (
         <EditPopup
           onClose={() => setShowEditPopup(false)}
           onUpdateUser={updateUser}

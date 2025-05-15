@@ -6,6 +6,30 @@ import { RootState } from "../store";
 import { useDispatch } from "react-redux";
 import { deposit, withdraw } from "../slices/walletSlice";
 import { fetchResults, generateResult, getBetHistory, checkValidBet, placeBet } from "../lib/services/BigSmallServices";
+import { io } from "socket.io-client";
+
+// Initialize socket connection with proper configuration
+const socket = io("http://localhost:3001", {
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000
+});
+
+// Socket connection status logging
+socket.on("connect", () => {
+  console.log("Connected to server with ID:", socket.id);
+  // Fetch initial data when connected
+  fetchTableData();
+});
+
+socket.on("connect_error", (error) => {
+  console.error("Connection error:", error);
+});
+
+socket.on("disconnect", () => {
+  console.log("Disconnected from server");
+});
 
 type Record = {
   id: number;
@@ -30,31 +54,11 @@ type BetHistory = {
   amountReceived: number;
 };
 
-const DB_NAME = 'wingoTimerDB';
-const STORE_NAME = 'timerState';
-const DB_VERSION = 1;
-
-const initDB = async () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    };
-  });
-};
-
 const BigSmall = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
   const [timeLeft, setTimeLeft] = useState(60);
-  const [isRunning, setIsRunning] = useState(false);
+  const [isRunning, setIsRunning] = useState(true);
   const [activeTime, setActiveTime] = useState<number | null>(1);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>("");
@@ -73,44 +77,38 @@ const BigSmall = () => {
   const dispatch = useDispatch();
   const [error, setError] = useState<string | null>(null);
 
+  // Socket.IO timer effect
   useEffect(() => {
-    const initializeDB = async () => {
-      try {
-        const db = await initDB() as IDBDatabase;
-        const transaction = db.transaction(STORE_NAME, 'readonly');
-        const store = transaction.objectStore(STORE_NAME);
-        const request = store.get('timerState');
-
-        request.onsuccess = () => {
-          if (request.result) {
-            const { timeRemaining, lastUpdated } = request.result;
-            const timePassed = Math.floor((Date.now() - lastUpdated) / 1000);
-            const newTimeLeft = Math.max(0, timeRemaining - timePassed);
-            setTimeLeft(newTimeLeft);
-          }
-          setIsRunning(true);
-        };
-      } catch (error) {
-        setIsRunning(true);
+    const handleTimer = (time: number) => {
+      console.log('Timer update:', time); // Debug log
+      setTimeLeft(time);
+      setIsRunning(true);
+      
+      if (time === 0) {
+        setIsRunning(false);
+        console.log('Timer reached 0, getting result for period:', currentPeriod); // Debug log
+        // Wait for 1 second before getting result to ensure period is updated
+        setTimeout(() => {
+          getResult();
+        }, 1000);
       }
     };
 
-    initializeDB();
-  }, []);
+    const handlePeriod = (period: number) => {
+      console.log('Period update:', period); // Debug log
+      setCurrentPeriod(period);
+    };
 
-  const saveTimerState = async () => {
-    try {
-      const db = await initDB() as IDBDatabase;
-      const transaction = db.transaction(STORE_NAME, 'readwrite');
-      const store = transaction.objectStore(STORE_NAME);
-      store.put({
-        timeRemaining: timeLeft,
-        lastUpdated: Date.now()
-      }, 'timerState');
-    } catch (error) {
-      // Handle error silently
-    }
-  };
+    // Set up socket listeners
+    socket.on("timer", handleTimer);
+    socket.on("period", handlePeriod);
+
+    // Cleanup socket listeners on unmount
+    return () => {
+      socket.off("timer", handleTimer);
+      socket.off("period", handlePeriod);
+    };
+  }, []); // Empty dependency array since we don't need to recreate the effect
 
   useEffect(() => {
     fetchTableData();
@@ -118,40 +116,59 @@ const BigSmall = () => {
 
   const fetchTableData = async () => {
     try {
+      console.log('Fetching table data'); // Debug log
       const response = await fetchResults();
-      setCurrentPeriod(response.results[0].period_number + 1);
-      setRecords(response.results);
-      setError(null);
+      console.log('Table data received:', response); // Debug log
+      
+      if (response && response.results) {
+        setCurrentPeriod(response.results[0].period_number + 1);
+        setRecords(response.results);
+        setError(null);
+      } else {
+        throw new Error('Invalid response format from fetchResults');
+      }
     } catch (error) {
-      setError("Failed to fetch results. Please try again later.");
-      console.error("Error fetching results:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch results. Please try again later.";
+      console.error("Error in fetchTableData:", error); // Enhanced error logging
+      setError(errorMessage);
     }
   };
 
   const getResult = async () => {
     try {
+      console.log('Getting result for period:', currentPeriod); // Debug log
+
       if (!currentPeriod || isNaN(currentPeriod)) {
+        console.error('Invalid period number:', currentPeriod); // Debug log
         setError("Invalid period number");
         return;
       }
 
+      console.log('Calling generateResult for period:', currentPeriod); // Debug log
       const data = await generateResult(currentPeriod);
+      console.log('Result data received:', data); // Debug log
       
       if (!data) {
+        console.error('No data received from generateResult'); // Debug log
         setError("Failed to generate result. Please try again.");
         return;
       }
 
       setResult(data);
       setRecords((prev) => [data, ...prev]);
+      
+      console.log('Fetching updated table data'); // Debug log
       await fetchTableData();
+      
+      console.log('Checking win/lose status'); // Debug log
       await checkWinLose(data);
+      
       setBets([]);
       setError(null);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to generate result. Please try again later.";
+      console.error("Error in getResult:", error); // Enhanced error logging
       setError(errorMessage);
-      console.error("Error generating result:", error);
     }
   };
 
@@ -244,39 +261,21 @@ const BigSmall = () => {
     }
   };
 
-  useEffect(() => {
-    if (!isRunning) return;
-  
-    if (timeLeft === 0) {
-      getResult();
-      
-      if (activeTime) {
-        setTimeout(() => setTimeLeft(activeTime * 60), 0);
-      }
-      return;
-    }
-  
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        const newTime = prev - 1;
-        saveTimerState();
-        return newTime;
-      });
-    }, 1000);
-  
-    return () => clearInterval(timer);
-  }, [isRunning, timeLeft]);
-
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? `0${secs}` : secs}`;
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(records.length / recordsPerPage);
+
+  // Update the time buttons click handler to not affect the timer directly
+  const handleTimeButtonClick = (min: number) => {
+    setActiveTime(min);
+  };
 
   return (
     <div className="pt-16 pb-24 bg-[#0F0F19]">
@@ -293,9 +292,9 @@ const BigSmall = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Game Controls */}
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 gap-6">
+          {/* Game Controls */}
+          <div className="space-y-4">
             {/* Time Buttons */}
             <div className="grid grid-cols-4 gap-2">
               {[1, 3, 5, 10].map((min) => (
@@ -306,7 +305,7 @@ const BigSmall = () => {
                       ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                       : "bg-[#252547] border border-purple-500/20 text-gray-300 hover:bg-[#2f2f5a]"
                   }`}
-                  onClick={() => setActiveTime(min)}
+                  onClick={() => handleTimeButtonClick(min)}
                 >
                   {min} min
                 </button>
@@ -430,7 +429,7 @@ const BigSmall = () => {
             </div>
           </div>
 
-          {/* Right Column - Record Table */}
+          {/* Record Table */}
           <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
             <div className="p-4 border-b border-purple-500/10">
               <h2 className="text-xl font-bold text-white">

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Zap } from "lucide-react";
 import CryptoJS from "crypto-js";
-import GameData from "../gamesData/gamesData.json";
+import GameData from "../../gamesData/vegas.json";
 import AuthModal from "./AuthModal";
 import axios from "axios";
 

@@ -5,7 +5,6 @@ import { Search, Plus, Edit, Trash2, Eye, BarChart3 } from 'lucide-react';
 const Games = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [games, setGames] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -13,10 +12,8 @@ const Games = () => {
       try {
         const response = await axios.get('http://localhost:5000/api/games/allgames');
         setGames(response.data); // Assuming the API returns an array of games
-        setLoading(false);
       } catch (err) {
         setError(err.message);
-        setLoading(false);
       }
     };
 
@@ -47,7 +44,6 @@ const Games = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (

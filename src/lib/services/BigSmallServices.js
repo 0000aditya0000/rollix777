@@ -77,3 +77,25 @@ export const placeBet = async betData => {
     throw error;
   }
 };
+
+export const getServerTime = async () => {
+  try {
+    const response = await axios.get(`${baseUrl}/api/color/server-time`);
+
+    if (!response.data) {
+      throw new Error("No data received from server");
+    }
+
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Failed to get server time"
+      );
+    } else if (error.request) {
+      throw new Error("No response from server");
+    } else {
+      throw error;
+    }
+  }
+};
