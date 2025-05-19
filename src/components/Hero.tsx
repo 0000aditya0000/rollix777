@@ -287,7 +287,7 @@ const Hero: React.FC = () => {
                 >
                   <div 
                     onClick={() => openJsGame(game.id)}
-                    className="relative w-full h-[200px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
+                    className="relative w-full h-[180px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
                   >
                     <img
                       src={game.image}
@@ -345,7 +345,7 @@ const Hero: React.FC = () => {
                 >
                   <div 
                     onClick={() => openJsGame(game.id)}
-                    className="relative w-full h-[280px] bg-[#252547] rounded-2xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-3 flex items-center justify-center group"
+                    className="relative w-full h-[240px] bg-[#252547] rounded-2xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-3 flex items-center justify-center group"
                   >
                     <img
                       src={game.image}

@@ -105,7 +105,7 @@ const Referrals = () => {
               <div className="p-2 bg-purple-500/20 rounded-lg">
                 <Users className="w-5 h-5 text-purple-400" />
               </div>
-              <span className="text-gray-400">Total Referrals</span>
+              <span className="text-gray-400">Total Referrals </span>
             </div>
             <p className="text-2xl font-bold text-white">{totalReferrals}</p>
           </div>
@@ -116,7 +116,7 @@ const Referrals = () => {
               </div>
               <span className="text-gray-400">Total Earnings</span>
             </div>
-            <p className="text-2xl font-bold text-white">$125.00</p>
+            <p className="text-2xl font-bold text-white">₹125.00</p>
           </div>
         </div>
 
@@ -168,7 +168,8 @@ const Referrals = () => {
                 <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
                   <th className="py-4 px-6 font-medium">Level</th>
                   <th className="py-4 px-6 font-medium">User ID</th>
-                  <th className="py-4 px-6 font-medium">Status</th>
+                  <th className="py-4 px-6 font-medium">User Name</th>
+                  <th className="py-4 px-6 font-medium">Email</th>
                   <th className="py-4 px-6 font-medium">Earnings</th>
                 </tr>
               </thead>
@@ -177,10 +178,11 @@ const Referrals = () => {
                   getAllReferrals().map((referral, index) => (
                     <tr key={index} className="border-b border-purple-500/10 text-white">
                       <td className="py-4 px-6">Level {referral.level}</td>
-                      <td className="py-4 px-6">{referral.userId || 'N/A'}</td>
+                      <td className="py-4 px-6">{referral.id || 'N/A'}</td>
+                      <td className="py-4 px-6">{referral.username || 'N/A'}</td>
                       <td className="py-4 px-6">
-                        <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-400">
-                          active
+                        <span className="px-2 py-1 rounded-full text-xs bg-green-500/200">
+                          {referral.email || 'N/A'}
                         </span>
                       </td>
                       <td className="py-4 px-6">$0.00</td>
