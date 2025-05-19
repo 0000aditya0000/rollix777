@@ -26,6 +26,7 @@ import Wallet from './components/wallet/Wallet';
 import AgentProgram from './components/promotions/AgentProgram';
 import TeamReport from './components/promotions/TeamReport';
 import { HelpCenter } from "./components/HelpCenter";
+import CommissionDetails from "./components/promotions/CommissionDetails";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -63,49 +64,46 @@ function App() {
                   <Header />
                   <main className="min-h-screen">
                     <Routes>
+                      {/* Public Routes - Always accessible */}
                       <Route path="/" element={<Home />} />
+                      <Route path="/games" element={<AllGames />} />
+                      <Route path="/featured-games" element={<GameCarousel title="Featured Games" type="featured" />} />
+                      <Route path="/trending-games" element={<TrendingGames title="Trending Games" type="trending" />} />
+                      <Route path="/hot-games" element={<HotGames title="Hot Games" type="hot" />} />
+                      <Route path="/color-game" element={<ColorGame />} />
                       <Route path="/bigsmall" element={<BigSmall />} />
-                      <Route path="/agent-program" element={<AgentProgram />} />
-                      <Route path="/team-report" element={<TeamReport />} />
-                      <Route path="/bet-history" element={<BetHistory />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/payment-methods" element={<PaymentMethods />} />
-                      <Route path="/referrals" element={<Referrals />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/security" element={<Security />} />
-                      <Route path="/promotions" element={<AgentProgram />} />
-                      <Route path="/rewards" element={<Promotions />} />
                       <Route path="/support" element={<HelpCenter />} />
-                      <Route path="/promotions/team-report" element={<TeamReport />} />
+                      <Route path="/rewards" element={<Promotions />} />
+
+                      {/* Protected Routes - Only accessible when authenticated */}
                       {authenticated ? (
-                        <Route path="/dashboard" element={<Dashboard />} />
+                        <>
+                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/account" element={<MyAccount />} />
+                          <Route path="/wallet" element={<Wallet />} />
+                          <Route path="/bet-history" element={<BetHistory />} />
+                          
+                          {/* Profile Related Routes */}
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="/payment-methods" element={<PaymentMethods />} />
+                          <Route path="/settings" element={<Settings />} />
+                          <Route path="/security" element={<Security />} />
+                          
+                          {/* Promotion & Referral Routes */}
+                          <Route path="/referrals" element={<Referrals />} />
+                          <Route path="/agent-program" element={<AgentProgram />} />
+                          <Route path="/team-report" element={<TeamReport />} />
+                          <Route path="/promotions" element={<AgentProgram />} />
+                          <Route path="/promotions/team-report" element={<TeamReport />} />
+                          <Route path="/promotions/commission-details" element={<CommissionDetails />} />
+                        </>
                       ) : (
                         <>
+                          {/* Landing Page Components - Only shown when not authenticated */}
                           <Route path="/hero" element={<Hero />} />
-                          <Route
-                            path="/featured-games"
-                            element={
-                              <GameCarousel
-                                title="Featured Games"
-                                type="featured"
-                              />
-                            }
-                          />
-                          <Route
-                            path="/trending-games"
-                            element={<TrendingGames title="Trending Games" type="trending" />}
-                          />
-                          <Route path="/color-game" element={<ColorGame />} />
-                          <Route 
-                            path="/hot-games" 
-                            element={<HotGames title="Hot Games" type="hot" />}
-                          />
                           <Route path="/features" element={<Features />} />
                         </>
                       )}
-                      <Route path="/games" element={<AllGames />} />
-                      <Route path="/account" element={<MyAccount />} />
-                      <Route path="/wallet" element={<Wallet />} />
                     </Routes>
                   </main>
                   <Footer />
