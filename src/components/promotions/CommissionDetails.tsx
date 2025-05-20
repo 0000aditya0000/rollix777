@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, DollarSign, Clock, AlertCircle, RefreshCw, ChevronDown, Users, IndianRupee } from 'lucide-react';
+import { ArrowLeft, Clock, AlertCircle, ChevronDown, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { referralService } from '../../lib/services/referralService';
 import { baseUrl } from '../../lib/config/server';
 
 const VALID_CRYPTOS = ['BTC', 'ETH', 'LTC', 'USDT', 'SOL', 'DOGE', 'BCH', 'XRP', 'TRX', 'EOS', 'INR', 'CP'] as const;
 type CryptoName = typeof VALID_CRYPTOS[number];
-
-interface Commission {
-  cryptoname: string;
-  total_commissions: number;
-  updated_at: string;
-}
 
 interface PendingCommission {
   cryptoname: string;
@@ -32,15 +26,11 @@ interface Referral {
 
 const CommissionDetails: React.FC = () => {
   // Commission states
-  const [totalCommissions, setTotalCommissions] = useState<Commission[]>([]);
   const [pendingCommissions, setPendingCommissions] = useState<PendingCommission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoName | 'ALL'>('ALL');
-  const [apiMessage, setApiMessage] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-  const [pendingRefreshing, setPendingRefreshing] = useState(false);
   const [pendingNote, setPendingNote] = useState<string | null>(null);
 
   // Referral states
@@ -50,57 +40,8 @@ const CommissionDetails: React.FC = () => {
 
   const userId = localStorage.getItem('userId') || '';
 
-  const fetchCommissionData = async () => {
-    try {
-      setRefreshing(true);
-      setApiMessage(null);
-      setError(null);
-
-      const response = await fetch(`${baseUrl}/api/user/commissions/${userId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch commissions');
-      }
-
-      const data = await response.json();
-      if (data.commissions && data.commissions.length > 0) {
-        console.log(data.commissions[0].pending_amount);
-      }
-
-      if (data.message) {
-        setApiMessage(data.message);
-        setTotalCommissions([]);
-      } else {
-        setTotalCommissions(data.commissions || []);
-      }
-
-      if (!data.commissions || data.commissions.length === 0) {
-        const defaultCommissions = VALID_CRYPTOS.map(crypto => ({
-          cryptoname: crypto,
-          total_commissions: 0,
-          updated_at: new Date().toISOString()
-        }));
-        setTotalCommissions(defaultCommissions);
-      }
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
-      setTotalCommissions([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   const fetchPendingCommissions = async () => {
     try {
-      setPendingRefreshing(true);
       setPendingMessage(null);
       setPendingNote(null);
 
@@ -129,7 +70,7 @@ const CommissionDetails: React.FC = () => {
       setPendingMessage(err instanceof Error ? err.message : 'An unexpected error occurred');
       setPendingCommissions([]);
     } finally {
-      setPendingRefreshing(false);
+      setLoading(false);
     }
   };
 
@@ -143,7 +84,7 @@ const CommissionDetails: React.FC = () => {
       if (data.referralsByLevel) {
         flatReferrals = Object.values(data.referralsByLevel)
           .flat()
-          .filter(Boolean);
+          .filter(Boolean) as Referral[];
       } else if (Array.isArray(data.referrals)) {
         flatReferrals = data.referrals;
       }
@@ -159,7 +100,6 @@ const CommissionDetails: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchCommissionData();
     fetchPendingCommissions();
     fetchReferrals();
   }, [userId]);
@@ -173,14 +113,6 @@ const CommissionDetails: React.FC = () => {
       minute: '2-digit'
     });
   };
-
-  const formatCryptoAmount = (amount: number) => {
-    return amount.toFixed(8);
-  };
-
-  const filteredCommissions = selectedCrypto === 'ALL'
-    ? totalCommissions
-    : totalCommissions.filter(commission => commission.cryptoname === selectedCrypto);
 
   if (loading) { 
     return (
@@ -233,65 +165,11 @@ const CommissionDetails: React.FC = () => {
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400 pointer-events-none" />
               </div>
             </div>
-          
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Total Commissions */}
-          <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
-            <div className="p-4 border-b border-purple-500/10 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Total Commissions</h2>
-              <div className="p-2 bg-purple-500/20 rounded-lg">
-                <IndianRupee size={20} className="text-purple-400" />
-              </div>
-            </div>
-            <div className="p-4">
-              {apiMessage ? (
-                <div className="p-4 rounded-lg bg-[#1A1A2E] border border-purple-500/20 text-center">
-                  <p className="text-purple-200">{apiMessage}</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredCommissions.map((commission) => {
-                    const pending = pendingCommissions.find(
-                      (p) => p.cryptoname === commission.cryptoname
-                    );
-                    return (
-                      <div 
-                        key={commission.cryptoname}
-                        className="p-4 rounded-lg bg-[#1A1A2E] border border-purple-500/20 hover:bg-purple-500/10 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-lg font-medium text-white">
-                              {commission.cryptoname}
-                            </p>
-                            <p className="text-sm text-purple-300/70">
-                              Last updated: {formatDate(commission.updated_at)}
-                            </p>
-                            {pending && (
-                              <p className="text-sm text-fuchsia-400 mt-1">
-                                Pending: {pending.pending_amount.toFixed(8)} {commission.cryptoname}
-                              </p>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-purple-400">
-                              {formatCryptoAmount(commission.total_commissions)}
-                            </p>
-                            <p className="text-sm text-purple-400">{commission.cryptoname}</p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 gap-6">
           {/* Pending Commissions */}
           <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
             <div className="p-4 border-b border-purple-500/10 flex items-center justify-between">
@@ -367,91 +245,120 @@ const CommissionDetails: React.FC = () => {
 
         {/* Recent Referrals */}
         <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
-  <div className="p-4 border-b border-purple-500/10 flex items-center justify-between">
-    <h2 className="text-lg font-semibold text-white">Referral Network</h2>
-    <div className="p-2 bg-purple-500/20 rounded-lg">
-      <Users size={20} className="text-purple-400" />
-    </div>
-  </div>
-  <div className="p-4">
-    {referralsLoading ? (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    ) : referralsError ? (
-      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400">
-        <div className="flex items-center gap-3">
-          <AlertCircle size={20} />
-          <p>{referralsError}</p>
-        </div>
-      </div>
-    ) : (
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-purple-300 text-sm border-b border-purple-500/10">
-              <th className="py-3 px-4 font-medium">Level</th>
-              <th className="py-3 px-4 font-medium">Name</th>
-              <th className="py-3 px-4 font-medium">Username</th>
-              <th className="py-3 px-4 font-medium">Email</th>
-              <th className="py-3 px-4 font-medium">Status</th>
-              <th className="py-3 px-4 font-medium text-right">Earnings</th>
-              <th className="py-3 px-4 font-medium">Joined</th>
-            </tr>
-          </thead>
-          <tbody>
-            {referrals.length > 0 ? (
-              referrals.map((referral) => (
-                <tr key={referral.id} className="border-b border-purple-500/10 text-white hover:bg-purple-500/10 transition-colors">
-                  <td className="py-4 px-4">Level {referral.level}</td>
-                  <td className="py-4 px-4">
-                    <div className="font-medium">{referral.name}</div>
-                  </td>
-                  <td className="py-4 px-4 text-purple-300">@{referral.username}</td>
-                  <td className="py-4 px-4">
-                    <div className="text-sm truncate max-w-[180px]">{referral.email}</div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className={`inline-flex px-2 py-1 text-xs rounded-full 
-                      ${referral.status === 'active' 
-                        ? 'bg-green-500/10 text-green-400' 
-                        : referral.status === 'pending'
-                          ? 'bg-amber-500/10 text-amber-400'
-                          : 'bg-red-500/10 text-red-400'
-                      }`}
-                    >
-                      {referral.status
-                        ? referral.status.charAt(0).toUpperCase() + referral.status.slice(1)
-                        : 'Active'}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-right font-medium text-purple-400">
-                    ₹{referral.earnings?.toFixed(2) ?? '0.00'}
-                  </td>
-                  <td className="py-4 px-4 text-sm text-purple-300/80">
-                    {referral.joinedAt ? new Date(referral.joinedAt).toLocaleDateString() : 'N/A'}
-                  </td>
-                </tr>
-              ))
+          <div className="p-4 border-b border-purple-500/10 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white">Referral Network</h2>
+            <div className="p-2 bg-purple-500/20 rounded-lg">
+              <Users size={20} className="text-purple-400" />
+            </div>
+          </div>
+          <div className="p-4">
+            {referralsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+              </div>
+            ) : referralsError ? (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400">
+                <div className="flex items-center gap-3">
+                  <AlertCircle size={20} />
+                  <p>{referralsError}</p>
+                </div>
+              </div>
             ) : (
-              <tr>
-                <td colSpan={7} className="py-8 text-center">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-[#1A1A2E] flex items-center justify-center mb-4">
-                    <Users size={32} className="text-purple-400" />
+              <>
+                {/* Total Commission Summary */}
+                <div className="mb-6 p-4 rounded-lg bg-[#1A1A2E] border border-purple-500/20">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-fuchsia-300/70">Total Pending</p>
+                      <p className="text-xl font-bold text-fuchsia-400">
+                        ₹{pendingCommissions.find(p => p.cryptoname === 'INR')?.pending_amount || '0.00'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-purple-300/70">Total Referrals</p>
+                      <p className="text-xl font-bold text-purple-400">{referrals.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-purple-300/70">Active Referrals</p>
+                      <p className="text-xl font-bold text-purple-400">
+                        {referrals.filter(ref => ref.status === 'active').length}
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-medium text-purple-200 mb-1">No referrals yet</h3>
-                  <p className="text-purple-300/70 max-w-md mx-auto">
-                    You haven't referred anyone yet. Share your referral link to start earning commissions.
-                  </p>
-                </td>
-              </tr>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left text-purple-300 text-sm border-b border-purple-500/10">
+                        <th className="py-3 px-4 font-medium">Level</th>
+                        <th className="py-3 px-4 font-medium">Name</th>
+                        <th className="py-3 px-4 font-medium">Username</th>
+                        <th className="py-3 px-4 font-medium">Email</th>
+                        <th className="py-3 px-4 font-medium">Status</th>
+                        <th className="py-3 px-4 font-medium text-right">Commission</th>
+                        <th className="py-3 px-4 font-medium">Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {referrals.length > 0 ? (
+                        referrals.map((referral) => (
+                          <tr key={referral.id} className="border-b border-purple-500/10 text-white hover:bg-purple-500/10 transition-colors">
+                            <td className="py-4 px-4">Level {referral.level}</td>
+                            <td className="py-4 px-4">
+                              <div className="font-medium">{referral.name}</div>
+                            </td>
+                            <td className="py-4 px-4 text-purple-300">@{referral.username}</td>
+                            <td className="py-4 px-4">
+                              <div className="text-sm truncate max-w-[180px]">{referral.email}</div>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className={`inline-flex px-2 py-1 text-xs rounded-full 
+                                ${referral.status === 'active' 
+                                  ? 'bg-green-500/10 text-green-400' 
+                                  : referral.status === 'pending'
+                                    ? 'bg-amber-500/10 text-amber-400'
+                                    : 'bg-red-500/10 text-red-400'
+                                  }`}
+                              >
+                                {referral.status
+                                  ? referral.status.charAt(0).toUpperCase() + referral.status.slice(1)
+                                  : 'Active'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 text-right font-medium text-purple-400">
+                              <div>₹{referral.earnings?.toFixed(2) ?? '0.00'}</div>
+                              {pendingCommissions.find(p => p.cryptoname === 'INR') && (
+                                <div className="text-sm text-fuchsia-400">
+                                  Pending: ₹{pendingCommissions.find(p => p.cryptoname === 'INR')?.pending_amount ?? '0.00'}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-4 px-4 text-sm text-purple-300/80">
+                              {referral.joinedAt ? new Date(referral.joinedAt).toLocaleDateString() : 'N/A'}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center">
+                            <div className="mx-auto w-16 h-16 rounded-full bg-[#1A1A2E] flex items-center justify-center mb-4">
+                              <Users size={32} className="text-purple-400" />
+                            </div>
+                            <h3 className="text-lg font-medium text-purple-200 mb-1">No referrals yet</h3>
+                            <p className="text-purple-300/70 max-w-md mx-auto">
+                              You haven't referred anyone yet. Share your referral link to start earning commissions.
+                            </p>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </div>
-</div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
+import { Toaster } from 'react-hot-toast';
 import Home from "./components/Home";
 import BigSmall from "./components/BigSmall";
 import Header from "./components/Header";
@@ -27,6 +28,7 @@ import AgentProgram from './components/promotions/AgentProgram';
 import TeamReport from './components/promotions/TeamReport';
 import { HelpCenter } from "./components/HelpCenter";
 import CommissionDetails from "./components/promotions/CommissionDetails";
+import LatestGames from "./components/LatestGames";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -46,6 +48,7 @@ function App() {
   );
   return (
     <BrowserRouter>
+      <Toaster position="top-right" />
       <Routes>
         {/* Add the referral route before other routes */}
         <Route path="/refer/:referralCode" element={<ReferralRedirect />} />
@@ -67,6 +70,7 @@ function App() {
                       {/* Public Routes - Always accessible */}
                       <Route path="/" element={<Home />} />
                       <Route path="/games" element={<AllGames />} />
+                      {/* <Route path="/featured=games" element={< />} /> */}
                       <Route path="/featured-games" element={<GameCarousel title="Featured Games" type="featured" />} />
                       <Route path="/trending-games" element={<TrendingGames title="Trending Games" type="trending" />} />
                       <Route path="/hot-games" element={<HotGames title="Hot Games" type="hot" />} />
