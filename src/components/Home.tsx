@@ -32,15 +32,15 @@ const Home = () => {
     <div>
       <div className="fixed inset-0 bg-[#0F0F19] overflow-y-auto hide-scrollbar">
         <div>
-          <Header onLogout={"hiii"}/>
+          <Header />
           <main>
             <Hero />
             <GameCarousel title="Featured Games" type="featured" />
-            <TrendingGames />
+            <TrendingGames title="Trending Games" type="trending" />
             <div className='md:hidden'>
-            <ColorGame />
+              <ColorGame />
             </div>
-            <HotGames />
+            <HotGames title="Hot Games" type="hot" />
             <Promotions />
             <Features />
           </main>

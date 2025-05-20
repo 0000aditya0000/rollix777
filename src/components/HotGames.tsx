@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Zap } from "lucide-react";
+import { Zap, Search } from "lucide-react";
 import CryptoJS from "crypto-js";
 import jiliGames from "../gamesData/jili.json";
 import AuthModal from "./AuthModal";
@@ -25,6 +25,7 @@ const encryptAES256 = (data: string, key: string) => {
 const generateRandom10Digits = () => {
   return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };
+
 const openJsGame = async (id: string): Promise<void> => {
   try {
     const userId = localStorage.getItem("userId");
@@ -50,31 +51,20 @@ const openJsGame = async (id: string): Promise<void> => {
   }
 };
 
-
-
-
 const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const desktopGridRef = useRef<HTMLDivElement>(null);
   const hotGames = jiliGames;
 
-  // For mobile scrolling
-  const scrollLeft = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
-    }
-  };
+  // Filter games based on search query
+  const filteredGames = hotGames.filter((game) =>
+    game.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
-    }
-  };
-
-  // For desktop pagination - show only 8 games (one row)
+  // For desktop pagination
   const [currentPage, setCurrentPage] = useState(0);
-  const gamesPerPage = 8; // Show only 8 games (single row)
+  const gamesPerPage = 6; // Show 6 games per row like in Hero
   
   const totalPages = Math.ceil(hotGames.length / gamesPerPage);
   
@@ -96,83 +86,75 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
     <>
       {/* Mobile View */}
       <section className="md:hidden py-8 px-4 bg-[#1A1A2E]">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <Zap className="w-6 h-6 text-yellow-500" />
-            <h2 className="text-2xl font-bold text-white">Hot Games</h2>
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <Zap className="w-6 h-6 text-yellow-500" />
+              <h2 className="text-2xl font-bold text-white">Hot Games</h2>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={scrollLeft}
-              className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
-            >
-              &lt;
-            </button>
-            <button
-              onClick={scrollRight}
-              className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
-            >
-              &gt;
-            </button>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search games..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 pl-10 bg-[#252547] text-white rounded-lg border border-purple-500/20 focus:outline-none focus:border-purple-500"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           </div>
         </div>
 
-        <div
-          ref={scrollRef}
-          className="flex gap-3 overflow-x-auto hide-scrollbar px-1"
-        >
-          {hotGames.length > 0 ? (
-            hotGames.map((game) => (
-              <div
-                key={game.id}
-                className="min-w-[100px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg relative"
+        <div className="grid grid-cols-3 gap-4">
+          {filteredGames.map((game) => (
+            <div
+              key={game.id}
+              className="flex flex-col items-center"
+            >
+              <div 
+                onClick={() => openJsGame(game.id)}
+                className="relative w-full h-[130px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2"
               >
-                <div className="relative aspect-square">
-                  <img
-                    src={game.img}
-                    alt={game.name}
-                    onClick={() => openJsGame(game.id)}
-                    className="w-full h-full object-contain cursor-pointer rounded-t-xl"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
-                    <h3 className="text-white font-medium text-xs text-center line-clamp-1 mb-3">{game.name}</h3>
-                    <button 
-                      onClick={() => openJsGame(game.id)}
-                      className="py-1.5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium text-base hover:opacity-90 transition-opacity"
-                    >
-                      Play
-                    </button>
-                  </div>
-                </div>
+                <img
+                  src={game.img}
+                  alt={game.name}
+                  className="w-full h-[160px] object-fit"
+                />
               </div>
-            ))
-          ) : (
-            <p className="text-white">No hot games available.</p>
+              <h3 className="text-white font-medium text-sm text-center line-clamp-1">
+                {game.name}
+              </h3>
+            </div>
+          ))}
+          {filteredGames.length === 0 && (
+            <div className="col-span-3 text-center py-8">
+              <p className="text-gray-400">No games found matching your search.</p>
+            </div>
           )}
         </div>
       </section>
 
-      {/* Desktop View - Single row */}
-      <section className="hidden md:block py-6 px-6 bg-[#1A1A2E] relative rounded-xl border border-purple-500/10">
-        <div className="flex justify-between items-center mb-4">
+      {/* Desktop View - Matching Hero.tsx style */}
+      <div className="hidden md:block py-6 px-6 bg-[#1A1A2E] relative rounded-xl border border-purple-500/10">
+        <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-yellow-500" />
-            <h2 className="text-xl font-bold text-white">Hot Games</h2>
+            <h2 className="text-xl font-bold text-white">{title}</h2>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-gray-400 text-sm">
               Page {currentPage + 1} of {totalPages}
             </span>
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <button
                 onClick={prevPage}
-                className="text-white bg-purple-900/20 p-1 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-6 h-6 text-xs"
+                className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
               >
                 &lt;
               </button>
               <button
                 onClick={nextPage}
-                className="text-white bg-purple-900/20 p-1 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-6 h-6 text-xs"
+                className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
               >
                 &gt;
               </button>
@@ -180,46 +162,35 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
           </div>
         </div>
         
-        {/* Single row with 8 columns */}
-        <div ref={desktopGridRef} className="grid grid-cols-8 gap-2">
+        {/* Game grid - Matching Hero.tsx style */}
+        <div className="grid grid-cols-6 gap-6">
           {currentGames.map((game) => (
             <div 
               key={game.id} 
-              className="group bg-[#252547] rounded-md border border-purple-500/10 overflow-hidden transition-transform hover:scale-[1.05]"
+              className="flex flex-col items-center group"
             >
-              <div className="relative aspect-square">
+              <div 
+                onClick={() => openJsGame(game.id)}
+                className="relative w-full h-[240px] bg-[#252547] rounded-2xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-3 flex items-center justify-center group"
+              >
                 <img
                   src={game.img}
                   alt={game.name}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-fit"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
-                  <h3 className="text-white font-medium text-xs text-center line-clamp-1 mb-3">{game.name}</h3>
-                  <button 
-                    onClick={() => openJsGame(game.id)}
-                    className="py-1.5 px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium text-base hover:opacity-90 transition-opacity"
-                  >
-                    Play
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button className="bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+                    Play Now
                   </button>
                 </div>
               </div>
+              <h3 className="text-gray-400 font-medium text-sm text-center line-clamp-1">
+                {game.name}
+              </h3>
             </div>
           ))}
         </div>
-        
-        {/* Page indicators */}
-        <div className="flex justify-center mt-4">
-          {Array.from({ length: totalPages }).map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentPage(index)}
-              className={`w-1.5 h-1.5 rounded-full mx-0.5 ${
-                currentPage === index ? 'bg-yellow-500' : 'bg-gray-700'
-              }`}
-            />
-          ))}
-        </div>
-      </section>
+      </div>
 
       {/* Authentication Modal */}
       <AuthModal

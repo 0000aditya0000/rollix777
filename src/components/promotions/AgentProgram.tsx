@@ -1,10 +1,15 @@
 import React, { useEffect } from 'react';
 import { Copy, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 const AgentProgram: React.FC = () => {
   const [referralCode, setReferralCode] = React.useState('');
   const [isHovered, setIsHovered] = React.useState('');
+  const navigate = useNavigate();
+  
+  const userId = useSelector((state: RootState) => state.auth.user?.id);
 
   useEffect(() => {
     const referralCode = localStorage.getItem('referralCode');
@@ -21,6 +26,10 @@ const AgentProgram: React.FC = () => {
     const invitationLink = `https://www.rollix777.com/refer/${referralCode}`;
     navigator.clipboard.writeText(invitationLink);
     alert('Invitation link copied to clipboard');
+  };
+
+  const handleNavigateToCommissionDetails = () => {
+    navigate('/promotions/commission-details', { state: { userId } });
   };
 
   return (
@@ -182,15 +191,15 @@ const AgentProgram: React.FC = () => {
             {/* Menu Items */}
             {[
               { title: 'Subordinate data', icon: '👥', route: '/promotions/team-report' },
-              { title: 'Commission detail', icon: '💰', route: '#' },
-              { title: 'Invitation rules', icon: '📜', route: '#' },
-              { title: 'Agent line customer service', icon: '🎮', route: '#' }
+              { title: 'Commission detail', icon: '💰', onClick: handleNavigateToCommissionDetails },
+              { title: 'Invitation rules', icon: '📜', route: '#', onClick: () => {} },
+              { title: 'Agent line customer service', icon: '🎮', route: '#', onClick: () => {} }
             ].map((item, index) => (
-              <Link
+              <div
                 key={index}
-                to={item.route}
+                onClick={item.onClick || (() => item.route && navigate(item.route))}
                 className="block bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] 
-                         rounded-xl border border-purple-500/20 overflow-hidden
+                         rounded-xl border border-purple-500/20 overflow-hidden cursor-pointer
                          transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg 
                          hover:shadow-purple-500/10 hover:scale-[1.02] active:scale-[0.98]"
               >
@@ -204,7 +213,7 @@ const AgentProgram: React.FC = () => {
                   </div>
                   <span className="text-white/40 text-xl md:text-2xl">›</span>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>

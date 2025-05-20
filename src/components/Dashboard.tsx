@@ -12,6 +12,8 @@ import LatestGames from './LatestGames';
 const Dashboard = () => {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const userName = localStorage.getItem('userName'); 
+  const userId = Number(localStorage.getItem('userId'));
 
   return (
     <div className="min-h-screen bg-[#0F0F19] w-full">
@@ -23,7 +25,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-white">Welcome Back!</h2>
-                <p className="text-sm text-gray-400">John Doe</p>
+                <p className="text-sm text-gray-400">{userName}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-400">Balance</p>
@@ -68,24 +70,24 @@ const Dashboard = () => {
 
           <ImageSlider />
           <ColorGame />
-          <LatestGames />
+          <LatestGames title="Latest Games" type="latest" />
           <GameCarousel title="Popular Games" type="popular" />
-          <TrendingGames />
-          <HotGames />
+          <TrendingGames title="Trending Games" type="trending" />
+          <HotGames title="Hot Games" type="hot" />
         </div>
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block w-full">
+      <div className="hidden md:block w-full mt-12">
         <div className="w-full">
           {/* Top Bar */}
           <div className="w-full bg-[#151525] border-b border-gray-800/50">
             <div className="w-full max-w-[1920px] mx-auto px-6 lg:px-8">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-6">
                 <div className="flex items-center gap-8">
                   <div>
-                    <h2 className="text-2xl font-bold text-white">Welcome Back, John Doe!</h2>
-                    <p className="text-gray-400 text-sm">Let's play and win big today!</p>
+                    <h2 className="text-2xl font-bold text-white">Welcome Back!</h2>
+                    <p className="text-gray-400 text-sm">{userName}</p>
                   </div>
                   <div className="h-12 w-px bg-gray-800/50"></div>
                   <div>
@@ -96,14 +98,14 @@ const Dashboard = () => {
                 <div className="flex gap-3">
                   <button 
                     onClick={() => setIsDepositModalOpen(true)}
-                    className="py-2.5 px-6 rounded-lg bg-green-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                    className="py-3 px-6 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
                   >
                     <Wallet className="w-5 h-5" />
                     <span>Deposit</span>
                   </button>
                   <button 
                     onClick={() => setIsWithdrawModalOpen(true)}
-                    className="py-2.5 px-6 rounded-lg bg-purple-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                    className="py-3 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
                   >
                     <ArrowDown className="w-5 h-5" />
                     <span>Withdraw</span>
@@ -158,8 +160,8 @@ const Dashboard = () => {
                 {/* Games Sections */}
                 <div className="space-y-6">
                   <GameCarousel title="Popular Games" type="popular" />
-                  <TrendingGames />
-                  <HotGames />
+                  <TrendingGames title="Trending Games" type="trending" />
+                  <HotGames title="Hot Games" type="hot" />
                 </div>
               </div>
 
@@ -180,7 +182,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="p-4">
-                    <LatestGames />
+                    <LatestGames title="Latest Games" type="latest" />
                   </div>
                 </div>
 
@@ -208,7 +210,8 @@ const Dashboard = () => {
       {/* Modals */}
       <DepositModal 
         isOpen={isDepositModalOpen} 
-        onClose={() => setIsDepositModalOpen(false)} 
+        onClose={() => setIsDepositModalOpen(false)}
+        userId={userId}
       />
       <WithdrawModal 
         isOpen={isWithdrawModalOpen} 
