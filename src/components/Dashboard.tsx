@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wallet, ArrowDown, Clock, Trophy, Gamepad2, History, ChevronRight } from 'lucide-react';
 import ImageSlider from './ImageSlider';
 import ColorGame from './ColorGame';
@@ -8,12 +8,34 @@ import HotGames from './HotGames';
 import DepositModal from './DepositModal';
 import WithdrawModal from './WithdrawModal';
 import LatestGames from './LatestGames';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { setWallets } from '../slices/walletSlice';
+import { fetchUserWallets } from '../lib/services/WalletServices.js';
 
 const Dashboard = () => {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const userName = localStorage.getItem('userName'); 
   const userId = Number(localStorage.getItem('userId'));
+  const dispatch = useDispatch();
+  const { wallets } = useSelector((state: RootState) => state.wallet);
+  
+  useEffect(() => {
+    async function fetchData() {
+      if (userId) {
+        try {
+          const data = await fetchUserWallets(userId);
+          dispatch(setWallets(data));
+        } catch (error) {
+          console.error("Error fetching wallet data:", error);
+        }
+      }
+    }
+    fetchData();
+  }, [userId]);
+
+  const mainBalance = wallets.find(w => w.cryptoname === "INR")?.balance || "0.00";
 
   return (
     <div className="min-h-screen bg-[#0F0F19] w-full">
@@ -29,7 +51,7 @@ const Dashboard = () => {
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-400">Balance</p>
-                <p className="text-lg font-bold text-white">$0.00</p>
+                <p className="text-lg font-bold text-white">₹{mainBalance}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -92,7 +114,7 @@ const Dashboard = () => {
                   <div className="h-12 w-px bg-gray-800/50"></div>
                   <div>
                     <p className="text-gray-400 text-sm">Balance</p>
-                    <p className="text-2xl font-bold text-white">$0.00</p>
+                    <p className="text-2xl font-bold text-white">₹{mainBalance}</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -117,7 +139,7 @@ const Dashboard = () => {
 
           {/* Main Content */}
           <div className="w-full max-w-[1920px] mx-auto px-6 lg:px-8 py-6">
-            <div className="grid grid-cols-12 gap-6">
+            <div className="grid grid-cols-9 gap-6">
               {/* Main Content Column */}
               <div className="col-span-9">
                 {/* Stats Cards */}
@@ -156,52 +178,59 @@ const Dashboard = () => {
                 <div className="bg-[#151525] rounded-xl overflow-hidden mb-6">
                   <ImageSlider />
                 </div>
+                <div className="col-span-8">
+  <div className="grid grid-cols-2 gap-8">
+    {/* Latest Activity (Latest Games) */}
+    <div className="bg-[#151525] rounded-xl overflow-hidden">
+      <div className="p-3 border-b border-gray-800/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-purple-500" />
+            <h3 className="text-sm font-bold text-white">Latest Games</h3>
+          </div>
+          <button className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
+            View All
+            <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+      <div className="p-3">
+        <LatestGames title="" type="latest" compact />
+      </div>
+    </div>
 
+    {/* Recent Games */}
+    <div className="bg-[#151525] rounded-xl overflow-hidden ml-6">
+      <div className="p-3 border-b border-gray-800/50">
+        <h3 className="text-sm font-bold text-white">Recent Games</h3>
+      </div>
+      <div className="p-3">
+        <div className="space-y-2">
+          {[1, 2, 3].map((_, index) => (
+            <div key={index} className="flex items-center gap-2 p-2 bg-gray-800/50 rounded-lg">
+              <div className="w-8 h-8 bg-gray-700 rounded-lg"></div>
+              <div>
+                <p className="text-xs font-medium text-white">Game Name</p>
+                <p className="text-[10px] text-gray-400">2 hours ago</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
                 {/* Games Sections */}
-                <div className="space-y-6">
-                  <GameCarousel title="Popular Games" type="popular" />
+                <div className="space-y-6 w-full ">
+                  <GameCarousel  title="Popular Games" type="popular" />
                   <TrendingGames title="Trending Games" type="trending" />
                   <HotGames title="Hot Games" type="hot" />
                 </div>
+                
               </div>
 
-              {/* Sidebar */}
-              <div className="col-span-3 space-y-6">
-                {/* Latest Activity */}
-                <div className="bg-[#151525] rounded-xl overflow-hidden">
-                  <div className="p-4 border-b border-gray-800/50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-purple-500" />
-                        <h3 className="text-lg font-bold text-white">Latest Activity</h3>
-                      </div>
-                      <button className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1">
-                        View All
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <LatestGames title="Latest Games" type="latest" />
-                  </div>
-                </div>
+   {/* Sidebar */}
 
-                {/* Recent Games */}
-                <div className="bg-[#151525] rounded-xl p-4">
-                  <h3 className="text-lg font-bold text-white mb-4">Recent Games</h3>
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((_, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg">
-                        <div className="w-10 h-10 bg-gray-700 rounded-lg"></div>
-                        <div>
-                          <p className="text-sm font-medium text-white">Game Name</p>
-                          <p className="text-xs text-gray-400">2 hours ago</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

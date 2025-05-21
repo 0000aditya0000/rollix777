@@ -8,13 +8,16 @@ import {
   Copy,
   RefreshCw,
   Clock,
-  CreditCard
+  CreditCard,
+  ChevronDown
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { setWallets } from '../../slices/walletSlice';
 import { fetchUserWallets } from '../../lib/services/WalletServices.js';
+import { depositService } from '../../services/api';
+import { toast } from 'react-hot-toast';
 
 const Wallet: React.FC = () => {
   const dispatch = useDispatch();
@@ -22,6 +25,15 @@ const Wallet: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount, setAmount] = useState('');
+  const [selectedCurrency, setSelectedCurrency] = useState('inr');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const cryptoOptions = [
+    { value: 'btc', label: 'Bitcoin (BTC)', symbol: '₿', color: 'yellow' },
+    { value: 'eth', label: 'Ethereum (ETH)', symbol: 'Ξ', color: 'blue' },
+    { value: 'usdt', label: 'USDT', symbol: '₮', color: 'green' },
+    { value: 'inr', label: 'INR', symbol: '₹', color: 'orange' }
+  ];
 
   const quickAmounts = ['500', '1000', '2000', '5000', '10000', '20000'];
 
@@ -41,8 +53,7 @@ const Wallet: React.FC = () => {
 
   const handleCopyUpi = () => {
     navigator.clipboard.writeText('test@paytm');
-    // Add toast notification here if you have one
-    alert('UPI ID copied to clipboard');
+    toast.success('UPI ID copied to clipboard');
   };
 
   const handleRefresh = async () => {
@@ -50,14 +61,46 @@ const Wallet: React.FC = () => {
       try {
         const data = await fetchUserWallets(user.id);
         dispatch(setWallets(data));
+        toast.success('Wallet data refreshed successfully');
       } catch (error) {
         console.error("Error refreshing data:", error);
+        toast.error('Failed to refresh wallet data');
       }
     }
   };
 
   const mainBalance = wallets.find(w => w.cryptoname === "INR")?.balance || "0";
   const bonusBalance = wallets.find(w => w.cryptoname === "CP")?.balance || "0";
+
+  const handleDeposit = async () => {
+    if (!user?.id || !amount) {
+      toast.error('Please enter an amount');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const depositData = {
+        userId: Number(user.id),
+        amount: parseFloat(amount),
+        cryptoname: selectedCurrency.toUpperCase()
+      };
+
+      const response = await depositService.deposit(depositData);
+      toast.success(response.message || 'Deposit successful');
+      
+      // Refresh wallet data after successful deposit
+      await handleRefresh();
+      
+      // Clear amount input
+      setAmount('');
+    } catch (error) {
+      console.error('Deposit failed:', error);
+      toast.error('Deposit failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0F0F19] p-4 sm:p-8">
@@ -142,6 +185,27 @@ const Wallet: React.FC = () => {
                 </div>
 
                 <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                  {/* Currency Selector */}
+                  <div className="space-y-2">
+                    <label className="text-xs sm:text-sm text-gray-400">Select Currency</label>
+                    <div className="relative">
+                      <select
+                        value={selectedCurrency}
+                        onChange={(e) => setSelectedCurrency(e.target.value)}
+                        className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none"
+                      >
+                        {cryptoOptions.map((option) => (
+                          <option key={option.value} value={option.value} className="bg-[#1A1A2E]">
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Amount Input */}
                   <div className="space-y-2">
                     <label className="text-xs sm:text-sm text-gray-400">Enter Amount</label>
@@ -191,10 +255,13 @@ const Wallet: React.FC = () => {
 
                   {/* Action Button */}
                   <button
-                    onClick={() => {/* Add deposit/withdraw logic */}}
-                    className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg sm:rounded-xl text-white font-medium hover:opacity-90 transition-opacity text-base sm:text-lg"
+                    onClick={activeTab === 'deposit' ? handleDeposit : () => {/* Add withdraw logic */}}
+                    disabled={isLoading}
+                    className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg sm:rounded-xl text-white font-medium transition-opacity text-base sm:text-lg ${
+                      isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                    }`}
                   >
-                    {activeTab === 'deposit' ? 'Deposit Now' : 'Withdraw Now'}
+                    {isLoading ? 'Processing...' : activeTab === 'deposit' ? 'Deposit Now' : 'Withdraw Now'}
                   </button>
                 </div>
               </div>
@@ -276,6 +343,27 @@ const Wallet: React.FC = () => {
               </div>
 
               <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                {/* Currency Selector */}
+                <div className="space-y-2">
+                  <label className="text-xs sm:text-sm text-gray-400">Select Currency</label>
+                  <div className="relative">
+                    <select
+                      value={selectedCurrency}
+                      onChange={(e) => setSelectedCurrency(e.target.value)}
+                      className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none"
+                    >
+                      {cryptoOptions.map((option) => (
+                        <option key={option.value} value={option.value} className="bg-[#1A1A2E]">
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Amount Input */}
                 <div className="space-y-2">
                   <label className="text-xs sm:text-sm text-gray-400">Enter Amount</label>
@@ -325,10 +413,13 @@ const Wallet: React.FC = () => {
 
                 {/* Action Button */}
                 <button
-                  onClick={() => {/* Add deposit/withdraw logic */}}
-                  className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg sm:rounded-xl text-white font-medium hover:opacity-90 transition-opacity text-base sm:text-lg"
+                  onClick={activeTab === 'deposit' ? handleDeposit : () => {/* Add withdraw logic */}}
+                  disabled={isLoading}
+                  className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg sm:rounded-xl text-white font-medium transition-opacity text-base sm:text-lg ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                  }`}
                 >
-                  {activeTab === 'deposit' ? 'Deposit Now' : 'Withdraw Now'}
+                  {isLoading ? 'Processing...' : activeTab === 'deposit' ? 'Deposit Now' : 'Withdraw Now'}
                 </button>
               </div>
             </div>

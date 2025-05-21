@@ -1,46 +1,66 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Copy, Gift, Users, DollarSign, Share2 } from 'lucide-react';
+import { ArrowLeft, Copy, Gift, Users, DollarSign, Share2, IndianRupee } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+interface PendingCommission {
+  cryptoname: string;
+  pending_amount: string;
+  commission_count: number;
+}
 
 interface ReferralData {
   userId: string;
   totalReferrals: number;
   referralsByLevel: {
-    level1: any[];
-    level2: any[];
-    level3: any[];
-    level4: any[];
-    level5: any[];
+    level1: Referral[];
+    level2: Referral[];
+    level3: Referral[];
+    level4: Referral[];
+    level5: Referral[];
   };
+}
+
+interface Referral {
+  id: string;
+  username: string;
+  email: string;
+  level?: string;
 }
 
 const Referrals = () => {
   const [copied, setCopied] = React.useState(false);
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [pendingCommissions, setPendingCommissions] = useState<PendingCommission[]>([]);
   const [error, setError] = useState<string | null>(null);
   
-  const referralCode = 'JOHN777';
+  const referralCode = localStorage.getItem("referralCode");
   const referralLink = `https://rollix777.com/ref/${referralCode}`;
 
   useEffect(() => {
     const userId = Number(localStorage.getItem('userId'));
-    const fetchReferralData = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`https://rollix777.com/api/user/referrals/${userId}`);
-        if (!response.ok) {
+        // Fetch referral data
+        const referralResponse = await fetch(`https://rollix777.com/api/user/referrals/${userId}`);
+        if (!referralResponse.ok) {
           throw new Error('Failed to fetch referral data');
         }
-        const data = await response.json();
-        setReferralData(data);
+        const referralData = await referralResponse.json();
+        setReferralData(referralData);
+
+        // Fetch pending commissions
+        const pendingResponse = await fetch(`https://rollix777.com/api/user/pending-commissions/${userId}`);
+        if (!pendingResponse.ok) {
+          throw new Error('Failed to fetch pending commissions');
+        }
+        const pendingData = await pendingResponse.json();
+        setPendingCommissions(pendingData.pendingCommissions);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch referral data');
-      } finally {
-        setLoading(false);
+        setError(err instanceof Error ? err.message : 'Failed to fetch data');
       }
     };
 
-    fetchReferralData();
+    fetchData();
   }, []);
 
   const handleCopy = (text: string) => {
@@ -52,13 +72,17 @@ const Referrals = () => {
   // Calculate total referrals across all levels
   const totalReferrals = referralData?.totalReferrals ?? 0;
 
+  // Calculate total earnings - ₹75 per referral
+  const perReferralAmount = 75;
+  const totalEarnings = (referralData?.totalReferrals ?? 0) * perReferralAmount;
+
   // Combine all referrals from different levels for the table
   const getAllReferrals = () => {
     if (!referralData) return [];
     
-    const allReferrals: any[] = [];
+    const allReferrals: Referral[] = [];
     Object.entries(referralData.referralsByLevel).forEach(([level, referrals]) => {
-      referrals.forEach((referral: any) => {
+      referrals.forEach((referral: Referral) => {
         allReferrals.push({
           ...referral,
           level: level.replace('level', '')
@@ -67,14 +91,6 @@ const Referrals = () => {
     });
     return allReferrals;
   };
-
-  if (loading) {
-    return (
-      <div className="pt-16 pb-24 flex items-center justify-center">
-        <div className="text-white">Loading referral data...</div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -95,7 +111,7 @@ const Referrals = () => {
           >
             <ArrowLeft size={20} />
           </Link>
-          <h1 className="text-2xl font-bold text-white">Referrals & Rewards</h1>
+          <h1 className="text-2xl font-bold text-white">Rewards</h1>
         </div>
 
         {/* Stats Cards */}
@@ -105,18 +121,18 @@ const Referrals = () => {
               <div className="p-2 bg-purple-500/20 rounded-lg">
                 <Users className="w-5 h-5 text-purple-400" />
               </div>
-              <span className="text-gray-400">Total Referrals </span>
+              <span className="text-gray-400">Total Referrals</span>
             </div>
             <p className="text-2xl font-bold text-white">{totalReferrals}</p>
           </div>
           <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-green-500/20 rounded-lg">
-                <DollarSign className="w-5 h-5 text-green-400" />
+                <IndianRupee className="w-5 h-5 text-green-400" />
               </div>
               <span className="text-gray-400">Total Earnings</span>
             </div>
-            <p className="text-2xl font-bold text-white">₹125.00</p>
+            <p className="text-2xl font-bold text-white">₹{totalEarnings.toFixed(2)}</p>
           </div>
         </div>
 
@@ -170,7 +186,7 @@ const Referrals = () => {
                   <th className="py-4 px-6 font-medium">User ID</th>
                   <th className="py-4 px-6 font-medium">User Name</th>
                   <th className="py-4 px-6 font-medium">Email</th>
-                  <th className="py-4 px-6 font-medium">Earnings</th>
+                  <th className="py-4 px-6 font-medium">Commission</th>
                 </tr>
               </thead>
               <tbody>
@@ -185,12 +201,23 @@ const Referrals = () => {
                           {referral.email || 'N/A'}
                         </span>
                       </td>
-                      <td className="py-4 px-6">$0.00</td>
+                      <td className="py-4 px-6">
+                        {pendingCommissions.length > 0 ? (
+                          <div className="flex flex-col">
+                            <span>₹{perReferralAmount.toFixed(2)}</span>
+                            {/* <span className="text-xs text-yellow-400">
+                              Pending: ₹{pendingCommissions[0].pending_amount}
+                            </span> */}
+                          </div>
+                        ) : (
+                          <span>₹{perReferralAmount.toFixed(2)}</span>
+                        )}
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr className="border-b border-purple-500/10 text-white">
-                    <td colSpan={4} className="py-4 px-6 text-center text-gray-400">
+                    <td colSpan={5} className="py-4 px-6 text-center text-gray-400">
                       No referrals found
                     </td>
                   </tr>

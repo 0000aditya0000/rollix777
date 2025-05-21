@@ -2,14 +2,23 @@ import React, { useState } from 'react';
 import { X, CreditCard, Wallet, Bitcoin, DollarSign, Copy, Check } from 'lucide-react';
 import { depositService } from '../services/api';
 import { toast } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { setWallets } from '../slices/walletSlice';
+import { fetchUserWallets } from '../lib/services/WalletServices';
 
 interface DepositModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userId: number;
 }
 
-const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, userId }) => {
+interface DepositRequest {
+  userId: number;
+  amount: number;
+  cryptoname: string;
+}
+
+const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState<'crypto' | 'card'>('crypto');
   const [selectedCrypto, setSelectedCrypto] = useState<'btc' | 'eth' | 'usdt' | 'inr'>('btc');
   const [copied, setCopied] = useState(false);
@@ -68,9 +77,14 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, userId }) 
         'usdt': 'USDT',
         'inr': 'INR'
       };
- const userId = localStorage.getItem('userId');
-      const requestData = {
-        userId: userId,
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        toast.error('User ID not found');
+        return;
+      }
+
+      const requestData: DepositRequest = {
+        userId: parseInt(userId),
         amount: numericAmount,
         cryptoname: cryptoMapping[selectedCrypto] || selectedCrypto.toUpperCase()
       };
@@ -78,11 +92,15 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, userId }) 
       console.log('Sending deposit request:', requestData);
       const response = await depositService.deposit(requestData);
 
+      // Refresh wallet data after successful deposit
+      const updatedWallets = await fetchUserWallets(parseInt(userId));
+      dispatch(setWallets(updatedWallets));
+
       console.log('Deposit response:', response);
       toast.success(response.message || 'Deposit processed successfully');
       onClose();
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to process deposit. Please try again.';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process deposit. Please try again.';
       toast.error(errorMessage);
       console.error('Deposit error:', error);
     } finally {

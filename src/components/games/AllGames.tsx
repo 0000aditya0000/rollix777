@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from "react";
+import { Flame, Search, Loader2 } from "lucide-react";
 import { motion } from 'framer-motion';
 import CryptoJS from 'crypto-js';
 import axios from 'axios';
@@ -53,38 +54,8 @@ const generateRandom10Digits = () => {
   return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };
 
-const openJsGame = async (id: string): Promise<void> => {
-  try {
-    const userId = localStorage.getItem("userId");
-
-    if (!userId) {
-      alert("User ID not found. Please log in.");
-      return;
-    }
-
-    const response = await axios.post("https://rollix777.com/api/color/launchGame", {
-      userId,
-      id,
-    });
-
-    if (response.data.success) {
-      window.location.href = response.data.gameUrl;
-    } else {
-      alert("Failed to launch game.");
-    }
-  } catch (error) {
-    console.error("Error launching game:", error);
-    alert("An error occurred while launching the game.");
-  }
-};
-
-interface GameProvider {
-  id: string;
-  name: string;
-  games: any[];
-}
-
 const AllGames: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const gameProviders: GameProvider[] = [
     { id: 'apex', name: 'APEX', games: apexGames },
     { id: 'amatic', name: 'AMATIC', games: amaticGames },
@@ -122,66 +93,287 @@ const AllGames: React.FC = () => {
   ];
 
   const [activeProvider, setActiveProvider] = useState(gameProviders[0].id);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const gamesPerPage = 6;
+
+  // Filter games based on search query
+  const filteredGames = gameProviders
+    .find(p => p.id === activeProvider)
+    ?.games.filter((game) =>
+      (game.name || game.game_name).toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+
+  const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
+  
+  const nextPage = () => {
+    setCurrentPage((prev) => (prev + 1) % totalPages);
+  };
+  
+  const prevPage = () => {
+    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
+  };
+
+  const currentGames = filteredGames.slice(
+    currentPage * gamesPerPage,
+    (currentPage + 1) * gamesPerPage
+  );
+
+  const openJsGame = async (id: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        alert("User ID not found. Please log in.");
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+        userId,
+        id,
+      });
+
+      if (response.data.success) {
+        window.location.href = response.data.gameUrl;
+      } else {
+        alert("Failed to launch game.");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error launching game:", error);
+      alert("An error occurred while launching the game.");
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="pt-16 pb-24 bg-[#0F0F19]">
-      {/* Header */}
-      <div className="px-4 py-6">
-        <h1 className="text-2xl font-bold text-white">All Games</h1>
-      </div>
+    <div className="pt-16 pb-24 bg-[#1A1A2E]">
+      {/* Enhanced Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-gradient-to-b from-black/95 to-black/90 backdrop-blur-xl z-50 flex flex-col items-center justify-center">
+          <div className="relative flex flex-col items-center gap-8">
+            {/* Main Loading Animation */}
+            <div className="relative w-32 h-32">
+              {/* Outer Ring */}
+              <div className="absolute inset-0 border-4 border-orange-500/20 rounded-full animate-[spin_3s_linear_infinite]"></div>
+              {/* Middle Ring */}
+              <div className="absolute inset-2 border-4 border-orange-500/40 rounded-full animate-[spin_2s_linear_infinite_reverse]"></div>
+              {/* Inner Ring */}
+              <div className="absolute inset-4 border-4 border-orange-500 rounded-full animate-[spin_1s_linear_infinite] border-t-transparent"></div>
+              {/* Center Circle */}
+              <div className="absolute inset-6 flex items-center justify-center">
+                <div className="w-full h-full bg-orange-500/10 rounded-full animate-pulse"></div>
+              </div>
+              {/* Orbiting Dots */}
+              <div className="absolute inset-0 animate-[spin_4s_linear_infinite]">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rounded-full"></div>
+              </div>
+              <div className="absolute inset-0 animate-[spin_4s_linear_infinite_reverse]">
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rounded-full"></div>
+              </div>
+            </div>
 
-      {/* Provider Tabs */}
-      <div className="w-full overflow-x-auto hide-scrollbar">
-        <div className="flex gap-2 px-4">
-          {gameProviders.map((provider) => (
-            <button
-              key={provider.id}
-              onClick={() => setActiveProvider(provider.id)}
-              className={`
-                px-6 py-3 
-                rounded-lg 
-                text-sm 
-                font-medium 
-                whitespace-nowrap 
-                transition-colors
-                ${activeProvider === provider.id
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-[#252547] text-gray-400 hover:bg-[#2f2f5a]'
-                }
-              `}
+            {/* Text and Dots */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <h2 className="text-3xl font-bold text-white tracking-wider">Game Launching</h2>
+                <div className="absolute -bottom-2 left-0 w-full h-1 bg-orange-500/30 rounded-full overflow-hidden">
+                  <div className="w-1/2 h-full bg-orange-500 rounded-full animate-[shimmer_2s_infinite]"></div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <span className="w-3 h-3 bg-orange-500 rounded-full animate-[bounce_1s_infinite_0ms]"></span>
+                <span className="w-3 h-3 bg-orange-500 rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                <span className="w-3 h-3 bg-orange-500 rounded-full animate-[bounce_1s_infinite_400ms]"></span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-64 h-1 bg-orange-500/20 rounded-full overflow-hidden">
+              <div className="h-full bg-orange-500 rounded-full animate-[progress_2s_ease-in-out_infinite]"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header and Search - Mobile View */}
+      <div className="md:hidden px-4 py-6">
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-white">All Games</h2>
+            </div>
+          </div>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search games..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#252547] text-white rounded-lg pl-10 pr-4 py-2 border border-purple-500/10 focus:outline-none focus:border-purple-500"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          </div>
+        </div>
+
+        {/* Provider Tabs - Mobile */}
+        <div className="w-full overflow-x-auto hide-scrollbar mb-6">
+          <div className="flex gap-2">
+            {gameProviders.map((provider) => (
+              <button
+                key={provider.id}
+                onClick={() => {
+                  setActiveProvider(provider.id);
+                  setCurrentPage(0);
+                }}
+                className={`
+                  px-4 py-2 
+                  rounded-lg 
+                  text-xs 
+                  font-medium 
+                  whitespace-nowrap 
+                  transition-colors
+                  ${activeProvider === provider.id
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-[#252547] text-gray-400 hover:bg-[#2f2f5a]'
+                  }
+                `}
+              >
+                {provider.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Games Grid - Mobile */}
+        <div className="grid grid-cols-3 gap-4">
+          {filteredGames.map((game) => (
+            <div
+              key={game.id || game.game_uid}
+              className="flex flex-col items-center"
             >
-              {provider.name}
-            </button>
+              <div 
+                onClick={() => openJsGame(game.id)}
+                className="relative w-full h-[130px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
+              >
+                <img
+                  src={game.img || game.icon}
+                  alt={game.name || game.game_name}
+                  className="w-full h-[160px] object-fit"
+                />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
+                    Play Now
+                  </button>
+                </div>
+              </div>
+              <h3 className="text-white font-medium text-sm text-center line-clamp-1">
+                {game.name || game.game_name}
+              </h3>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Games Grid */}
-      <div className="px-4 mt-6">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="grid grid-cols-3 gap-3"
-        >
-          {gameProviders
-            .find(p => p.id === activeProvider)
-            ?.games.map((game) => (
-              <motion.div
-                key={game.id || game.game_uid}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="aspect-[3/4] rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+      {/* Desktop View */}
+      <div className="hidden md:block py-6 px-6 bg-[#1A1A2E] rounded-xl border border-purple-500/10">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-white">All Games</h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative w-64">
+              <input
+                type="text"
+                placeholder="Search games..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#252547] text-white rounded-lg pl-10 pr-4 py-2 border border-purple-500/10 focus:outline-none focus:border-purple-500"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-gray-400 text-sm">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={prevPage}
+                  className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
+                >
+                  &lt;
+                </button>
+                <button
+                  onClick={nextPage}
+                  className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
+                >
+                  &gt;
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Provider Tabs - Desktop */}
+        <div className="w-full overflow-x-auto hide-scrollbar mb-6">
+          <div className="flex gap-2">
+            {gameProviders.map((provider) => (
+              <button
+                key={provider.id}
+                onClick={() => {
+                  setActiveProvider(provider.id);
+                  setCurrentPage(0);
+                }}
+                className={`
+                  px-6 py-3 
+                  rounded-lg 
+                  text-sm 
+                  font-medium 
+                  whitespace-nowrap 
+                  transition-colors
+                  ${activeProvider === provider.id
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-[#252547] text-gray-400 hover:bg-[#2f2f5a]'
+                  }
+                `}
               >
-                <img 
-                  src={game.img || game.icon} 
-                  alt={game.name || game.game_name}
-                  onClick={() => openJsGame(game.id)}
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
+                {provider.name}
+              </button>
             ))}
-        </motion.div>
+          </div>
+        </div>
+
+        {/* Games Grid - Desktop */}
+        <div className="grid grid-cols-6 gap-6">
+  {currentGames.map((game) => (
+    <div 
+      key={game.id || game.game_uid} 
+      className="flex flex-col items-center group"
+    >
+      <div 
+        onClick={() => openJsGame(game.id)}
+        className="relative w-full h-[240px] bg-[#252547] rounded-2xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-3 flex items-center justify-center group"
+      >
+        <img
+          src={game.img || game.icon}
+          alt={game.name || game.game_name}
+          className="w-full h-full object-fit"
+        />
+        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <button className="bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+            Play Now
+          </button>
+        </div>
+      </div>
+      <h3 className="text-gray-400 font-medium text-sm text-center line-clamp-1">
+        {game.name || game.game_name}
+      </h3>
+    </div>
+  ))}
+</div>
+
       </div>
 
       <style jsx>{`
@@ -192,9 +384,18 @@ const AllGames: React.FC = () => {
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
         }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+        @keyframes progress {
+          0% { width: 0%; }
+          50% { width: 100%; }
+          100% { width: 0%; }
+        }
       `}</style>
     </div>
   );
 };
 
-export default AllGames; 
+export default AllGames;

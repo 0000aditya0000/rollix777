@@ -222,6 +222,16 @@ const Header: React.FC = () => {
                             </div>
                           ))}
                         </div>
+                          <Link
+                          to="/wallet"
+                            
+                            className="block p-2 hover:bg-[#2f2f5a] rounded-lg cursor-pointer border-t border-purple-500/10 mt-2 pt-2"
+                          >
+                            <button className="w-full px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-bold hover:opacity-90 transition-opacity flex items-center justify-center space-x-2">
+                              <Wallet className="w-4 h-4 text-white font-bold" />
+                              <span>Manage Wallet</span>
+                            </button>
+                          </Link>
                       </div>
                     )}
                   </div>
@@ -325,6 +335,15 @@ const Header: React.FC = () => {
                           </div>
                         ))}
                       </div>
+                        <Link
+                          to="/wallet"
+                          className="block p-2 hover:bg-[#2f2f5a] rounded-lg cursor-pointer border-t border-purple-500/10 mt-2 pt-2"
+                        >
+                          <button className="w-full px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center space-x-2">
+                            <Wallet className="w-4 h-4 text-white font-bold" />
+                            <span>Manage Wallet</span>
+                          </button>
+                        </Link>
                     </div>
                   )}
                 </div>

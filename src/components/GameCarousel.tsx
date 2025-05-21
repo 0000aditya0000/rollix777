@@ -1,75 +1,22 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import sportBettingGames from "../gamesData/sportbetting.json";
 import axios from "axios";
-import CryptoJS from "crypto-js";
 import AuthModal from "./AuthModal";
-import { useSelector } from "react-redux";
-import { RootState } from "../store";
 import { Flame, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface GameCarouselProps {
   title: string;
   type: "featured" | "popular";
 }
 
-const aesKey = "126c2e86c418427c4aa717f971063e0e";
-const serverUrl = "https://api.workorder.icu/proxy";
-
-const encryptAES256 = (data: string, key: string) => {
-  const key256 = CryptoJS.enc.Utf8.parse(key);
-  const encrypted = CryptoJS.AES.encrypt(data, key256, {
-    mode: CryptoJS.mode.ECB,
-    padding: CryptoJS.pad.Pkcs7,
-  });
-  return encrypted.toString();
-};
-
-// Generate a random 10-digit number
-const generateRandom10Digits = () => {
-  return Math.floor(1000000000 + Math.random() * 9000000000).toString();
-};
-
-// Open JS Game Function
-const openJsGame = async (id: string): Promise<void> => {
-  try {
-    const userId = localStorage.getItem("userId");
-
-    if (!userId) {
-      alert("User ID not found. Please log in.");
-      return;
-    }
-
-    const response = await axios.post("https://rollix777.com/api/color/launchGame", {
-      userId,
-      id,
-    });
-
-    if (response.data.success) {
-      window.location.href = response.data.gameUrl;
-    } else {
-      alert("Failed to launch game.");
-    }
-  } catch (error) {
-    console.error("Error launching game:", error);
-    alert("An error occurred while launching the game.");
-  }
-};
-
-const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
+const GameCarousel: React.FC<GameCarouselProps> = ({ title }) => {
+  const navigate = useNavigate();
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
-  const userToken = useSelector((state: RootState) => state.auth.token);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const gamesPerPage = 6;
-
-  const handlePlayNow = () => {
-    if (!userToken) {
-      setAuthModalOpen(true);
-    } else {
-      console.log("Redirecting to game...");
-    }
-  };
 
   const games = sportBettingGames;
 
@@ -93,8 +40,91 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
     (currentPage + 1) * gamesPerPage
   );
 
+  const openJsGame = async (id: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        setAuthModalOpen(true);
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+        userId,
+        id,
+      });
+
+      if (response.data.success) {
+        // Use navigate for internal routes
+        if (response.data.gameUrl.startsWith('/')) {
+          navigate(response.data.gameUrl);
+        } else {
+          // For external URLs, open in new tab
+          window.open(response.data.gameUrl, '_blank');
+        }
+      } else {
+        alert("Failed to launch game.");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error launching game:", error);
+      alert("An error occurred while launching the game.");
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
+      {/* Enhanced Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-gradient-to-b from-black/95 to-black/90 backdrop-blur-xl z-50 flex flex-col items-center justify-center">
+          <div className="relative flex flex-col items-center gap-8">
+            {/* Main Loading Animation */}
+            <div className="relative w-32 h-32">
+              {/* Outer Ring */}
+              <div className="absolute inset-0 border-4 border-orange-500/20 rounded-full animate-[spin_3s_linear_infinite]"></div>
+              {/* Middle Ring */}
+              <div className="absolute inset-2 border-4 border-orange-500/40 rounded-full animate-[spin_2s_linear_infinite_reverse]"></div>
+              {/* Inner Ring */}
+              <div className="absolute inset-4 border-4 border-orange-500 rounded-full animate-[spin_1s_linear_infinite] border-t-transparent"></div>
+              {/* Center Circle */}
+              <div className="absolute inset-6 flex items-center justify-center">
+                <div className="w-full h-full bg-orange-500/10 rounded-full animate-pulse"></div>
+              </div>
+              {/* Orbiting Dots */}
+              <div className="absolute inset-0 animate-[spin_4s_linear_infinite]">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rounded-full"></div>
+              </div>
+              <div className="absolute inset-0 animate-[spin_4s_linear_infinite_reverse]">
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rounded-full"></div>
+              </div>
+            </div>
+
+            {/* Text and Dots */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <h2 className="text-3xl font-bold text-white tracking-wider">Game Launching</h2>
+                <div className="absolute -bottom-2 left-0 w-full h-1 bg-orange-500/30 rounded-full overflow-hidden">
+                  <div className="w-1/2 h-full bg-orange-500 rounded-full animate-[shimmer_2s_infinite]"></div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <span className="w-3 h-3 bg-orange-500 rounded-full animate-[bounce_1s_infinite_0ms]"></span>
+                <span className="w-3 h-3 bg-orange-500 rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                <span className="w-3 h-3 bg-orange-500 rounded-full animate-[bounce_1s_infinite_400ms]"></span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-64 h-1 bg-orange-500/20 rounded-full overflow-hidden">
+              <div className="h-full bg-orange-500 rounded-full animate-[progress_2s_ease-in-out_infinite]"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile View */}
       <section className="md:hidden py-8 px-4 bg-[#1A1A2E]">
         <div className="flex flex-col gap-4 mb-6">
@@ -207,6 +237,20 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title, type }) => {
         initialMode="login"
         onLoginSuccess={() => setAuthModalOpen(false)}
       />
+
+      <style>
+        {`
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+          }
+          @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 100%; }
+            100% { width: 0%; }
+          }
+        `}
+      </style>
     </>
   );
 };
