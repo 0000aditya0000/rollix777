@@ -38,9 +38,9 @@ const Dashboard = () => {
   const mainBalance = wallets.find(w => w.cryptoname === "INR")?.balance || "0.00";
 
   return (
-    <div className="min-h-screen bg-[#0F0F19] w-full">
+    <div className="min-h-screen bg-[#0F0F19] w-full  ">
       {/* Mobile View */}
-      <div className="md:hidden max-w-[430px] mx-auto">
+      <div className="md:hidden w-full mx-auto px-0">
         <div className="pt-16 pb-20">
           {/* User Stats - Mobile */}
           <div className="px-4 py-4 bg-[#151525]">
@@ -100,10 +100,10 @@ const Dashboard = () => {
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block w-full mt-12">
-        <div className="w-full">
+      <div className="hidden md:block  w-full mt-12">
+        <div className="w-full lg:px-2">
           {/* Top Bar */}
-          <div className="w-full bg-[#151525] border-b border-gray-800/50">
+          <div className="w-full bg-[#151525] border-b border-gray-800/50 ">
             <div className="w-full max-w-[1920px] mx-auto px-6 lg:px-8">
               <div className="flex items-center justify-between py-6">
                 <div className="flex items-center gap-8">

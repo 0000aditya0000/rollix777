@@ -98,8 +98,8 @@ const BetHistory = () => {
   }
 
   return (
-    <div className="pt-16 pb-24 w-full">
-      <div className="max-w-[430px] md:max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 space-y-6 md:space-y-8">
+    <div className="pt-16 pb-24 w-full ">
+      <div className="w-full mx-auto px-4 md:px-6 lg:px-8 space-y-6 md:space-y-8">
         {/* Header - Mobile design for small screens, enhanced for desktop */}
         <div className="flex mt-4 items-center gap-4 md:bg-gradient-to-r md:from-purple-900/50 md:to-[#252547] md:rounded-2xl md:p-6">
           <Link 

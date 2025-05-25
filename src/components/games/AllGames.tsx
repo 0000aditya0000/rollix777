@@ -94,8 +94,8 @@ const AllGames: React.FC = () => {
 
   const [activeProvider, setActiveProvider] = useState(gameProviders[0].id);
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
-  const gamesPerPage = 6;
+  // const [currentPage, setCurrentPage] = useState(0);
+  // const gamesPerPage = 6;
 
   // Filter games based on search query
   const filteredGames = gameProviders
@@ -104,20 +104,20 @@ const AllGames: React.FC = () => {
       (game.name || game.game_name).toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
-  const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
+  // const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
   
-  const nextPage = () => {
-    setCurrentPage((prev) => (prev + 1) % totalPages);
-  };
+  // const nextPage = () => {
+  //   setCurrentPage((prev) => (prev + 1) % totalPages);
+  // };
   
-  const prevPage = () => {
-    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
-  };
+  // const prevPage = () => {
+  //   setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
+  // };
 
-  const currentGames = filteredGames.slice(
-    currentPage * gamesPerPage,
-    (currentPage + 1) * gamesPerPage
-  );
+  // const currentGames = filteredGames.slice(
+  //   currentPage * gamesPerPage,
+  //   (currentPage + 1) * gamesPerPage
+  // );
 
   const openJsGame = async (id: string): Promise<void> => {
     try {
@@ -248,7 +248,7 @@ const AllGames: React.FC = () => {
         </div>
 
         {/* Games Grid - Mobile */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           {filteredGames.map((game) => (
             <div
               key={game.id || game.game_uid}
@@ -256,12 +256,12 @@ const AllGames: React.FC = () => {
             >
               <div 
                 onClick={() => openJsGame(game.id)}
-                className="relative w-full h-[130px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
+                className="relative w-full h-[100px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
               >
                 <img
                   src={game.img || game.icon}
                   alt={game.name || game.game_name}
-                  className="w-full h-[160px] object-fit"
+                  className="w-full h-full object-fit"
                 />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
@@ -278,7 +278,7 @@ const AllGames: React.FC = () => {
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block py-6 px-6 bg-[#1A1A2E] rounded-xl border border-purple-500/10">
+      <div className="hidden md:block py-6 px-6 bg-[#1A1A2E] rounded-xl  border-purple-500/10  border">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-white">All Games</h2>
@@ -294,7 +294,7 @@ const AllGames: React.FC = () => {
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             </div>
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <span className="text-gray-400 text-sm">
                 Page {currentPage + 1} of {totalPages}
               </span>
@@ -312,12 +312,12 @@ const AllGames: React.FC = () => {
                   &gt;
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
         {/* Provider Tabs - Desktop */}
-        <div className="w-full overflow-x-auto hide-scrollbar mb-6">
+        <div className="w-full overflow-x-auto hide-scrollbar mb-6 ">
           <div className="flex gap-2">
             {gameProviders.map((provider) => (
               <button
@@ -346,8 +346,8 @@ const AllGames: React.FC = () => {
         </div>
 
         {/* Games Grid - Desktop */}
-        <div className="grid grid-cols-6 gap-6">
-  {currentGames.map((game) => (
+        <div className="grid grid-cols-6 gap-6 ">
+  {filteredGames.map((game) => (
     <div 
       key={game.id || game.game_uid} 
       className="flex flex-col items-center group"

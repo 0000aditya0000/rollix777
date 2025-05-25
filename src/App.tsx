@@ -63,7 +63,7 @@ function App() {
             <div className="fixed inset-0 bg-[#0F0F19] overflow-y-auto hide-scrollbar">
               {/* Container with responsive padding and width */}
               <div className="mx-auto w-full relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E] min-h-screen">
-                <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+                <div className="w-full md:px-6 lg:px-0 " >
                   <Header />
                   <main className="min-h-screen">
                     <Routes>

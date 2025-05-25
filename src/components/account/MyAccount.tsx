@@ -150,9 +150,9 @@ const MyAccount: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F19]">
+    <div className="min-h-screen bg-[#0F0F19] w-full lg:px-2 px-1">
       {/* Header Section */}
-      <div className="max-w-[1400px] mx-auto px-4">
+      <div className="w-full px-1">
         <div className="mt-10">
           <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-6">
             <Link 
@@ -170,7 +170,7 @@ const MyAccount: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1400px] mx-auto px-4 pb-8">
+      <div className="w-full px-1 pb-8">
         {/* Profile & Balance Card */}
         <div className="bg-[#1A1A2E] rounded-2xl p-6 md:p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
@@ -282,7 +282,7 @@ const MyAccount: React.FC = () => {
           </div>
 
           {/* Desktop Layout */}
-          <div className="hidden md:grid grid-cols-3 gap-6">
+          <div className="hidden md:grid grid-cols-3 gap-6 ">
             {menuItems.map((item, index) => (
               <button
                 key={index}
