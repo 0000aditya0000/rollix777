@@ -158,7 +158,7 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           {filteredGames.map((game) => (
             <div
               key={game.id}
@@ -166,12 +166,12 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
             >
               <div 
                 onClick={() => openJsGame(game.id)}
-                className="relative w-full h-[130px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2"
+                className="relative w-full h-[100px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2"
               >
                 <img
                   src={game.img}
                   alt={game.name}
-                  className="w-full h-[160px] object-fit"
+                  className="w-full h-[100px] object-fit"
                 />
                 {loadingGameId === game.id && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
