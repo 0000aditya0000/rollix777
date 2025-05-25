@@ -19,11 +19,11 @@ const BetHistory = () => {
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
-
+  const userId = localStorage.getItem('userId');
   useEffect(() => {
     const fetchBetHistory = async () => {
       try {
-        const response = await betHistory({ userId: 29 });
+        const response = await betHistory({ userId: userId });
         const betData = response.betHistory || [];
         if (!Array.isArray(betData)) {
           console.error("Unexpected data format:", betData);

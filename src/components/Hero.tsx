@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { 
   Star, 
   Users, 
-  Trophy,
+  Trophy, 
   Play,
   Crown,
   Heart,
@@ -84,31 +84,31 @@ const Hero: React.FC = () => {
     { id: 'sports', name: 'Sports' }
   ];
 
-  const openJsGame = async (id: string): Promise<void> => {
-    try {
+const openJsGame = async (id: string): Promise<void> => {
+  try {
       setIsLoading(true);
-      const userId = localStorage.getItem("userId");
+    const userId = localStorage.getItem("userId");
 
-      if (!userId) {
-        alert("User ID not found. Please log in.");
+    if (!userId) {
+      alert("User ID not found. Please log in.");
         setIsLoading(false);
-        return;
-      }
+      return;
+    }
 
       const response = await axios.post("https://rollix777.com/api/color/launchGame", {
-        userId,
-        id,
-      });
+      userId,
+      id,
+    });
 
-      if (response.data.success) {
-        window.open(response.data.gameUrl, "_blank");
-      } else {
-        alert("Failed to launch game.");
+    if (response.data.success) {
+      window.open(response.data.gameUrl, "_blank");
+    } else {
+      alert("Failed to launch game.");
         setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Error launching game:", error);
-      alert("An error occurred while launching the game.");
+    }
+  } catch (error) {
+    console.error("Error launching game:", error);
+    alert("An error occurred while launching the game.");
       setIsLoading(false);
     }
   };
@@ -234,10 +234,10 @@ const Hero: React.FC = () => {
                     >
                       {cat.name}
                     </button>
-                  ))}
-                </div>
-              </div>
-              
+            ))}
+          </div>
+        </div>
+
               <div className="flex items-center space-x-6">
                 <div className="relative hidden md:block">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -261,9 +261,9 @@ const Hero: React.FC = () => {
                     Register
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
+                  </div>
+                  </div>
+                  </div>
         </nav>
 
         {/* Main Content */}
@@ -286,7 +286,7 @@ const Hero: React.FC = () => {
                   Join millions of players worldwide in the most thrilling gaming experience. Play, win, and become a legend.
                 </p>
               </div>
-
+              
               <div className="flex items-center space-x-6">
                 <button className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-medium hover:opacity-90 transition-opacity flex items-center space-x-2">
                   <Play className="w-5 h-5" />
@@ -302,25 +302,25 @@ const Hero: React.FC = () => {
                   <Trophy className="w-8 h-8 text-yellow-400 mb-3" />
                   <div className="text-2xl font-bold text-white">$1M+</div>
                   <div className="text-sm text-gray-400">Total Winnings</div>
-                </div>
+                  </div>
                 <div className="p-6 bg-[#1A1A2E] rounded-xl border border-white/10">
                   <Users className="w-8 h-8 text-purple-400 mb-3" />
                   <div className="text-2xl font-bold text-white">50K+</div>
                   <div className="text-sm text-gray-400">Active Players</div>
-                </div>
+                            </div>
                 <div className="p-6 bg-[#1A1A2E] rounded-xl border border-white/10">
                   <Star className="w-8 h-8 text-pink-400 mb-3" />
                   <div className="text-2xl font-bold text-white">4.9/5</div>
                   <div className="text-sm text-gray-400">User Rating</div>
-                </div>
-              </div>
-            </div>
+                            </div>
+                          </div>
+                        </div>
 
             <div className="relative">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-30"></div>
               <WingoGame />
-            </div>
-          </div>
+                        </div>
+                      </div>
 
           {/* Popular Games Section - Mobile */}
           <div className="md:hidden py-8 px-4">
@@ -328,8 +328,8 @@ const Hero: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Flame className="w-6 h-6 text-orange-500" />
                 <h2 className="text-2xl font-bold text-white">Popular Games</h2>
-              </div>
-            </div>
+                  </div>
+                </div>
 
             {/* Horizontal scrollable row for mobile */}
             <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
@@ -384,31 +384,31 @@ const Hero: React.FC = () => {
                     className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
                   >
                     &gt;
-                  </button>
+                </button>
                 </div>
               </div>
             </div>
-            
+
             {/* Single row grid for desktop */}
             <div className="grid grid-cols-6 gap-6">
               {currentGames.slice(0, 6).map(game => (
-                <div 
-                  key={game.id} 
+                <div
+                  key={game.id}
                   className="flex flex-col items-center group"
                 >
                   <div 
                     onClick={() => openJsGame(game.id)}
                     className="relative w-full h-[240px] bg-[#252547] rounded-2xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-3 flex items-center justify-center group"
                   >
-                    <img
-                      src={game.image}
-                      alt={game.title}
+                  <img
+                    src={game.image}
+                    alt={game.title}
                       className="w-full h-full object-fit"
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button className="bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
                         Play Now
-                      </button>
+                        </button>
                     </div>
                   </div>
                   <h3 className="text-gray-400 font-medium text-sm text-center line-clamp-1">

@@ -112,7 +112,7 @@ const MyAccount: React.FC = () => {
     { 
       icon: Gift, 
       label: 'My Rewards', 
-      route: '/rewards',
+      route: '/coupon',
       description: 'Check your rewards and bonuses',
       bgColor: 'from-amber-600/10 to-yellow-500/10',
       hoverBg: 'from-amber-600/20 to-yellow-500/20'

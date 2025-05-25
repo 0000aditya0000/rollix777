@@ -29,7 +29,7 @@ import TeamReport from './components/promotions/TeamReport';
 import { HelpCenter } from "./components/HelpCenter";
 import CommissionDetails from "./components/promotions/CommissionDetails";
 import LatestGames from "./components/LatestGames";
-
+import Coupon from "./components/coupon/Coupon";
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
   const location = useLocation();
@@ -78,6 +78,7 @@ function App() {
                       <Route path="/bigsmall" element={<BigSmall />} />
                       <Route path="/support" element={<HelpCenter />} />
                       <Route path="/rewards" element={<Promotions />} />
+                      <Route path="/coupon" element={<Coupon />} />
 
                       {/* Protected Routes - Only accessible when authenticated */}
                       {authenticated ? (
