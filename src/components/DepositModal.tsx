@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { setWallets } from '../slices/walletSlice';
 import { fetchUserWallets } from '../lib/services/WalletServices';
+import { button } from 'framer-motion/client';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -107,9 +108,18 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
       setLoading(false);
     }
   };
+  const launchGateway = () => {
+    const uid=29;
+    const amount=689;
+    const phone=1234567890;
+    const url = `https://pay.rollix777.com/index.php?uid=${uid}&amount=${amount}&phone=${phone}`;
+    window.location.href = url;
+  }
 
   return (
+   
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 mt-12">
+      
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose}></div>
       
       <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
@@ -160,6 +170,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
         <div className="p-5">
           {activeTab === 'crypto' ? (
             <div className="space-y-4">
+               <button onClick={() => launchGateway()}>launch gateway</button>
               <div className="relative">
                 <select
                   value={selectedCrypto}
