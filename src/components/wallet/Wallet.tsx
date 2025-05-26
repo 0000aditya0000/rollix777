@@ -26,6 +26,7 @@ const Wallet: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount1, setAmount] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('inr');
+  const [selectedBankAccount, setSelectedBankAccount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const cryptoOptions = [
@@ -33,6 +34,12 @@ const Wallet: React.FC = () => {
     { value: 'eth', label: 'Ethereum (ETH)', symbol: 'Ξ', color: 'blue' },
     { value: 'usdt', label: 'USDT', symbol: '₮', color: 'green' },
     { value: 'inr', label: 'INR', symbol: '₹', color: 'orange' }
+  ];
+  const BankOptions = [
+    { value: 'pnb', label: 'Punjab  National Bank', symbol: '', color: '' },
+    { value: 'sbi', label: 'State Bank Of India', symbol: '', color: '' },
+    { value: 'cbi', label: 'Central Bank Of India', symbol: '', color: '' },
+    
   ];
 
   const quickAmounts = ['500', '1000', '2000', '5000', '10000', '20000'];
@@ -200,7 +207,7 @@ const Wallet: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 ">
                   {/* Currency Selector */}
                   <div className="space-y-2">
                     <label className="text-xs sm:text-sm text-gray-400">Select Currency</label>
@@ -221,9 +228,33 @@ const Wallet: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                    {/* Bank Account Selector */}
+                    {
+                  activeTab !== 'deposit' && (
+                    <div className="space-y-2">
+                    <label className="text-xs sm:text-sm text-gray-400">Select Bank Account</label>
+                    <div className="relative">
+                      <select
+                        value={selectedBankAccount}
+                        onChange={(e) => setSelectedBankAccount(e.target.value)}
+                        className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none"
+                      >
+                        {BankOptions.map((option) => (
+                          <option key={option.value} value={option.value} className="bg-[#1A1A2E]">
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
+                  )
+                 }
 
                   {/* Amount Input */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 ">
                     <label className="text-xs sm:text-sm text-gray-400">Enter Amount</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-base sm:text-lg">₹</span>
@@ -344,7 +375,7 @@ const Wallet: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+              <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 ">
                 {/* Currency Selector */}
                 <div className="space-y-2">
                   <label className="text-xs sm:text-sm text-gray-400">Select Currency</label>
@@ -365,6 +396,31 @@ const Wallet: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                 {/* Bank Account Selector */}
+                 {
+                  activeTab !== 'deposit' && (
+                    <div className="space-y-2">
+                    <label className="text-xs sm:text-sm text-gray-400">Select Bank Account</label>
+                    <div className="relative">
+                      <select
+                        value={selectedBankAccount}
+                        onChange={(e) => setSelectedBankAccount(e.target.value)}
+                        className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none"
+                      >
+                        {BankOptions.map((option) => (
+                          <option key={option.value} value={option.value} className="bg-[#1A1A2E]">
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
+                  )
+                 }
+               
 
                 {/* Amount Input */}
                 <div className="space-y-2">
