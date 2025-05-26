@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { X, CreditCard, Wallet, Bitcoin, DollarSign, Copy, Check } from 'lucide-react';
+import { X, CreditCard, Wallet, Bitcoin, DollarSign, Copy, Check,IndianRupee } from 'lucide-react';
 import { depositService } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { setWallets } from '../slices/walletSlice';
 import { fetchUserWallets } from '../lib/services/WalletServices';
+import { button } from 'framer-motion/client';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -21,16 +22,14 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState<'crypto' | 'card'>('crypto');
   const [selectedCrypto, setSelectedCrypto] = useState<'btc' | 'eth' | 'usdt' | 'inr'>('btc');
+  const [selectedServer, setSelectedServer] = useState<'server1' | 'server2'>('server1');
   const [copied, setCopied] = useState(false);
-  const [amount, setAmount] = useState<string>('');
+  const [amount1, setAmount] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
   const cryptoOptions = [
-    { value: 'btc', label: 'Bitcoin (BTC)', symbol: '₿', color: 'yellow' },
-    { value: 'eth', label: 'Ethereum (ETH)', symbol: 'Ξ', color: 'blue' },
-    { value: 'usdt', label: 'USDT', symbol: '₮', color: 'green' },
     { value: 'inr', label: 'INR', symbol: '₹', color: 'orange' }
   ];
 
@@ -42,9 +41,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
   };
 
   const currencySymbols = {
-    btc: '₿',
-    eth: 'Ξ',
-    usdt: '₮',
     inr: '₹'
   };
 
@@ -107,6 +103,28 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
       setLoading(false);
     }
   };
+  
+
+  const launchGateway = () => {
+    if (parseFloat(amount1) < 300) {
+      toast.error('Minimum deposit amount is 300 INR');
+      return;
+    }
+    const uid = localStorage.getItem('userId');
+    if (!uid) {
+      toast.error('Please Login First');
+      return;
+    }
+    const amount = parseFloat(amount1);
+    const phone = 1234567890;
+    
+    // Different URLs for different servers
+    const serverUrls = {
+      server1: `https://pay.rollix777.com/index.php?uid=${uid}&amount=${amount}&phone=${phone}`,
+      server2: `https://pay.rollix777.com/novapay.php?uid=${uid}&amount=${amount}&phone=${phone}`
+    };
+    window.location.href = serverUrls[selectedServer];
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 mt-12">
@@ -137,8 +155,8 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
             onClick={() => setActiveTab('crypto')}
           >
             <div className="flex items-center justify-center gap-2">
-              <Bitcoin size={18} />
-              <span>Cryptocurrency</span>
+              <IndianRupee size={18} />
+              <span>UPI</span>
             </div>
           </button>
           <button 
@@ -151,7 +169,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
           >
             <div className="flex items-center justify-center gap-2">
               <CreditCard size={18} />
-              <span>Credit Card</span>
+              <span>Card</span>
             </div>
           </button>
         </div>
@@ -160,6 +178,40 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
         <div className="p-5">
           {activeTab === 'crypto' ? (
             <div className="space-y-4">
+              {/* Server Selection */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <button
+                  onClick={() => setSelectedServer('server1')}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === 'server1'
+                      ? 'bg-green-500/20 border-green-500 text-white'
+                      : 'bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Server 1</span>
+                    <span className="text-xs">Recommended</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => setSelectedServer('server2')}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === 'server2'
+                      ? 'bg-green-500/20 border-green-500 text-white'
+                      : 'bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Server 2</span>
+                    <span className="text-xs">Alternative</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* Existing crypto selection */}
               <div className="relative">
                 <select
                   value={selectedCrypto}
@@ -178,36 +230,24 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
               </div>
-              
-              <div className="p-4 bg-[#1A1A2E] rounded-lg border border-green-500/20">
-                <p className="text-sm text-gray-400 mb-2">Send {selectedCrypto.toUpperCase()} to this address:</p>
-                <div className="flex items-center gap-2 bg-[#252547] p-2 rounded-lg border border-green-500/10">
-                  <div className="flex-1 text-white text-sm font-mono overflow-hidden overflow-ellipsis">
-                    {cryptoAddresses[selectedCrypto]}
-                  </div>
-                  <button 
-                    onClick={handleCopy}
-                    className="p-1.5 rounded-md bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
-                  >
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
-                  </button>
-                </div>
 
+              {/* Amount input */}
+              <div className="p-4 bg-[#1A1A2E] rounded-lg border border-green-500/20">
                 <div className="mt-4">
-                  <label className="text-sm text-gray-400 mb-2 block">Amount ({selectedCrypto.toUpperCase()})</label>
+                  <label className="text-sm text-gray-400 mb-2 block">Amount (INR)</label>
                   <div className="relative">
                     <input
                       type="text"
-                      value={amount}
+                      value={amount1}
                       onChange={(e) => setAmount(e.target.value)}
                       className="w-full py-3 px-4 bg-[#252547] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
-                      placeholder={`Enter ${selectedCrypto.toUpperCase()} amount`}
+                      placeholder="Enter amount"
                     />
                   </div>
                 </div>
 
                 <button
-                  onClick={handleDeposit}
+                  onClick={launchGateway}
                   disabled={loading}
                   className={`w-full mt-4 py-3 px-4 rounded-lg text-white font-medium transition-all ${
                     loading
@@ -215,16 +255,18 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                       : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90'
                   }`}
                 >
-                  {loading ? 'Processing...' : 'Confirm Deposit'}
+                  {loading ? 'Processing...' : `Deposit via ${selectedServer === 'server1' ? 'Server 1' : 'Server 2'}`}
                 </button>
               </div>
-              
+
+              {/* Important notes */}
               <div className="p-4 bg-[#1A1A2E] rounded-lg border border-green-500/20 text-sm text-gray-400">
                 <p className="mb-2">Important:</p>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>Send only {selectedCrypto.toUpperCase()} to this address</li>
-                  <li>Minimum deposit: 0.001 {selectedCrypto.toUpperCase()}</li>
-                  <li>Deposits are credited after 2 network confirmations</li>
+                  <li>Send only via UPI Method</li>
+                  <li>Minimum deposit: 300 INR</li>
+                  <li>Deposits are credited instantly</li>
+                  <li>Choose server based on your location</li>
                 </ul>
               </div>
             </div>

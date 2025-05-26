@@ -8,7 +8,12 @@ import Withdrawals from './pages/Withdrawals';
 import Reports from './pages/Reports';
 import Sliders from './pages/Sliders';
 import Games from './pages/Games';
+
 import Userdetail from './pages/Userdetail';
+
+import Coupon from './pages/Coupon';
+import Recharge from './pages/Recharge';
+
 // import Settings from './pages/Settings';
 
 const AdminRoutes = () => {
@@ -18,7 +23,12 @@ const AdminRoutes = () => {
         <Route index element={<Dashboard />} />
         <Route path="users" element={<Users />} />
         <Route path="bank-accounts" element={<BankAccounts />} />
+
         <Route path="user-detail/:userId" element={<Userdetail />} />
+
+        <Route path="coupon" element={<Coupon/>} />
+        <Route path="recharge" element={<Recharge/>} />
+
         <Route path="withdrawals" element={<Withdrawals/>} />
         <Route path="reports" element={<Reports />} />
         <Route path="sliders" element={<Sliders />} />

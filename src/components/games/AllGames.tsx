@@ -319,31 +319,31 @@ const AllGames: React.FC = () => {
         {/* Provider Tabs - Desktop */}
         <div className="w-full overflow-x-auto hide-scrollbar mb-6 ">
           <div className="flex gap-2">
-            {gameProviders.map((provider) => (
-              <button
-                key={provider.id}
+          {gameProviders.map((provider) => (
+            <button
+              key={provider.id}
                 onClick={() => {
                   setActiveProvider(provider.id);
                   setCurrentPage(0);
                 }}
-                className={`
-                  px-6 py-3 
-                  rounded-lg 
-                  text-sm 
-                  font-medium 
-                  whitespace-nowrap 
-                  transition-colors
-                  ${activeProvider === provider.id
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-[#252547] text-gray-400 hover:bg-[#2f2f5a]'
-                  }
-                `}
-              >
-                {provider.name}
-              </button>
-            ))}
-          </div>
+              className={`
+                px-6 py-3 
+                rounded-lg 
+                text-sm 
+                font-medium 
+                whitespace-nowrap 
+                transition-colors
+                ${activeProvider === provider.id
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-[#252547] text-gray-400 hover:bg-[#2f2f5a]'
+                }
+              `}
+            >
+              {provider.name}
+            </button>
+          ))}
         </div>
+      </div>
 
         {/* Games Grid - Desktop */}
         <div className="grid grid-cols-6 gap-6 ">
@@ -355,10 +355,10 @@ const AllGames: React.FC = () => {
       <div 
         onClick={() => openJsGame(game.id)}
         className="relative w-full h-[240px] bg-[#252547] rounded-2xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-3 flex items-center justify-center group"
-      >
-        <img
-          src={game.img || game.icon}
-          alt={game.name || game.game_name}
+              >
+                <img 
+                  src={game.img || game.icon} 
+                  alt={game.name || game.game_name}
           className="w-full h-full object-fit"
         />
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -398,4 +398,4 @@ const AllGames: React.FC = () => {
   );
 };
 
-export default AllGames;
+export default AllGames; 

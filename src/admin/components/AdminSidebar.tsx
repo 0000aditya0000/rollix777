@@ -10,7 +10,8 @@ import {
   Gamepad2, 
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Tag
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -26,11 +27,14 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar, onNa
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/admin' },
     { icon: <Users size={20} />, label: 'Users', path: '/admin/users' },
     { icon: <CreditCard size={20} />, label: 'Bank Accounts', path: '/admin/bank-accounts' },
+    { icon: <Tag size={20} />, label: 'Coupon', path: '/admin/coupon' },
+    { icon: <CreditCard size={20} />, label: 'Recharge', path: '/admin/recharge' },
     { icon: <ArrowDown size={20} />, label: 'Withdrawals', path: '/admin/withdrawals' },
     { icon: <BarChart3 size={20} />, label: 'Reports', path: '/admin/reports' },
     { icon: <Image size={20} />, label: 'Sliders', path: '/admin/sliders' },
     { icon: <Gamepad2 size={20} />, label: 'Games', path: '/admin/games' },
     { icon: <Settings size={20} />, label: 'Settings', path: '/admin/settings' },
+
   ];
 
   const handleNavigation = () => {

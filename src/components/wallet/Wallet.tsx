@@ -24,7 +24,7 @@ const Wallet: React.FC = () => {
   const { wallets } = useSelector((state: RootState) => state.wallet);
   const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
-  const [amount, setAmount] = useState('');
+  const [amount1, setAmount] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('inr');
   const [selectedBankAccount, setSelectedBankAccount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -78,6 +78,22 @@ const Wallet: React.FC = () => {
 
   const mainBalance = wallets.find(w => w.cryptoname === "INR")?.balance || "0";
   const bonusBalance = wallets.find(w => w.cryptoname === "CP")?.balance || "0";
+   
+   const launchGateway = () => {
+    if (parseFloat(amount1) < 300) {
+      toast.error('Minimum amount is 300 INR');
+    }
+    const uid = localStorage.getItem('userId');
+    if(!uid) {
+      toast.error('Please login to continue');
+      return;
+    }
+    const amount=parseFloat(amount1);
+    const phone=1234567890;
+    const url = `https://pay.rollix777.com/index.php?uid=${uid}&amount=${amount}&phone=${phone}`;
+    window.location.href = url;
+
+   }
 
   const handleDeposit = async () => {
     if (!user?.id || !amount) {
@@ -244,7 +260,7 @@ const Wallet: React.FC = () => {
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-base sm:text-lg">₹</span>
                       <input
                         type="number"
-                        value={amount}
+                        value={amount1}
                         onChange={(e) => setAmount(e.target.value)}
                         className="w-full py-3 sm:py-4 px-8 sm:px-10 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500"
                         placeholder="0.00"
@@ -268,21 +284,7 @@ const Wallet: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* UPI Section */}
-                  {activeTab === 'deposit' && (
-                    <div className="space-y-2">
-                      <label className="text-xs sm:text-sm text-gray-400">UPI ID</label>
-                      <div className="flex items-center justify-between bg-[#1A1A2E] p-3 sm:p-4 rounded-lg sm:rounded-xl border border-purple-500/20">
-                        <span className="text-sm sm:text-base text-white">test@paytm</span>
-                        <button
-                          onClick={handleCopyUpi}
-                          className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
-                        >
-                          <Copy size={14} className="sm:w-4 sm:h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                 
 
                   {/* Action Button */}
                   <button
@@ -427,7 +429,7 @@ const Wallet: React.FC = () => {
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-base sm:text-lg">₹</span>
                     <input
                       type="number"
-                      value={amount}
+                      value={amount1}
                       onChange={(e) => setAmount(e.target.value)}
                       className="w-full py-3 sm:py-4 px-8 sm:px-10 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500"
                       placeholder="0.00"
@@ -451,25 +453,10 @@ const Wallet: React.FC = () => {
                   </div>
                 </div>
 
-                {/* UPI Section */}
-                {activeTab === 'deposit' && (
-                  <div className="space-y-2">
-                    <label className="text-xs sm:text-sm text-gray-400">UPI ID</label>
-                    <div className="flex items-center justify-between bg-[#1A1A2E] p-3 sm:p-4 rounded-lg sm:rounded-xl border border-purple-500/20">
-                      <span className="text-sm sm:text-base text-white">test@paytm</span>
-                      <button
-                        onClick={handleCopyUpi}
-                        className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
-                      >
-                        <Copy size={14} className="sm:w-4 sm:h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
+                
                 {/* Action Button */}
                 <button
-                  onClick={activeTab === 'deposit' ? handleDeposit : () => {/* Add withdraw logic */}}
+                  onClick={activeTab === 'deposit' ? launchGateway : () => {/* Add withdraw logic */}}
                   disabled={isLoading}
                   className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg sm:rounded-xl text-white font-medium transition-opacity text-base sm:text-lg ${
                     isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
