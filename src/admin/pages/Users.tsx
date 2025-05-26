@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Filter, Plus, Edit, Trash2, Eye, User, Mail, Phone, Calendar } from 'lucide-react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Users = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState<any[]>([]);
   const [error, setError] = useState(null);
@@ -73,6 +75,10 @@ const Users = () => {
       case 'suspended': return 'bg-red-500/20 text-red-400';
       default: return 'bg-gray-500/20 text-gray-400';
     }
+  };
+
+  const handleNameClick = (userId) => {
+    navigate(`/admin/user-detail/${userId}`);
   };
 
   if (loading) {
@@ -405,7 +411,12 @@ const Users = () => {
               {users.map((user) => (
                 <tr key={user.id} className="border-b border-purple-500/10 text-white hover:bg-purple-500/5">
                   <td className="py-4 px-6">#{user.id}</td>
-                  <td className="py-4 px-6">{user.username}</td>
+                  <td 
+                    onClick={() => handleNameClick(user.id)}
+                    className="py-4 px-6 cursor-pointer hover:text-purple-400 active:text-purple-500 transition-colors"
+                  >
+                    <span className="hover:underline decoration-purple-500/50">{user.username}</span>
+                  </td>
                   <td className="py-4 px-6">{user.email}</td>
                   <td className="py-4 px-6">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(user.status)}`}>

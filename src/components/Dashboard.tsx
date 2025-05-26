@@ -245,6 +245,7 @@ const Dashboard = () => {
       <WithdrawModal 
         isOpen={isWithdrawModalOpen} 
         onClose={() => setIsWithdrawModalOpen(false)} 
+        mainBalance={mainBalance}
       />
     </div>
   );

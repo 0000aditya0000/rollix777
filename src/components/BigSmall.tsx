@@ -279,8 +279,8 @@ const BigSmall = () => {
   const totalPages = Math.ceil(records.length / recordsPerPage);
 
   return (
-    <div className="pt-16 pb-24 bg-[#0F0F19]">
-      <div className="w-full mx-auto max-w-7xl bg-gradient-to-b from-[#252547] to-[#1A1A2E] text-white p-4 space-y-4 rounded-lg">
+    <div className=" px-2 pt-20 pb-24 bg-[#0F0F19]">
+      <div className="w-full  bg-gradient-to-b from-[#252547] to-[#1A1A2E] text-white p-4 space-y-4 rounded-lg">
         {/* Header with back button */}
         <div className="flex items-center mb-4">
           <Link
@@ -293,11 +293,11 @@ const BigSmall = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
           {/* Left Column - Game Controls */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-8 ">
             {/* Time Buttons */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-8">
               {[1, 3, 5, 10].map((min) => (
                 <button
                   key={min}
@@ -314,7 +314,7 @@ const BigSmall = () => {
             </div>
 
             {/* Period Display and Timer */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-8">
               <div className="flex items-center bg-gradient-to-r from-purple-900/50 to-pink-900/50 px-4 py-3 rounded-lg border border-purple-500/20">
                 <span className="mr-2">🏆</span>
                 <span className="font-bold">Period</span>
@@ -431,7 +431,7 @@ const BigSmall = () => {
           </div>
 
           {/* Right Column - Record Table */}
-          <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
+          <div className="  bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
             <div className="p-4 border-b border-purple-500/10">
               <h2 className="text-xl font-bold text-white">
                 {selected} min Record
@@ -487,7 +487,7 @@ const BigSmall = () => {
               </p>
               <div className="flex gap-2">
                 <button
-                  className="py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-400 hover:text-white transition-colors"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 py-1 px-3 border border-purple-500/20 rounded-lg text-gray-200 hover:text-gray-400 transition-colors"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 >
@@ -522,7 +522,7 @@ const BigSmall = () => {
                 })}
 
                 <button
-                  className="py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-400 hover:text-white transition-colors"
+                  className=" bg-gradient-to-r from-pink-600 to-purple-600  py-1 px-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-gray-200 hover:text-gray-400 transition-colors"
                   disabled={currentPage === totalPages}
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))

@@ -21,6 +21,28 @@ const fetchUser = async userId => {
   }
 };
 
+// Fetch all user data including wallet, referrals, etc.
+const fetchAllUserData = async userId => {
+  try {
+    const response = await fetch(`${baseUrl}/api/user/user-all-data/${userId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching user all data:", error.message);
+    throw error;
+  }
+};
+
 // Update user data
 const updateUser = async (userId, formData) => {
   console.log(formData);
@@ -49,5 +71,6 @@ const updateUser = async (userId, formData) => {
 };
 
 export const fetchUserData = async userId => fetchUser(userId);
+export const fetchUserAllData = async userId => fetchAllUserData(userId);
 export const updateUserData = async (userId, formData) =>
   updateUser(userId, formData);
