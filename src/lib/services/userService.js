@@ -70,6 +70,27 @@ const updateUser = async (userId, formData) => {
   }
 };
 
+export const userCouponHistory = async (userId) => {
+  try {
+    const response = await fetch(`${baseUrl}/api/user/coupons/${userId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching coupon history:", error);
+    throw error;
+  }
+};
+
 export const fetchUserData = async userId => fetchUser(userId);
 export const fetchUserAllData = async userId => fetchAllUserData(userId);
 export const updateUserData = async (userId, formData) =>

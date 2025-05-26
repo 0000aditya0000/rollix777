@@ -18,10 +18,13 @@ export const createCoupon = async (couponData) => {
 };
 
 // Redeem a coupon
-export const redeemCoupon = async (couponCode) => {
+export const redeemCoupon = async (userId, code) => {
   try {
     const response = await axios.post(`${baseUrl}/api/coupons/redeem`, 
-      { code: couponCode },
+      { 
+        code, 
+        userId 
+      },
       {
         headers: {
           'Content-Type': 'application/json',
@@ -50,9 +53,9 @@ export const getAllCoupons = async () => {
 };
 
 // Get coupon redemption history
-export const getCouponHistory = async (couponCode) => {
+export const getCouponHistory = async (id) => {
   try {
-    const response = await axios.get(`${baseUrl}/api/coupons/history/${couponCode}`, {
+    const response = await axios.get(`${baseUrl}/api/coupons/history/${id}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
