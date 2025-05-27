@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   X,
   Wallet,
@@ -9,6 +9,8 @@ import {
   ChevronDown,
   IndianRupee,
   AlertCircle,
+  Hexagon,
+  Gem,
 } from "lucide-react";
 
 interface WithdrawModalProps {
@@ -23,14 +25,13 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   mainBalance,
 }) => {
   const [activeTab, setActiveTab] = useState<"crypto" | "bank">("crypto");
-  const [selectedCrypto, setSelectedCrypto] = useState<"btc" | "eth" | "usdt">(
-    "btc"
-  );
-
+  const [selectedCrypto, setSelectedCrypto] = useState<"btc" | "eth" | "usdt">("btc");
+  const [selectedNetwork, setSelectedNetwork] = useState<"trc20" | "erc20">("trc20");
   const [selectedCurrency, setSelectedCurrency] = useState("inr");
   const [selectedBankAccount, setSelectedBankAccount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [error, setError] = useState<string>("");
+  const [usdtWallets, setUsdtWallets] = useState<string>('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/,/g, "");
@@ -63,6 +64,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   ];
 
   if (!isOpen) return null;
+
+  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -116,9 +119,9 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="p-5">
+        <div className="p-5 ">
           {activeTab === "crypto" ? (
-            <div className="space-y-4">
+            <div className="space-y-4 ">
               <div className="flex gap-2">
                 <button
                   className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 ${
@@ -160,6 +163,33 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                   <span>USDT</span>
                 </button>
               </div>
+
+              {selectedCrypto === "usdt" && (
+                <div className="flex gap-2 mt-3">
+                  <button
+                    className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 ${
+                      selectedNetwork === "trc20"
+                        ? "bg-purple-500/20 border border-purple-500/30 text-white"
+                        : "bg-[#1A1A2E] border border-gray-700 text-gray-400 hover:border-purple-500/30"
+                    }`}
+                    onClick={() => setSelectedNetwork("trc20")}
+                  >
+                    <Hexagon className="w-4 h-4" />
+                    <span>TRC20</span>
+                  </button>
+                  <button
+                    className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 ${
+                      selectedNetwork === "erc20"
+                        ? "bg-purple-500/20 border border-purple-500/30 text-white"
+                        : "bg-[#1A1A2E] border border-gray-700 text-gray-400 hover:border-purple-500/30"
+                    }`}
+                    onClick={() => setSelectedNetwork("erc20")}
+                  >
+                    <Gem className="w-4 h-4" />
+                    <span>ERC20</span>
+                  </button>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className="text-sm text-gray-300">Wallet Address</label>
