@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, ArrowLeft, HelpCircle, ChevronRight, MessageCircle, Phone, Mail } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, ArrowLeft, HelpCircle, ChevronRight, MessageCircle, Phone, Mail, Send, X, Loader2, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface FAQItem {
@@ -7,6 +7,49 @@ interface FAQItem {
   answer: string;
   category: string;
 }
+
+interface QueryFormData {
+  name: string;
+  email: string;
+  phone: string;
+  queryType: string;
+  queryText: string;
+}
+
+interface ValidationState {
+  isValid: boolean;
+  message: string;
+  isTouched: boolean;
+}
+
+interface FormValidation {
+  name: ValidationState;
+  email: ValidationState;
+  phone: ValidationState;
+  queryText: ValidationState;
+}
+
+interface QuerySubmission extends QueryFormData {
+  id: string;
+  timestamp: number;
+  status: 'pending' | 'resolved';
+}
+
+interface ValidationErrors {
+  name?: string;
+  email?: string;
+  phone?: string;
+  queryType?: string;
+  queryText?: string;
+}
+
+const queryTypes = [
+  "Technical Issue",
+  "Billing Query",
+  "Feature Request",
+  "General Inquiry",
+  "Other"
+];
 
 const faqData: FAQItem[] = [
   {
@@ -30,13 +73,135 @@ const categories = [
   { name: "Getting Started", icon: HelpCircle },
   { name: "Account", icon: MessageCircle },
   { name: "Billing", icon: Mail },
-  { name: "Technical Support", icon: Phone }
+  { name: "Technical Support", icon: Phone },
+  { name: "Send Query", icon: Send }
 ];
 
 export const HelpCenter: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  
+  const [validation, setValidation] = useState<FormValidation>({
+    name: { isValid: false, message: '', isTouched: false },
+    email: { isValid: false, message: '', isTouched: false },
+    phone: { isValid: false, message: '', isTouched: false },
+    queryText: { isValid: false, message: '', isTouched: false }
+  });
+
+  
+  const [queryFormData, setQueryFormData] = useState<QueryFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    queryType: queryTypes[0],
+    queryText: ''
+  });
+
+
+
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case 'name':
+        if (!value.trim()) return 'Name is required';
+        if (value.trim().length < 2) return 'Name must be at least 2 characters';
+        return '';
+      
+      case 'email':
+        if (!value.trim()) return 'Email is required';
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        if (!emailRegex.test(value)) return 'Please enter a valid email address';
+        return '';
+      
+      case 'phone':
+        if (!value.trim()) return 'Phone number is required';
+        if (!/^\d{10}$/.test(value)) return 'Phone number must be exactly 10 digits';
+        return '';
+      
+      case 'queryText':
+        if (!value.trim()) return 'Query message is required';
+        if (value.trim().length < 10) return 'Query must be at least 10 characters';
+        return '';
+      
+      case 'queryType':
+        if (!value.trim()) return 'Query type is required';
+        return '';
+      
+      default:
+        return '';
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setQueryFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Validate field and update errors immediately
+    const error = validateField(name, value);
+    setErrors(prev => ({
+      ...prev,
+      [name]: error || undefined // Only set error if there is one
+    }));
+  };
+
+  const handleBlur = (name: string) => {
+    const value = queryFormData[name as keyof QueryFormData];
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  const handleQuerySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate all fields
+    const newErrors: ValidationErrors = {
+      name: validateField('name', queryFormData.name),
+      email: validateField('email', queryFormData.email),
+      phone: validateField('phone', queryFormData.phone),
+      queryType: validateField('queryType', queryFormData.queryType),
+      queryText: validateField('queryText', queryFormData.queryText)
+    };
+
+    setErrors(newErrors);
+
+    // Check if there are any errors
+    if (Object.values(newErrors).some(error => error)) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+    
+      localStorage.setItem('queries', JSON.stringify(queryFormData));
+
+      setShowSuccess(true);
+  
+        setTimeout(() => {
+          setShowSuccess(false);
+        setIsQueryModalOpen(false);
+        setQueryFormData({
+          name: '',
+          email: '',
+          phone: '',
+          queryType: queryTypes[0],
+          queryText: ''
+        });
+        setErrors({});
+      
+        }, 1000);
+    } catch (error) {
+      console.error('Error storing query:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const filteredFAQs = faqData.filter(faq => {
     const matchesSearch = faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -61,6 +226,151 @@ export const HelpCenter: React.FC = () => {
           </div>
         </div>
       </header>
+
+      {/* Query Modal */}
+      {isQueryModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start md:items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-gradient-to-br from-[#1A1A2E] to-[#252547] rounded-2xl p-4 md:p-6 w-full max-w-lg my-4 relative">
+            {showSuccess && (
+              <div className="absolute inset-0 bg-[#1A1A2E]/95 backdrop-blur-sm flex items-center justify-center z-10 rounded-2xl">
+                <div className="text-center p-4">
+                  <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
+                  <p className="text-white text-lg font-medium">Query Submitted!</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-white">Send Query</h2>
+              <button 
+                onClick={() => setIsQueryModalOpen(false)}
+                className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleQuerySubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={queryFormData.name}
+                  onChange={handleInputChange}
+                  onBlur={() => handleBlur('name')}
+                  className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 ${
+                    errors.name ? 'border-red-500/50' : 'border-purple-500/20'
+                  }`}
+                  placeholder="Enter your name"
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <AlertCircle size={14} />
+                    {errors.name}
+                  </p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Email *</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={queryFormData.email}
+                  onChange={handleInputChange}
+                  onBlur={() => handleBlur('email')}
+                  className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 ${
+                    errors.email ? 'border-red-500/50' : 'border-purple-500/20'
+                  }`}
+                  placeholder="Enter your email"
+                />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <AlertCircle size={14} />
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Phone *</label>
+                <input
+                  type="number"
+                  name="phone"
+                  value={queryFormData.phone}
+                  onChange={handleInputChange}
+                  onBlur={() => handleBlur('phone')}
+                  className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    errors.phone ? 'border-red-500/50' : 'border-purple-500/20'
+                  }`}
+                  placeholder="Enter phone number"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                />
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <AlertCircle size={14} />
+                    {errors.phone}
+                  </p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Query Type *</label>
+                <select
+                  name="queryType"
+                  value={queryFormData.queryType}
+                  onChange={handleInputChange}
+                  onBlur={() => handleBlur('queryType')}
+                  className="w-full px-4 py-2.5 bg-[#252547]/50 border border-purple-500/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white appearance-none"
+                >
+                  <option value="">Select Query Type</option>
+                  {queryTypes.map(type => (
+                    <option key={type} value={type} className="bg-[#1A1A2E]">{type}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Your Query *</label>
+                <textarea
+                  name="queryText"
+                  value={queryFormData.queryText}
+                  onChange={handleInputChange}
+                  onBlur={() => handleBlur('queryText')}
+                  rows={3}
+                  className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 resize-none ${
+                    errors.queryText ? 'border-red-500/50' : 'border-purple-500/20'
+                  }`}
+                  placeholder="Describe your query..."
+                ></textarea>
+                {errors.queryText && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <AlertCircle size={14} />
+                    {errors.queryText}
+                  </p>
+                )}
+              </div>
+              
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Query'
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-[1400px] mx-auto px-4 pt-24 md:pt-28 pb-8">
@@ -108,7 +418,13 @@ export const HelpCenter: React.FC = () => {
                 {categories.map(({ name, icon: Icon }) => (
                   <button
                     key={name}
-                    onClick={() => setSelectedCategory(name === selectedCategory ? null : name)}
+                    onClick={() => {
+                      if (name === "Send Query") {
+                        setIsQueryModalOpen(true);
+                      } else {
+                        setSelectedCategory(name === selectedCategory ? null : name);
+                      }
+                    }}
                     className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 group ${
                       selectedCategory === name
                         ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/20'

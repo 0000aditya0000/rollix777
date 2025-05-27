@@ -6,6 +6,7 @@ import {
   Trash2,
   Check,
   Loader2,
+  Wallet,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -35,6 +36,12 @@ interface BankAccount {
   ifsccode: string;
   branch: string;
   status: number;
+}
+
+interface USDTWallet {
+  id: string;
+  address: string;
+  createdAt: string;
 }
 
 // Separate components for better code splitting and performance
@@ -118,8 +125,48 @@ const BankAccountCard = memo(
   )
 );
 
+const USDTWalletCard = memo(({ wallet, onRemove }: { wallet: USDTWallet; onRemove: (id: string) => void }) => (
+  <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4 hover:border-purple-500/40 transition-all duration-300 shadow-lg hover:shadow-purple-500/10">
+    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div className="flex items-start gap-4">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center shrink-0 shadow-inner">
+            <Wallet className="w-6 h-6 text-purple-400" />
+          </div>
+        </div>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <h3 className="text-white font-medium text-base w-full sm:w-auto sm:truncate">
+              USDT Wallet
+            </h3>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-gray-400 text-sm font-medium flex items-center gap-2">
+              <span className="text-purple-400/60">Address:</span>
+              <span className="font-mono break-all">{wallet.address}</span>
+            </p>
+            <p className="text-gray-400 text-xs">
+              Added on: {new Date(wallet.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center sm:items-start gap-2 ml-16 sm:ml-0">
+        <button
+          onClick={() => onRemove(wallet.id)}
+          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+          title="Remove USDT Wallet"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  </div>
+));
+
 const PaymentMethods: React.FC = () => {
   const [showAddCard, setShowAddCard] = useState<boolean>(false);
+  const [showAddUSDT, setShowAddUSDT] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     accountname: "",
     accountnumber: "",
@@ -135,6 +182,9 @@ const PaymentMethods: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [usdtAddress, setUsdtAddress] = useState<string>("");
+  const [usdtError, setUsdtError] = useState<string>("");
+  const [usdtWallets, setUsdtWallets] = useState<USDTWallet[]>([]);
 
   const userId = localStorage.getItem("userId");
 
@@ -373,6 +423,52 @@ const PaymentMethods: React.FC = () => {
     fetchBankAccounts();
   }, [fetchBankAccounts]);
 
+  useEffect(() => {
+    // Load USDT wallets from localStorage
+    const savedWallets = localStorage.getItem("usdtWallets");
+    if (savedWallets) {
+      setUsdtWallets(JSON.parse(savedWallets));
+    }
+  }, []);
+
+  const handleAddUSDT = useCallback(() => {
+    if (!usdtAddress.trim()) {
+      setUsdtError("Wallet address is required");
+      return;
+    }
+
+    // Basic USDT address validation (you might want to add more specific validation)
+    if (!/^[0-9a-zA-Z]{34,}$/.test(usdtAddress.trim())) {
+      setUsdtError("Invalid USDT wallet address");
+      return;
+    }
+
+    const newWallet: USDTWallet = {
+      id: Date.now().toString(),
+      address: usdtAddress.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedWallets = [...usdtWallets, newWallet];
+    setUsdtWallets(updatedWallets);
+    localStorage.setItem("usdtWallets", JSON.stringify(updatedWallets));
+    setUsdtAddress("");
+    setShowAddUSDT(false);
+    toast.success("USDT wallet added successfully!");
+  }, [usdtAddress, usdtWallets]);
+
+  const handleRemoveUSDT = useCallback((id: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to remove this USDT wallet?"
+    );
+    if (!confirmed) return;
+
+    const updatedWallets = usdtWallets.filter(wallet => wallet.id !== id);
+    setUsdtWallets(updatedWallets);
+    localStorage.setItem("usdtWallets", JSON.stringify(updatedWallets));
+    toast.success("USDT wallet removed successfully");
+  }, [usdtWallets]);
+
   const handleRemoveAccount = async (accountId: number) => {
     try {
       const confirmed = window.confirm(
@@ -413,8 +509,6 @@ const PaymentMethods: React.FC = () => {
     ));
   }, [bankAccounts, isLoading, getStatusInfo, handleRemoveAccount]);
 
-
-
   return (
     <div className="pt-16 pb-24">
       <div className="px-4 py-6 space-y-6">
@@ -429,20 +523,55 @@ const PaymentMethods: React.FC = () => {
           <h1 className="text-2xl font-bold text-white">Payment Methods</h1>
         </div>
 
-        {/* Add Card Button */}
-        <button
-          onClick={() => setShowAddCard(true)}
-          className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-          disabled={isSubmitting}
-        >
-          <Plus size={20} />
-          <span>Add New Bank Account</span>
-        </button>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button
+            onClick={() => setShowAddCard(true)}
+            className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+            disabled={isSubmitting}
+          >
+            <Plus size={20} />
+            <span>Add New Bank Account</span>
+          </button>
+          <button
+            onClick={() => setShowAddUSDT(true)}
+            className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+          >
+            <Plus size={20} />
+            <span>Add New USDT Wallet</span>
+          </button>
+        </div>
 
-        {/* Bank Accounts List */}
-        <div className="space-y-4">{bankAccountCards}</div>
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Bank Accounts Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-white">Bank Accounts</h2>
+            <div className="space-y-4">{bankAccountCards}</div>
+          </div>
 
-        {/* Add Bank Account Modal */}
+          {/* USDT Wallets Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-white">USDT Wallets</h2>
+            <div className="space-y-4">
+              {usdtWallets.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  No USDT wallets added yet
+                </div>
+              ) : (
+                usdtWallets.map(wallet => (
+                  <USDTWalletCard
+                    key={wallet.id}
+                    wallet={wallet}
+                    onRemove={handleRemoveUSDT}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Existing Bank Account Modal */}
         {showAddCard && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
@@ -517,6 +646,77 @@ const PaymentMethods: React.FC = () => {
                     ) : (
                       "Add Account"
                     )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* USDT Wallet Modal */}
+        {showAddUSDT && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => setShowAddUSDT(false)}
+            />
+            <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
+              <div className="p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white">
+                    Add New USDT Wallet
+                  </h2>
+                  <button
+                    onClick={() => setShowAddUSDT(false)}
+                    className="p-2 rounded-lg bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-sm text-gray-300">Wallet Address</label>
+                    <input
+                      type="text"
+                      value={usdtAddress}
+                      onChange={(e) => {
+                        setUsdtAddress(e.target.value);
+                        setUsdtError("");
+                      }}
+                      className={`w-full py-3 px-4 bg-[#1A1A2E] border ${
+                        usdtError ? "border-red-500" : "border-purple-500/20"
+                      } rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors`}
+                      placeholder="Enter USDT wallet address"
+                    />
+                    {usdtError && (
+                      <p className="text-red-400 text-xs mt-1">{usdtError}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <button
+                    onClick={() => setShowAddUSDT(false)}
+                    className="w-full sm:w-auto sm:flex-1 py-3 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white hover:bg-purple-500/10 transition-colors order-2 sm:order-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddUSDT}
+                    className="w-full sm:w-auto sm:flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 order-1 sm:order-2"
+                  >
+                    Add Wallet
                   </button>
                 </div>
               </div>

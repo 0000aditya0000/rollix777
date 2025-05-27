@@ -29,6 +29,11 @@ interface RechargeDetail {
   email?: string;
   phone?: string;
   transaction_id?: string;
+  id?: number;
+  recharge_amount?: string;
+  recharge_type?: string;
+  payment_mode?: string;
+  recharge_status?: string;
 }
 
 function Recharge() {
@@ -37,6 +42,7 @@ function Recharge() {
   const [searchResult, setSearchResult] = useState<RechargeDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [recharges, setRecharges] = useState<Recharge[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'success'>('all');
 
   useEffect(() => {
     fetchRecharges();
@@ -71,7 +77,7 @@ function Recharge() {
     setLoading(true);
     try {
       const response = await getRechargeByOrderId(searchOrderId);
-      console.log('Search Response:', response); // Debug log
+      console.log('Search Response:', response);
       
       if (response && response.recharge) {
         setSearchResult(response.recharge);
@@ -81,7 +87,7 @@ function Recharge() {
         console.error('Unexpected search response:', response);
         toast.error('Invalid response format');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search error:', error);
       toast.error(error.message || 'Failed to fetch recharge details');
     } finally {
@@ -94,10 +100,15 @@ function Recharge() {
     console.log('Current recharges:', recharges);
   }, [recharges]);
 
+  const filteredRecharges = recharges.filter(recharge => {
+    if (activeFilter === 'all') return true;
+    return recharge.status.toLowerCase() === activeFilter;
+  });
+
   return (
     <div className="min-h-screen bg-[#1A1A2E] py-8">
       <div className="w-full px-2">
-        {/* Header with Title and History Button */}
+        {/* Header with Title and Buttons */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg">
@@ -105,13 +116,47 @@ function Recharge() {
             </div>
             <h2 className="text-2xl font-bold text-white">Recharge Management</h2>
           </div>
-          <button
-            onClick={() => setShowHistoryModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 rounded-lg hover:from-purple-500/30 hover:to-pink-500/30 transition-all"
-          >
-            <Clock className="w-5 h-5" />
-            Recharge History
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={`px-4 py-2 rounded-lg transition-all ${
+                  activeFilter === 'all'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setActiveFilter('success')}
+                className={`px-4 py-2 rounded-lg transition-all ${
+                  activeFilter === 'success'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                }`}
+              >
+                Success
+              </button>
+              <button
+                onClick={() => setActiveFilter('pending')}
+                className={`px-4 py-2 rounded-lg transition-all ${
+                  activeFilter === 'pending'
+                    ? 'bg-yellow-500 text-white'
+                    : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
+                }`}
+              >
+                Pending
+              </button>
+            </div>
+            <button
+              onClick={() => setShowHistoryModal(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 rounded-lg hover:from-purple-500/30 hover:to-pink-500/30 transition-all"
+            >
+              <Clock className="w-5 h-5" />
+              Recharge History
+            </button>
+          </div>
         </div>
 
         {/* Recharges Table */}
@@ -131,8 +176,8 @@ function Recharge() {
                 </tr>
               </thead>
               <tbody>
-                {recharges && recharges.length > 0 ? (
-                  recharges.map((recharge) => (
+                {filteredRecharges && filteredRecharges.length > 0 ? (
+                  filteredRecharges.map((recharge) => (
                     <tr key={recharge.recharge_id} className="border-b border-purple-500/10 hover:bg-purple-500/5 transition-colors">
                       <td className="py-4 text-white font-medium">{recharge.order_id}</td>
                       <td className="py-4 text-white">{recharge.userId}</td>
@@ -140,7 +185,6 @@ function Recharge() {
                       <td className="py-4 text-white">{recharge.type}</td>
                       <td className="py-4 text-white">{recharge.mode}</td>
                       <td className="py-4">
-                        {console.log('Status value:', recharge.status)}
                         <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${
                           recharge.status.toLowerCase() === 'success' ? 'bg-green-500/20 text-green-400' :
                           recharge.status.toLowerCase() === 'failed' ? 'bg-red-500/20 text-red-400' :
@@ -222,24 +266,24 @@ function Recharge() {
                   </div>
                   <div>
                     <p className="text-gray-400 text-sm mb-1">Amount</p>
-                    <p className="text-purple-400 font-medium">₹{searchResult.recharge_amount}</p>
+                    <p className="text-purple-400 font-medium">₹{searchResult.recharge_amount || searchResult.amount}</p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-sm mb-1">Type</p>
-                    <p className="text-white font-medium">{searchResult.recharge_type}</p>
+                    <p className="text-white font-medium">{searchResult.recharge_type || searchResult.type}</p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-sm mb-1">Mode</p>
-                    <p className="text-white font-medium">{searchResult.payment_mode}</p>
+                    <p className="text-white font-medium">{searchResult.payment_mode || searchResult.mode}</p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-sm mb-1">Status</p>
                     <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                      searchResult.recharge_status.toLowerCase() === 'success' ? 'bg-green-500/20 text-green-400' :
-                      searchResult.recharge_status.toLowerCase() === 'pending' ? 'bg-red-500/20 text-yellow-400' :
+                      (searchResult.recharge_status || searchResult.status).toLowerCase() === 'success' ? 'bg-green-500/20 text-green-400' :
+                      (searchResult.recharge_status || searchResult.status).toLowerCase() === 'pending' ? 'bg-red-500/20 text-yellow-400' :
                       'bg-yellow-500/20 text-red-400'
                     }`}>
-                      {searchResult.recharge_status}
+                      {searchResult.recharge_status || searchResult.status}
                     </span>
                   </div>
                   <div>
