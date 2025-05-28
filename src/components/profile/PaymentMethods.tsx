@@ -19,6 +19,7 @@ interface FormData {
   accountnumber: string;
   ifsccode: string;
   branch: string;
+  type: string;
 }
 
 interface FormErrors {
@@ -26,23 +27,71 @@ interface FormErrors {
   accountnumber: string;
   ifsccode: string;
   branch: string;
+  type: string;
 }
 
 interface BankAccount {
   id: number;
   userId: number;
-  accountname: string;
-  accountnumber: string;
-  ifsccode: string;
-  branch: string;
+  accountname: string | null;
+  accountnumber: string | null;
+  ifsccode: string | null;
+  branch: string | null;
   status: number;
+  network: string | null;
+  usdt: string | null;
 }
 
-interface USDTWallet {
-  id: string;
-  address: string;
-  createdAt: string;
+interface USDTWalletCardProps {
+  wallet: BankAccount;
+  onEdit: (wallet: BankAccount) => void;
+
 }
+
+const USDTWalletCard = memo(({ wallet, onEdit, }: USDTWalletCardProps) => (
+  <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4 hover:border-purple-500/40 transition-all duration-300 shadow-lg hover:shadow-purple-500/10">
+    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div className="flex items-start gap-4">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center shrink-0 shadow-inner">
+            <Wallet className="w-6 h-6 text-purple-400" />
+          </div>
+        </div>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <h3 className="text-white font-medium text-base w-full sm:w-auto sm:truncate">
+              USDT Wallet ({wallet.network})
+            </h3>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-gray-400 text-sm font-medium flex items-center gap-2">
+              <span className="text-purple-400/60">Address:</span>
+              <span className="font-mono break-all">{wallet.usdt}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center sm:items-start gap-2 ml-16 sm:ml-0">
+        <button
+          onClick={() => onEdit(wallet)}
+          className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
+          title="Edit USDT Wallet"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+        </button>
+        <button
+          onClick={() => onRemove(wallet.id)}
+          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+          title="Remove USDT Wallet"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  </div>
+));
 
 // Separate components for better code splitting and performance
 const LoadingSpinner = memo(() => (
@@ -63,11 +112,11 @@ interface BankAccountCardProps {
     text: string;
     className: string;
   };
-  onRemove: (accountId: number) => void;
+
 }
 
 const BankAccountCard = memo(
-  ({ account, statusInfo, onRemove }: BankAccountCardProps) => (
+  ({ account, statusInfo, }: BankAccountCardProps) => (
     <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4 hover:border-purple-500/40 transition-all duration-300 shadow-lg hover:shadow-purple-500/10">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="flex items-start gap-4">
@@ -95,7 +144,7 @@ const BankAccountCard = memo(
               <p className="text-gray-400 text-sm font-medium flex items-center gap-2">
                 <span className="text-purple-400/60">A/c :</span>
                 <span className="font-mono">
-                  •••• {account.accountnumber.slice(-6)}
+                  •••• {account.accountnumber?.slice(-6)}
                 </span>
               </p>
               <p className="text-gray-400 text-xs flex items-center gap-2">
@@ -125,71 +174,41 @@ const BankAccountCard = memo(
   )
 );
 
-const USDTWalletCard = memo(({ wallet, onRemove }: { wallet: USDTWallet; onRemove: (id: string) => void }) => (
-  <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4 hover:border-purple-500/40 transition-all duration-300 shadow-lg hover:shadow-purple-500/10">
-    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-      <div className="flex items-start gap-4">
-        <div className="relative">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center shrink-0 shadow-inner">
-            <Wallet className="w-6 h-6 text-purple-400" />
-          </div>
-        </div>
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <h3 className="text-white font-medium text-base w-full sm:w-auto sm:truncate">
-              USDT Wallet
-            </h3>
-          </div>
-          <div className="space-y-0.5">
-            <p className="text-gray-400 text-sm font-medium flex items-center gap-2">
-              <span className="text-purple-400/60">Address:</span>
-              <span className="font-mono break-all">{wallet.address}</span>
-            </p>
-            <p className="text-gray-400 text-xs">
-              Added on: {new Date(wallet.createdAt).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center sm:items-start gap-2 ml-16 sm:ml-0">
-        <button
-          onClick={() => onRemove(wallet.id)}
-          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-          title="Remove USDT Wallet"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  </div>
-));
-
 const PaymentMethods: React.FC = () => {
   const [showAddCard, setShowAddCard] = useState<boolean>(false);
   const [showAddUSDT, setShowAddUSDT] = useState<boolean>(false);
+  const [showEditUSDT, setShowEditUSDT] = useState<boolean>(false);
+  const [selectedWalletForEdit, setSelectedWalletForEdit] = useState<BankAccount | null>(null);
   const [formData, setFormData] = useState<FormData>({
     accountname: "",
     accountnumber: "",
     ifsccode: "",
     branch: "",
+    type: "bank"
   });
   const [errors, setErrors] = useState<FormErrors>({
     accountname: "",
     accountnumber: "",
     ifsccode: "",
     branch: "",
+    type: ""
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [usdtAddress, setUsdtAddress] = useState<string>("");
   const [usdtError, setUsdtError] = useState<string>("");
-  const [usdtWallets, setUsdtWallets] = useState<USDTWallet[]>([]);
+  const [selectedNetwork, setSelectedNetwork] = useState<string>("");
+  const [networkError, setNetworkError] = useState<string>("");
 
   const userId = localStorage.getItem("userId");
 
-  // Memoize fetchBankAccounts to prevent unnecessary recreations
-  const fetchBankAccounts = useCallback(async () => {
+  // Filter accounts based on type
+  const bankAccounts = useMemo(() => accounts.filter(acc => !acc.network), [accounts]);
+  const usdtWallets = useMemo(() => accounts.filter(acc => acc.network), [accounts]);
+
+  // Fetch all accounts (both bank and USDT)
+  const fetchAccounts = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -203,60 +222,151 @@ const PaymentMethods: React.FC = () => {
       );
 
       if (Array.isArray(response.data)) {
-        setBankAccounts(response.data);
+        setAccounts(response.data);
       } else {
         console.error("Unexpected response format:", response.data);
-        // toast.error('Failed to fetch bank accounts');
-        setBankAccounts([]);
+        setAccounts([]);
       }
     } catch (error) {
-      console.error("Error fetching bank accounts:", error);
-      // toast.error('Failed to fetch bank accounts');
-      setBankAccounts([]);
+      console.error("Error fetching accounts:", error);
+      setAccounts([]);
     } finally {
       setIsLoading(false);
     }
   }, [userId]);
 
-  // Use debounced input handler to prevent too many state updates
-  const debouncedInputHandler = useMemo(
-    () =>
-      debounce((name: string, value: string) => {
-        let transformedValue = value;
-        if (name === "accountnumber") {
-          transformedValue = value.replace(/\D/g, "").slice(0, 18);
-        } else if (name === "ifsccode") {
-          transformedValue = value.toUpperCase().slice(0, 11);
-        }
-
-        setFormData((prev) => ({
-          ...prev,
-          [name]: transformedValue,
-        }));
-
-        // Clear error when user starts typing
-        setErrors((prev) => ({
-          ...prev,
-          [name]: "",
-        }));
-      }, 150),
-    []
-  );
-
-  // Cleanup debounce on unmount
   useEffect(() => {
-    return () => {
-      debouncedInputHandler.cancel();
-    };
-  }, [debouncedInputHandler]);
+    fetchAccounts();
+  }, [fetchAccounts]);
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      debouncedInputHandler(name, value);
-    },
-    [debouncedInputHandler]
-  );
+  const handleEditUSDT = useCallback((wallet: BankAccount) => {
+    setSelectedWalletForEdit(wallet);
+    setUsdtAddress(wallet.usdt || "");
+    setSelectedNetwork(wallet.network || "");
+    setShowEditUSDT(true);
+  }, []);
+
+  const handleUpdateUSDT = useCallback(async () => {
+    return
+    if (!usdtAddress.trim()) {
+      setUsdtError("Wallet address is required");
+      return;
+    }
+
+    if (!selectedNetwork) {
+      setNetworkError("Please select a network");
+      return;
+    }
+
+    if (!/^[0-9a-zA-Z]{34,}$/.test(usdtAddress.trim())) {
+      setUsdtError("Invalid USDT wallet address");
+      return;
+    }
+
+    try {
+      if (!userId || !selectedWalletForEdit) {
+        toast.error("Missing required information");
+        return;
+      }
+
+      const payload = {
+        id: selectedWalletForEdit.id,
+        userId,
+        type: "usdt",
+        usdt: usdtAddress.trim(),
+        network: selectedNetwork,
+        status: 0
+      };
+
+      const response = await axios.put(
+        `${baseUrl}/api/bankaccount/update/${selectedWalletForEdit.id}`,
+        payload
+      );
+
+      if (response.data) {
+        setUsdtAddress("");
+        setSelectedNetwork("");
+        setShowEditUSDT(false);
+        setSelectedWalletForEdit(null);
+        toast.success("USDT wallet updated successfully!");
+        await fetchAccounts();
+      } else {
+        toast.error(response.data.message || "Failed to update USDT wallet");
+      }
+    } catch (error) {
+      console.error("Error updating USDT wallet:", error);
+      toast.error("An error occurred while updating USDT wallet");
+    }
+  }, [usdtAddress, selectedNetwork, userId, selectedWalletForEdit, fetchAccounts]);
+
+  const handleAddUSDT = useCallback(async () => {
+    if (!usdtAddress.trim()) {
+      setUsdtError("Wallet address is required");
+      return;
+    }
+
+    if (!selectedNetwork) {
+      setNetworkError("Please select a network");
+      return;
+    }
+
+    if (!/^[0-9a-zA-Z]{34,}$/.test(usdtAddress.trim())) {
+      setUsdtError("Invalid USDT wallet address");
+      return;
+    }
+
+    try {
+      if (!userId) {
+        toast.error("User ID not found");
+        return;
+      }
+
+      const payload = {
+        userId,
+        type: "usdt",
+        usdt: usdtAddress.trim(),
+        network: selectedNetwork
+      };
+
+      const response = await axios.post(
+        `${baseUrl}/api/bankaccount/addnew`,
+        payload
+      );
+
+      if (response.data.id) {
+        setUsdtAddress("");
+        setSelectedNetwork("");
+        setShowAddUSDT(false);
+        toast.success("USDT wallet added successfully!");
+        await fetchAccounts();
+      } else {
+        toast.error(response.data.message || "Failed to add USDT wallet");
+      }
+    } catch (error) {
+      console.error("Error adding USDT wallet:", error);
+      toast.error("An error occurred while adding USDT wallet");
+    }
+  }, [usdtAddress, selectedNetwork, userId, fetchAccounts]);
+
+  // const handleRemoveAccount = async (accountId: number) => {
+  //   try {
+  //     const confirmed = window.confirm(
+  //       "Are you sure you want to remove this account?"
+  //     );
+  //     if (!confirmed) return;
+
+  //     setIsLoading(true);
+  //     await axios.delete(`${baseUrl}/api/bankaccount/delete/${accountId}`);
+
+  //     toast.success("Account removed successfully");
+  //     await fetchAccounts();
+  //   } catch (error) {
+  //     console.error("Error removing account:", error);
+  //     toast.error("Failed to remove account");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   // Memoize form reset function
   const resetForm = useCallback(() => {
@@ -265,12 +375,14 @@ const PaymentMethods: React.FC = () => {
       accountnumber: "",
       ifsccode: "",
       branch: "",
+      type: "bank"
     });
     setErrors({
       accountname: "",
       accountnumber: "",
       ifsccode: "",
       branch: "",
+      type: "",
     });
   }, []);
 
@@ -311,6 +423,7 @@ const PaymentMethods: React.FC = () => {
       accountnumber: "",
       ifsccode: "",
       branch: "",
+      type: "",
     };
 
     if (!formData.accountname.trim()) {
@@ -363,6 +476,7 @@ const PaymentMethods: React.FC = () => {
         ...formData,
         userId,
         status: 0,
+        type: "bank"
       };
 
       const response = await axios.post(
@@ -376,7 +490,7 @@ const PaymentMethods: React.FC = () => {
         toast.success(
           response.data.message || "Bank account added successfully!"
         );
-        await fetchBankAccounts();
+        await fetchAccounts();
       } else {
         toast.error(response.data.message || "Failed to add bank account");
       }
@@ -386,7 +500,7 @@ const PaymentMethods: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, validateForm, userId, resetForm, fetchBankAccounts]);
+  }, [formData, validateForm, userId, resetForm, fetchAccounts]);
 
   // Memoize renderInput function
   const renderInput = useCallback(
@@ -402,7 +516,17 @@ const PaymentMethods: React.FC = () => {
           type="text"
           name={name}
           value={formData[name]}
-          onChange={handleInputChange}
+          onChange={(e) => {
+            const { value } = e.target;
+            setFormData((prev) => ({
+              ...prev,
+              [name]: value,
+            }));
+            setErrors((prev) => ({
+              ...prev,
+              [name]: "",
+            }));
+          }}
           maxLength={maxLength}
           className={`w-full py-3 px-4 bg-[#1A1A2E] border ${
             errors[name] ? "border-red-500" : "border-purple-500/20"
@@ -415,99 +539,130 @@ const PaymentMethods: React.FC = () => {
         )}
       </div>
     ),
-    [formData, errors, isSubmitting, handleInputChange]
+    [formData, errors, isSubmitting]
   );
 
-  // Fetch bank accounts on component mount
-  useEffect(() => {
-    fetchBankAccounts();
-  }, [fetchBankAccounts]);
-
-  useEffect(() => {
-    // Load USDT wallets from localStorage
-    const savedWallets = localStorage.getItem("usdtWallets");
-    if (savedWallets) {
-      setUsdtWallets(JSON.parse(savedWallets));
-    }
-  }, []);
-
-  const handleAddUSDT = useCallback(() => {
-    if (!usdtAddress.trim()) {
-      setUsdtError("Wallet address is required");
-      return;
-    }
-
-    // Basic USDT address validation (you might want to add more specific validation)
-    if (!/^[0-9a-zA-Z]{34,}$/.test(usdtAddress.trim())) {
-      setUsdtError("Invalid USDT wallet address");
-      return;
-    }
-
-    const newWallet: USDTWallet = {
-      id: Date.now().toString(),
-      address: usdtAddress.trim(),
-      createdAt: new Date().toISOString(),
+  // Add Edit USDT Modal
+  const renderUSDTModal = (isEdit: boolean) => {
+    const modalTitle = isEdit ? "Edit USDT Wallet" : "Add New USDT Wallet";
+    const handleAction = isEdit ? handleUpdateUSDT : handleAddUSDT;
+    const closeModal = () => {
+      if (isEdit) {
+        setShowEditUSDT(false);
+        setSelectedWalletForEdit(null);
+      } else {
+        setShowAddUSDT(false);
+      }
+      setUsdtAddress("");
+      setSelectedNetwork("");
+      setUsdtError("");
+      setNetworkError("");
     };
 
-    const updatedWallets = [...usdtWallets, newWallet];
-    setUsdtWallets(updatedWallets);
-    localStorage.setItem("usdtWallets", JSON.stringify(updatedWallets));
-    setUsdtAddress("");
-    setShowAddUSDT(false);
-    toast.success("USDT wallet added successfully!");
-  }, [usdtAddress, usdtWallets]);
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          onClick={closeModal}
+        />
+        <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
+          <div className="p-4 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">{modalTitle}</h2>
+              <button
+                onClick={closeModal}
+                className="p-2 rounded-lg bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              {/* Network Selection */}
+              <div className="space-y-1">
+                <label className="text-sm text-gray-300">Select Network</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => {
+                      setSelectedNetwork("TRC20");
+                      setNetworkError("");
+                    }}
+                    className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                      selectedNetwork === "TRC20"
+                        ? "bg-purple-600 text-white"
+                        : "bg-[#1A1A2E] text-gray-400 hover:bg-purple-600/20"
+                    }`}
+                  >
+                    TRC20
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedNetwork("ERC20");
+                      setNetworkError("");
+                    }}
+                    className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                      selectedNetwork === "ERC20"
+                        ? "bg-purple-600 text-white"
+                        : "bg-[#1A1A2E] text-gray-400 hover:bg-purple-600/20"
+                    }`}
+                  >
+                    ERC20
+                  </button>
+                </div>
+                {networkError && (
+                  <p className="text-red-400 text-xs mt-1">{networkError}</p>
+                )}
+              </div>
 
-  const handleRemoveUSDT = useCallback((id: string) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to remove this USDT wallet?"
+              <div className="space-y-1">
+                <label className="text-sm text-gray-300">Wallet Address</label>
+                <input
+                  type="text"
+                  value={usdtAddress}
+                  onChange={(e) => {
+                    setUsdtAddress(e.target.value);
+                    setUsdtError("");
+                  }}
+                  className={`w-full py-3 px-4 bg-[#1A1A2E] border ${
+                    usdtError ? "border-red-500" : "border-purple-500/20"
+                  } rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors`}
+                  placeholder="Enter USDT wallet address"
+                />
+                {usdtError && (
+                  <p className="text-red-400 text-xs mt-1">{usdtError}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              <button
+                onClick={closeModal}
+                className="w-full sm:w-auto sm:flex-1 py-3 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white hover:bg-purple-500/10 transition-colors order-2 sm:order-1"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAction}
+                className="w-full sm:w-auto sm:flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 order-1 sm:order-2"
+              >
+                {isEdit ? "Update Wallet" : "Add Wallet"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     );
-    if (!confirmed) return;
-
-    const updatedWallets = usdtWallets.filter(wallet => wallet.id !== id);
-    setUsdtWallets(updatedWallets);
-    localStorage.setItem("usdtWallets", JSON.stringify(updatedWallets));
-    toast.success("USDT wallet removed successfully");
-  }, [usdtWallets]);
-
-  const handleRemoveAccount = async (accountId: number) => {
-    try {
-      const confirmed = window.confirm(
-        "Are you sure you want to remove this bank account?"
-      );
-      if (!confirmed) return;
-
-      setIsLoading(true);
-      await axios.delete(`${baseUrl}/api/bankaccount/delete/${accountId}`);
-
-      toast.success("Bank account removed successfully");
-      await fetchBankAccounts();
-    } catch (error) {
-      console.error("Error removing bank account:", error);
-      toast.error("Failed to remove bank account");
-    } finally {
-      setIsLoading(false);
-    }
   };
-
-  // Memoize bank account cards
-  const bankAccountCards = useMemo(() => {
-    if (isLoading) {
-      return <LoadingSpinner />;
-    }
-
-    if (bankAccounts.length === 0) {
-      return <EmptyState />;
-    }
-
-    return bankAccounts.map((account) => (
-      <BankAccountCard
-        key={account.id}
-        account={account}
-        statusInfo={getStatusInfo(account.status)}
-        onRemove={handleRemoveAccount}
-      />
-    ));
-  }, [bankAccounts, isLoading, getStatusInfo, handleRemoveAccount]);
 
   return (
     <div className="pt-16 pb-24">
@@ -547,14 +702,31 @@ const PaymentMethods: React.FC = () => {
           {/* Bank Accounts Section */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-white">Bank Accounts</h2>
-            <div className="space-y-4">{bankAccountCards}</div>
+            <div className="space-y-4">
+              {isLoading ? (
+                <LoadingSpinner />
+              ) : bankAccounts.length === 0 ? (
+                <EmptyState />
+              ) : (
+                bankAccounts.map((account) => (
+                  <BankAccountCard
+                    key={account.id}
+                    account={account}
+                    statusInfo={getStatusInfo(account.status)}
+                    // onRemove={handleRemoveAccount}
+                  />
+                ))
+              )}
+            </div>
           </div>
 
           {/* USDT Wallets Section */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-white">USDT Wallets</h2>
             <div className="space-y-4">
-              {usdtWallets.length === 0 ? (
+              {isLoading ? (
+                <LoadingSpinner />
+              ) : usdtWallets.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
                   No USDT wallets added yet
                 </div>
@@ -563,7 +735,8 @@ const PaymentMethods: React.FC = () => {
                   <USDTWalletCard
                     key={wallet.id}
                     wallet={wallet}
-                    onRemove={handleRemoveUSDT}
+                    onEdit={handleEditUSDT}
+                    // onRemove={handleRemoveAccount}
                   />
                 ))
               )}
@@ -571,7 +744,7 @@ const PaymentMethods: React.FC = () => {
           </div>
         </div>
 
-        {/* Existing Bank Account Modal */}
+        {/* Modals */}
         {showAddCard && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
@@ -652,77 +825,8 @@ const PaymentMethods: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* USDT Wallet Modal */}
-        {showAddUSDT && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-              onClick={() => setShowAddUSDT(false)}
-            />
-            <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
-              <div className="p-4 sm:p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">
-                    Add New USDT Wallet
-                  </h2>
-                  <button
-                    onClick={() => setShowAddUSDT(false)}
-                    className="p-2 rounded-lg bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-sm text-gray-300">Wallet Address</label>
-                    <input
-                      type="text"
-                      value={usdtAddress}
-                      onChange={(e) => {
-                        setUsdtAddress(e.target.value);
-                        setUsdtError("");
-                      }}
-                      className={`w-full py-3 px-4 bg-[#1A1A2E] border ${
-                        usdtError ? "border-red-500" : "border-purple-500/20"
-                      } rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors`}
-                      placeholder="Enter USDT wallet address"
-                    />
-                    {usdtError && (
-                      <p className="text-red-400 text-xs mt-1">{usdtError}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                  <button
-                    onClick={() => setShowAddUSDT(false)}
-                    className="w-full sm:w-auto sm:flex-1 py-3 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white hover:bg-purple-500/10 transition-colors order-2 sm:order-1"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAddUSDT}
-                    className="w-full sm:w-auto sm:flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 order-1 sm:order-2"
-                  >
-                    Add Wallet
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {showAddUSDT && renderUSDTModal(false)}
+        {showEditUSDT && renderUSDTModal(true)}
       </div>
     </div>
   );
