@@ -20,18 +20,20 @@ const Dashboard = () => {
   const userId = Number(localStorage.getItem('userId'));
   const dispatch = useDispatch();
   const { wallets } = useSelector((state: RootState) => state.wallet);
-  
-  useEffect(() => {
-    async function fetchData() {
-      if (userId) {
-        try {
-          const data = await fetchUserWallets(userId);
-          dispatch(setWallets(data));
-        } catch (error) {
-          console.error("Error fetching wallet data:", error);
-        }
+ 
+  async function fetchData() {
+    if (userId) {
+      try {
+        const data = await fetchUserWallets(userId);
+        
+        dispatch(setWallets(data));
+      } catch (error) {
+        console.error("Error fetching wallet data:", error);
       }
     }
+  }
+  useEffect(() => {
+ 
     fetchData();
   }, [userId]);
 
@@ -245,7 +247,8 @@ const Dashboard = () => {
       <WithdrawModal 
         isOpen={isWithdrawModalOpen} 
         onClose={() => setIsWithdrawModalOpen(false)} 
-        mainBalance={mainBalance}
+        mainBalance={Number(mainBalance)}
+        fetchData={fetchData}
       />
     </div>
   );
