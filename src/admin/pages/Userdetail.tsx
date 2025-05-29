@@ -21,6 +21,14 @@ interface Referral {
   referred_username: string;
 }
 
+interface Withdrawal {
+  id: number;
+  userId: number;
+  balance: string;
+  cryptoname: string;
+  status: string;
+}
+
 interface UserData {
   user: {
     id: number;
@@ -39,7 +47,7 @@ interface UserData {
   wallet: WalletBalance[];
   bankAccounts: any[];
   referrals: Referral[];
-  withdrawals: any[];
+  withdrawals: Withdrawal[];
   kyc: {
     status: number;
     aadhar: string | null;
@@ -433,25 +441,46 @@ const Userdetail = () => {
           </div>
           
           {expandedSections.withdrawals && (
-            <div className="mt-4 space-y-3">
+            <div className="mt-4">
               {userData?.withdrawals.length === 0 ? (
                 <div className="text-center py-6 text-gray-400">
                   No withdrawal history
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {userData?.withdrawals.map((withdrawal: any, index: number) => (
-                    <div key={index} className="p-4 bg-[#1A1A2E] rounded-xl border border-purple-500/10">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4 text-purple-400" />
-                          <span className="text-white font-medium">Amount</span>
-                        </div>
-                        <span className="text-gray-400 text-sm">Date</span>
-                      </div>
-                      {/* Withdrawal details will be added here */}
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left border-b border-purple-500/10">
+                        <th className="pb-4 text-gray-400 font-medium">ID</th>
+                        <th className="pb-4 text-gray-400 font-medium">Amount</th>
+                        <th className="pb-4 text-gray-400 font-medium">Currency</th>
+                        <th className="pb-4 text-gray-400 font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userData?.withdrawals.map((withdrawal) => (
+                        <tr 
+                          key={withdrawal.id}
+                          className="border-b border-purple-500/10 hover:bg-purple-500/5 transition-colors"
+                        >
+                          <td className="py-4 text-white">#{withdrawal.id}</td>
+                          <td className="py-4 text-purple-400">₹{withdrawal.balance}</td>
+                          <td className="py-4 text-white">{withdrawal.cryptoname}</td>
+                          <td className="py-4">
+                            <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                              withdrawal.status === '0' ? 'bg-yellow-500/20 text-yellow-400' :
+                              withdrawal.status === '1' ? 'bg-green-500/20 text-green-400' :
+                              'bg-red-500/20 text-red-400'
+                            }`}>
+                              {withdrawal.status === '0' ? 'Pending' :
+                               withdrawal.status === '1' ? 'Completed' :
+                               'Failed'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

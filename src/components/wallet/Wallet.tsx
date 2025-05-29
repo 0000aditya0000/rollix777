@@ -21,7 +21,7 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { baseUrl } from '../../lib/config/server';
 import { fetchUserAllData } from '../../lib/services/userService';
-
+import { getAllTransactions } from '../../lib/services/transactionService';
 interface BankAccount {
   id: number;
   userId: number;
@@ -34,10 +34,14 @@ interface BankAccount {
   usdt: string | null;
 }
 
+
+
+
 const Wallet: React.FC = () => {
   const dispatch = useDispatch();
   const { wallets } = useSelector((state: RootState) => state.wallet);
   const { user } = useSelector((state: RootState) => state.auth);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount1, setAmount] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('inr');
@@ -73,6 +77,7 @@ const Wallet: React.FC = () => {
     fetchData();
   }, [user?.id]);
 
+
   // fetch bank accounts
   useEffect(() => {
     const fetchUserData = async () => {
@@ -98,6 +103,21 @@ const Wallet: React.FC = () => {
 
     fetchUserData();
   }, [user?.id]);
+
+  useEffect(() => {
+    const uid = localStorage.getItem('userId');
+    const fetchTransactions = async () => {
+      try {
+        const data = await getAllTransactions(uid);
+        setTransactions(data.transactions || []);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    };
+    fetchTransactions();
+  }, [user?.id]);
+
+
   const handleCopyUpi = () => {
     navigator.clipboard.writeText('test@paytm');
     toast.success('UPI ID copied to clipboard');
@@ -491,37 +511,53 @@ const Wallet: React.FC = () => {
                 <button className="text-purple-400 hover:text-purple-300 text-xs sm:text-sm">View All</button>
               </div>
               <div className="p-4 sm:p-6 pb-8 space-y-3 sm:space-y-4">
-                {[1, 2, 3, 4, 5].map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 sm:p-4 bg-[#1A1A2E] rounded-lg sm:rounded-xl hover:bg-[#252547] transition-colors"
-                  >
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center ${
-                        index % 2 === 0 ? 'bg-green-500/10' : 'bg-red-500/10'
-                      }`}>
-                        {index % 2 === 0 
-                          ? <ArrowDownCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
-                          : <ArrowUpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
-                        }
+                {transactions && transactions.length > 0 ? (
+                  transactions.slice(0, 5).map((txn, index) => {
+                    const isDeposit = txn.transaction_type === 'recharge';
+                    const isWithdrawal = txn.transaction_type === 'withdraw';
+                    const typeLabel = isDeposit ? 'Deposit' : isWithdrawal ? 'Withdrawal' : txn.transaction_type;
+                    const iconBg = isDeposit ? 'bg-green-500/10' : 'bg-red-500/10';
+                    const icon = isDeposit
+                      ? <ArrowDownCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
+                      : <ArrowUpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />;
+                    const amountSign = isDeposit ? '+' : isWithdrawal ? '-' : '';
+                    const amountColor = isDeposit ? 'text-green-500' : isWithdrawal ? 'text-red-500' : 'text-white';
+                    const statusColor =
+                      txn.status.toLowerCase() === 'success'
+                        ? 'text-green-500'
+                        : txn.status.toLowerCase() === 'failed'
+                        ? 'text-red-500'
+                        : 'text-yellow-500';
+
+                    return (
+                      <div
+                        key={txn.id}
+                        className="flex items-center justify-between p-3 sm:p-4 bg-[#1A1A2E] rounded-lg sm:rounded-xl hover:bg-[#252547] transition-colors"
+                      >
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center ${iconBg}`}>
+                            {icon}
+                          </div>
+                          <div>
+                            <p className="text-white font-medium text-base sm:text-lg">
+                              {typeLabel}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-400">{txn.transaction_date}</p>
+                            <p className={`text-xs sm:text-sm ${statusColor}`}>{txn.status}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-base sm:text-lg font-semibold ${amountColor}`}>
+                            {amountSign}₹{txn.amount}
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-400">{txn.order_id}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-white font-medium text-base sm:text-lg">
-                          {index % 2 === 0 ? 'Deposit' : 'Withdrawal'}
-                        </p>
-                        <p className="text-xs sm:text-sm text-gray-400">Mar 25, 2024 • 14:30</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className={`text-base sm:text-lg font-semibold ${
-                        index % 2 === 0 ? 'text-green-500' : 'text-red-500'
-                      }`}>
-                        {index % 2 === 0 ? '+' : '-'}₹100.00
-                      </span>
-                      <p className="text-xs sm:text-sm text-gray-400">Processing</p>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })
+                ) : (
+                  <div className="text-gray-400 text-center py-6">No transactions found.</div>
+                )}
               </div>
             </div>
           </div>

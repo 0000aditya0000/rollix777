@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Gift, Clock, Plus, Search, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { createCoupon, getAllCoupons } from '../../lib/services/couponService';
+import { createCoupon, getAllCoupons, getCouponHistory } from '../../lib/services/couponService';
 
 interface Coupon {
   id: number;
@@ -17,14 +17,20 @@ interface Coupon {
 }
 
 interface CouponRedemption {
-  id: string;
-  couponCode: string;
-  userName: string;
-  email: string;
-  phone: string;
-  amount: number;
-  redeemedAt: string;
-  expiryDate: string;
+  user_id: number;
+  username: string;
+  redeemed_at: string;
+  amount_credited: string;
+}
+
+interface CouponHistoryResponse {
+  code: string;
+  amount: string;
+  usage_limit: number;
+  expires_at: string;
+  total_redeems: number;
+  remaining_uses: number;
+  redemptions: CouponRedemption[];
 }
 
 function Coupon() {
@@ -41,6 +47,7 @@ function Coupon() {
 
   // Fetch all coupons on component mount
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [couponHistory, setCouponHistory] = useState<CouponHistoryResponse | null>(null);
 
   useEffect(() => {
     fetchCoupons();
@@ -106,22 +113,12 @@ function Coupon() {
 
     setLoading(true);
     try {
-      // Add your API call here
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API call
-      
-      // Mock search result
-      setSearchResult([
-        {
-          id: '1',
-          couponCode: searchCode,
-          userName: 'John Doe',
-          email: 'john@example.com',
-          phone: '+1234567890',
-          amount: 100,
-          redeemedAt: '2024-03-15 14:30',
-          expiryDate: '2024-04-15'
-        }
-      ]);
+      const response = await getCouponHistory(searchCode);
+      if (response.success) {
+        setCouponHistory(response.data);
+      } else {
+        toast.error('Failed to fetch coupon details');
+      }
     } catch (error) {
       toast.error('Failed to fetch coupon details');
     } finally {
@@ -214,6 +211,7 @@ function Coupon() {
             <table className="w-full">
               <thead>
                 <tr className="text-left border-b border-purple-500/10">
+                <th className="pb-4 text-gray-300 font-medium">ID</th>
                   <th className="pb-4 text-gray-300 font-medium">Code</th>
                   <th className="pb-4 text-gray-300 font-medium">Amount</th>
                   <th className="pb-4 text-gray-300 font-medium">Usage Limit</th>
@@ -226,6 +224,7 @@ function Coupon() {
               <tbody>
                 {coupons.map((coupon) => (
                   <tr key={coupon.id} className="border-b border-purple-500/10 hover:bg-purple-500/5 transition-colors">
+                    <td className="py-4 text-white font-medium">{coupon.id}</td>
                     <td className="py-4 text-white font-medium">{coupon.code}</td>
                     <td className="py-4 text-purple-400 font-medium">₹{coupon.amount}</td>
                     <td className="py-4 text-white">{coupon.usage_limit}</td>
@@ -254,13 +253,13 @@ function Coupon() {
       {/* Coupon History Modal */}
       {showHistoryModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-[#252547] rounded-xl border border-purple-500/10 p-8 w-full max-w-2xl shadow-2xl">
+          <div className="bg-[#252547] rounded-xl border border-purple-500/10 p-8 w-full max-w-4xl shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-white">Coupon Redemption History</h3>
               <button
                 onClick={() => {
                   setShowHistoryModal(false);
-                  setSearchResult(null);
+                  setCouponHistory(null);
                   setSearchCode('');
                 }}
                 className="text-gray-400 hover:text-white transition-colors"
@@ -275,7 +274,7 @@ function Coupon() {
                   type="text"
                   value={searchCode}
                   onChange={(e) => setSearchCode(e.target.value.toUpperCase())}
-                  placeholder="Enter coupon code"
+                  placeholder="Enter coupon ID"
                   className="w-full px-4 py-3 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
                 />
               </div>
@@ -292,41 +291,71 @@ function Coupon() {
               </button>
             </div>
 
-            {searchResult && (
-              <div className="space-y-4">
-                {searchResult.map((redemption) => (
-                  <div
-                    key={redemption.id}
-                    className="bg-[#1A1A2E] rounded-lg p-6 border border-purple-500/10 hover:border-purple-500/20 transition-colors"
-                  >
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1">User Name</p>
-                        <p className="text-white font-medium">{redemption.userName}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1">Email</p>
-                        <p className="text-white font-medium">{redemption.email}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1">Phone</p>
-                        <p className="text-white font-medium">{redemption.phone}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1">Amount</p>
-                        <p className="text-purple-400 font-medium">₹{redemption.amount}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1">Redeemed At</p>
-                        <p className="text-white font-medium">{redemption.redeemedAt}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1">Expiry Date</p>
-                        <p className="text-white font-medium">{redemption.expiryDate}</p>
-                      </div>
+            {couponHistory && (
+              <div className="space-y-6">
+                {/* Coupon Details Card */}
+                <div className="bg-[#1A1A2E] rounded-lg p-6 border border-purple-500/10">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Coupon Code</p>
+                      <p className="text-white font-medium">{couponHistory.code}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Amount</p>
+                      <p className="text-purple-400 font-medium">₹{couponHistory.amount}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Usage Limit</p>
+                      <p className="text-white font-medium">{couponHistory.usage_limit}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Total Redeems</p>
+                      <p className="text-white font-medium">{couponHistory.total_redeems}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Remaining Uses</p>
+                      <p className="text-white font-medium">{couponHistory.remaining_uses}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Expiry Date</p>
+                      <p className="text-white font-medium">
+                        {new Date(couponHistory.expires_at).toLocaleString()}
+                      </p>
                     </div>
                   </div>
-                ))}
+                </div>
+
+                {/* Redemptions Table */}
+                <div className="bg-[#1A1A2E] rounded-lg p-6 border border-purple-500/10">
+                  <h4 className="text-lg font-semibold text-white mb-4">Redemption History</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-left border-b border-purple-500/10">
+                          <th className="pb-4 text-gray-400 font-medium">User ID</th>
+                          <th className="pb-4 text-gray-400 font-medium">Username</th>
+                          <th className="pb-4 text-gray-400 font-medium">Amount Credited</th>
+                          <th className="pb-4 text-gray-400 font-medium">Redeemed At</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {couponHistory.redemptions.map((redemption, index) => (
+                          <tr 
+                            key={index}
+                            className="border-b border-purple-500/10 hover:bg-purple-500/5 transition-colors"
+                          >
+                            <td className="py-4 text-white">{redemption.user_id}</td>
+                            <td className="py-4 text-white font-medium">{redemption.username}</td>
+                            <td className="py-4 text-purple-400">₹{redemption.amount_credited}</td>
+                            <td className="py-4 text-gray-400">
+                              {new Date(redemption.redeemed_at).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             )}
           </div>
