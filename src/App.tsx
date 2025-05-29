@@ -30,6 +30,7 @@ import { HelpCenter } from "./components/HelpCenter";
 import CommissionDetails from "./components/promotions/CommissionDetails";
 import LatestGames from "./components/LatestGames";
 import Coupon from "./components/coupon/Coupon";
+import KYCVerification from "./pages/KYCVerification";
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
   const location = useLocation();
@@ -79,6 +80,7 @@ function App() {
                       <Route path="/support" element={<HelpCenter />} />
                       <Route path="/rewards" element={<Promotions />} />
                       <Route path="/coupon" element={<Coupon />} />
+                      <Route path="/kyc-verification" element={<KYCVerification />} />
 
                       {/* Protected Routes - Only accessible when authenticated */}
                       {authenticated ? (
@@ -93,6 +95,7 @@ function App() {
                           <Route path="/payment-methods" element={<PaymentMethods />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="/security" element={<Security />} />
+                          
                           
                           {/* Promotion & Referral Routes */}
                           <Route path="/referrals" element={<Referrals />} />

@@ -176,14 +176,17 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
   const validateCryptoFields = (payload: cryptoPayload): { isValid: boolean; errors: errorCrypto } => {
     const errors = { ...initialErrorState.crypto };
+    const amount = Number(payload.amount);
 
     if (!payload.walletAddress.trim()) {
       errors.walletAddress = "Wallet address is required";
     }
     if (!payload.amount.trim()) {
       errors.amount = "Amount is required";
-    } else if (isNaN(Number(payload.amount)) || Number(payload.amount) <= 0) {
+    } else if (isNaN(amount) || amount <= 0) {
       errors.amount = "Please enter a valid amount";
+    } else if (amount < 10) {
+      errors.amount = "Minimum withdrawal amount is 10 USDT";
     }
 
     return {
@@ -205,8 +208,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
       errors.amount = "Please enter a valid amount";
     } else if (amount > mainBalance) {
       errors.amount = "Amount cannot exceed available balance";
-    } else if (amount < 50) {
-      errors.amount = "Minimum withdrawal amount is ₹50";
+    } else if (amount < 200) {
+      errors.amount = "Minimum withdrawal amount is ₹200";
     }
 
     return {
@@ -374,7 +377,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
             }}
           >
             <div className="flex items-center justify-center gap-2">
-              <Bitcoin size={18} />
+              <DollarSign size={18} />
               <span>Cryptocurrency</span>
             </div>
           </button>
