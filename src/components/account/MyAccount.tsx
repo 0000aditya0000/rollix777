@@ -118,6 +118,14 @@ const MyAccount: React.FC = () => {
       hoverBg: 'from-amber-600/20 to-yellow-500/20'
     },
     { 
+      icon: User, 
+      label: 'KYC Verification', 
+      route: '/kyc-verification',
+      description: 'Verify your identity',
+      bgColor: 'from-indigo-600/10 to-violet-500/10',
+      hoverBg: 'from-indigo-600/20 to-violet-500/20'
+    },
+    { 
       icon: Settings, 
       label: 'Settings', 
       route: '/settings',

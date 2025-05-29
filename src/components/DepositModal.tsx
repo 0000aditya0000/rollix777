@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, CreditCard, Wallet, Bitcoin, DollarSign, Copy, Check,IndianRupee } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, CreditCard, Wallet, Bitcoin, DollarSign, Copy, Check,IndianRupee, AlertCircle } from 'lucide-react';
 import { depositService } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
@@ -26,6 +26,32 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [cardAmount, setCardAmount] = useState<string>('');
+  const [cardError, setCardError] = useState<string>('');
+
+  // Clear states when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Reset all states when modal closes
+      setAmount('');
+      setCardAmount('');
+      setError('');
+      setCardError('');
+      setActiveTab('crypto');
+      setSelectedServer('server1');
+      setLoading(false);
+    }
+  }, [isOpen]);
+
+  // Clear states when changing tabs
+  useEffect(() => {
+    // Reset states specific to each tab
+    setAmount('');
+    setCardAmount('');
+    setError('');
+    setCardError('');
+  }, [activeTab]);
 
   if (!isOpen) return null;
 
@@ -48,6 +74,38 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
     navigator.clipboard.writeText(cryptoAddresses[selectedCrypto]);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const validateAmount = (value: string, type: 'upi' | 'card') => {
+    const amount = parseFloat(value);
+    if (!value) {
+      return type === 'upi' ? 'Amount is required' : 'Card amount is required';
+    }
+    if (isNaN(amount) || amount <= 0) {
+      return 'Please enter a valid amount';
+    }
+    if (type === 'upi' && amount < 100) {
+      return 'Minimum deposit amount is 100 INR';
+    }
+    if (type === 'card' && amount < 10) {
+      return 'Minimum deposit amount is 10 USDT';
+    }
+    return '';
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'upi' | 'card') => {
+    const value = e.target.value;
+    if (type === 'upi') {
+      setAmount(value);
+      setError(validateAmount(value, 'upi'));
+    } else {
+      setCardAmount(value);
+      setCardError(validateAmount(value, 'card'));
+    }
+  };
+
+  const handleTabChange = (tab: 'crypto' | 'card') => {
+    setActiveTab(tab);
   };
 
   const handleDeposit = async () => {
@@ -106,10 +164,12 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
   
 
   const launchGateway = () => {
-    if (parseFloat(amount1) < 300) {
-      toast.error('Minimum deposit amount is 300 INR');
+    const validationError = validateAmount(amount1, 'upi');
+    if (validationError) {
+      setError(validationError);
       return;
     }
+
     const uid = localStorage.getItem('userId');
     if (!uid) {
       toast.error('Please Login First');
@@ -126,9 +186,21 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
     window.location.href = serverUrls[selectedServer];
   }
 
+  const handleModalClose = () => {
+    // Reset all states before closing
+    setAmount('');
+    setCardAmount('');
+    setError('');
+    setCardError('');
+    setActiveTab('crypto');
+    setSelectedServer('server1');
+    setLoading(false);
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 mt-12">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleModalClose}></div>
       
       <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-500"></div>
@@ -137,7 +209,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
         <div className="flex justify-between items-center p-5 border-b border-green-500/10">
           <h2 className="text-xl font-bold text-white">Deposit Funds</h2>
           <button 
-            onClick={onClose}
+            onClick={handleModalClose}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
           >
             <X size={18} />
@@ -152,7 +224,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                 ? 'text-white border-b-2 border-green-500' 
                 : 'text-gray-400 hover:text-gray-300'
             }`}
-            onClick={() => setActiveTab('crypto')}
+            onClick={() => handleTabChange('crypto')}
           >
             <div className="flex items-center justify-center gap-2">
               <IndianRupee size={18} />
@@ -165,7 +237,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                 ? 'text-white border-b-2 border-green-500' 
                 : 'text-gray-400 hover:text-gray-300'
             }`}
-            onClick={() => setActiveTab('card')}
+            onClick={() => handleTabChange('card')}
           >
             <div className="flex items-center justify-center gap-2">
               <CreditCard size={18} />
@@ -239,18 +311,25 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                     <input
                       type="text"
                       value={amount1}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="w-full py-3 px-4 bg-[#252547] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
+                      onChange={(e) => handleAmountChange(e, 'upi')}
+                      className={`w-full py-3 px-4 bg-[#252547] border ${error ? 'border-red-500' : 'border-green-500/20'} rounded-lg text-white focus:outline-none focus:border-green-500`}
                       placeholder="Enter amount"
+                      required
                     />
                   </div>
+                  {error && (
+                    <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{error}</span>
+                    </div>
+                  )}
                 </div>
 
                 <button
                   onClick={launchGateway}
-                  disabled={loading}
+                  disabled={loading || !!error}
                   className={`w-full mt-4 py-3 px-4 rounded-lg text-white font-medium transition-all ${
-                    loading
+                    loading || !!error
                       ? 'bg-gray-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90'
                   }`}
@@ -264,7 +343,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                 <p className="mb-2">Important:</p>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Send only via UPI Method</li>
-                  <li>Minimum deposit: 300 INR</li>
+                  <li>Minimum deposit: 100 INR</li>
                   <li>Deposits are credited instantly</li>
                   <li>Choose server based on your location</li>
                 </ul>
@@ -278,6 +357,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                   type="text" 
                   className="w-full py-3 px-4 bg-[#1A1A2E] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
                   placeholder="1234 5678 9012 3456"
+                  required
                 />
               </div>
               
@@ -288,6 +368,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                     type="text" 
                     className="w-full py-3 px-4 bg-[#1A1A2E] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
                     placeholder="MM/YY"
+                    required
                   />
                 </div>
                 <div className="flex-1 space-y-1">
@@ -296,6 +377,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                     type="text" 
                     className="w-full py-3 px-4 bg-[#1A1A2E] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
                     placeholder="123"
+                    required
                   />
                 </div>
               </div>
@@ -306,26 +388,37 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                   type="text" 
                   className="w-full py-3 px-4 bg-[#1A1A2E] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
                   placeholder="John Doe"
+                  required
                 />
               </div>
               
               <div className="space-y-1">
-                <label className="text-sm text-gray-300">Amount (USD)</label>
+                <label className="text-sm text-gray-300">Amount (USDT)</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <DollarSign className="w-5 h-5 text-green-400" />
                   </div>
                   <input 
                     type="text" 
-                    className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
-                    placeholder="100.00"
+                    value={cardAmount}
+                    onChange={(e) => handleAmountChange(e, 'card')}
+                    className={`w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border ${cardError ? 'border-red-500' : 'border-green-500/20'} rounded-lg text-white focus:outline-none focus:border-green-500`}
+                    placeholder="10.00"
+                    required
                   />
                 </div>
+                {cardError && (
+                  <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{cardError}</span>
+                  </div>
+                )}
               </div>
               
               <button 
                 type="button"
-                className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity"
+                disabled={!!cardError}
+                className={`w-full py-3 px-4 ${cardError ? 'bg-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90'} rounded-lg text-white font-medium transition-opacity`}
               >
                 Deposit Now
               </button>

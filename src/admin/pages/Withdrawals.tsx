@@ -185,19 +185,21 @@ const Withdrawals = () => {
     try {
       setProcessingId(withdrawalId);
       setError(null);
+      // http://localhost:5000/api/wallet/withdrawal/approve/150
       
-      const response = await axios.post(`${baseUrl}/api/wallet/withdrawl-requests/${withdrawalId}/status`, {
-        status: newStatus
+      const response = await axios.put(`${baseUrl}/api/wallet/withdrawal/approve/${withdrawalId}`, {
+        status: newStatus === STATUS_CODES.APPROVED ? '1' : '2'
       });
       
       if (response.data.success) {
-        toast.success(`Withdrawal ${STATUS_LABELS[newStatus].toLowerCase()} successfully`);
-        fetchWithdrawals(currentPage);
+        toast.success(response.data.message);
+        // Refresh the withdrawals list while maintaining the current page
+        await fetchWithdrawals(currentPage);
       } else {
         throw new Error(response.data.message || `Failed to update withdrawal status`);
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update status';
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update status';
       toast.error(errorMessage);
       console.error('Error updating withdrawal status:', error);
     } finally {

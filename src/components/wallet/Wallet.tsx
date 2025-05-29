@@ -18,6 +18,21 @@ import { setWallets } from '../../slices/walletSlice';
 import { fetchUserWallets } from '../../lib/services/WalletServices.js';
 import { depositService } from '../../services/api';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
+import { baseUrl } from '../../lib/config/server';
+import { fetchUserAllData } from '../../lib/services/userService';
+
+interface BankAccount {
+  id: number;
+  userId: number;
+  accountname: string | null;
+  accountnumber: string | null;
+  ifsccode: string | null;
+  branch: string | null;
+  status: number;
+  network: string | null;
+  usdt: string | null;
+}
 
 const Wallet: React.FC = () => {
   const dispatch = useDispatch();
@@ -26,20 +41,20 @@ const Wallet: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount1, setAmount] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('inr');
-  const [selectedBankAccount, setSelectedBankAccount] = useState('');
+  const [selectedBankAccount, setSelectedBankAccount] = useState('0');
   const [isLoading, setIsLoading] = useState(false);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [errors, setErrors] = useState({
+    currency: '',
+    amount: '',
+    bankAccount: ''
+  });
 
   const cryptoOptions = [
     { value: 'btc', label: 'Bitcoin (BTC)', symbol: '₿', color: 'yellow' },
     { value: 'eth', label: 'Ethereum (ETH)', symbol: 'Ξ', color: 'blue' },
     { value: 'usdt', label: 'USDT', symbol: '₮', color: 'green' },
     { value: 'inr', label: 'INR', symbol: '₹', color: 'orange' }
-  ];
-  const BankOptions = [
-    { value: 'pnb', label: 'Punjab  National Bank', symbol: '', color: '' },
-    { value: 'sbi', label: 'State Bank Of India', symbol: '', color: '' },
-    { value: 'cbi', label: 'Central Bank Of India', symbol: '', color: '' },
-    
   ];
 
   const quickAmounts = ['500', '1000', '2000', '5000', '10000', '20000'];
@@ -58,6 +73,31 @@ const Wallet: React.FC = () => {
     fetchData();
   }, [user?.id]);
 
+  // fetch bank accounts
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user?.id ) {
+        console.log('user?.id',user?.id)
+        try {
+          const response = await fetchUserAllData(user?.id);
+          if (response.success) {
+            console.log('data is coming',response.data)
+            
+            const onlyBankAccounts = response.data.bankAccounts.filter(
+              (account: any) => account.network === null
+            );
+            setBankAccounts(onlyBankAccounts);
+            console.log('onlyBankAccounts',onlyBankAccounts)
+            
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [user?.id]);
   const handleCopyUpi = () => {
     navigator.clipboard.writeText('test@paytm');
     toast.success('UPI ID copied to clipboard');
@@ -96,7 +136,7 @@ const Wallet: React.FC = () => {
    }
 
   const handleDeposit = async () => {
-    if (!user?.id || !amount) {
+    if (!user?.id || !amount1) {
       toast.error('Please enter an amount');
       return;
     }
@@ -105,7 +145,7 @@ const Wallet: React.FC = () => {
     try {
       const depositData = {
         userId: Number(user.id),
-        amount: parseFloat(amount),
+        amount: parseFloat(amount1),
         cryptoname: selectedCurrency.toUpperCase()
       };
 
@@ -123,6 +163,117 @@ const Wallet: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Validation function
+  const validateFields = () => {
+    let isValid = true;
+    const newErrors = {
+      currency: '',
+      amount: '',
+      bankAccount: ''
+    };
+
+    if (activeTab === 'withdraw') {
+      // Currency validation
+      if (!selectedCurrency || selectedCurrency === '') {
+        newErrors.currency = 'Please select a currency';
+        isValid = false;
+      }
+
+      // Bank account validation for withdrawal
+      if (!selectedBankAccount || selectedBankAccount === '0') {
+        newErrors.bankAccount = 'Please select a bank account';
+        isValid = false;
+      }
+
+      // Amount validation for withdrawal
+      if (!amount1) {
+        newErrors.amount = 'Amount is required';
+        isValid = false;
+      } else if (parseFloat(amount1) < 100) {
+        newErrors.amount = 'Minimum withdrawal amount is ₹100';
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  // Quick amount selection handler
+  const handleQuickAmountSelect = (amt: string) => {
+    setAmount(amt);
+    // Clear amount error when quick amount is selected
+    setErrors(prev => ({ ...prev, amount: '' }));
+  };
+
+  // Reset form errors when changing tabs
+  useEffect(() => {
+    setErrors({
+      currency: '',
+      amount: '',
+      bankAccount: ''
+    });
+  }, [activeTab]);
+
+  const handleWithdraw = async () => {
+    if (!validateFields()) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const withdrawalData = {
+        type: "bank",
+        bankname: selectedBankAccount,
+        currency: selectedCurrency.toLowerCase(),
+        balance: amount1,
+        userId: user?.id?.toString()
+      };
+
+      const response = await axios.post(`${baseUrl}/api/wallet/withdrawl`, withdrawalData);
+      
+      if (response.data.success) {
+        toast.success(response.data.message || 'Withdrawal request created successfully');
+        // Reset all form fields
+        setAmount('');
+        setSelectedBankAccount('0');
+        setSelectedCurrency(''); // Reset currency field
+        setErrors({
+          currency: '',
+          amount: '',
+          bankAccount: ''
+        });
+        // Refresh wallet data
+        await handleRefresh();
+      } else {
+        toast.error(response.data.message || 'Withdrawal request failed');
+      }
+    } catch (error: any) {
+      console.error('Withdrawal failed:', error);
+      const errorMessage = error.response?.data?.message || 'Something went wrong. Please try again.';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update the action button to only call handleWithdraw when in withdraw tab
+  const handleActionButtonClick = () => {
+    if (activeTab === 'deposit') {
+      launchGateway();
+    } else {
+      handleWithdraw();
+    }
+  };
+
+  // Replace the BankOptions array with the dynamic bank accounts
+  const renderBankOptions = () => {
+    return bankAccounts.map((account) => ({
+      value: account.id.toString(),
+      label: `${account.accountname} - ${account.accountnumber}`,
+    }));
   };
 
   return (
@@ -214,9 +365,15 @@ const Wallet: React.FC = () => {
                     <div className="relative">
                       <select
                         value={selectedCurrency}
-                        onChange={(e) => setSelectedCurrency(e.target.value)}
-                        className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none"
+                        onChange={(e) => {
+                          setSelectedCurrency(e.target.value);
+                          setErrors(prev => ({ ...prev, currency: '' }));
+                        }}
+                        className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
+                          errors.currency ? 'border-red-500' : 'border-purple-500/20'
+                        } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
                       >
+                        <option value="" className="bg-[#1A1A2E]">Select Currency</option>
                         {cryptoOptions.map((option) => (
                           <option key={option.value} value={option.value} className="bg-[#1A1A2E]">
                             {option.label}
@@ -226,6 +383,9 @@ const Wallet: React.FC = () => {
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                         <ChevronDown className="w-5 h-5 text-gray-400" />
                       </div>
+                      {errors.currency && (
+                        <p className="text-red-500 text-xs mt-1">{errors.currency}</p>
+                      )}
                     </div>
                   </div>
                     {/* Bank Account Selector */}
@@ -236,10 +396,18 @@ const Wallet: React.FC = () => {
                     <div className="relative">
                       <select
                         value={selectedBankAccount}
-                        onChange={(e) => setSelectedBankAccount(e.target.value)}
-                        className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none"
+                        onChange={(e) => {
+                          setSelectedBankAccount(e.target.value);
+                          setErrors(prev => ({ ...prev, bankAccount: '' }));
+                        }}
+                        className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
+                          errors.bankAccount ? 'border-red-500' : 'border-purple-500/20'
+                        } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
                       >
-                        {BankOptions.map((option) => (
+                        <option value="0" className="bg-[#1A1A2E]">
+                          Select Bank Account
+                        </option>
+                        {renderBankOptions().map((option) => (
                           <option key={option.value} value={option.value} className="bg-[#1A1A2E]">
                             {option.label}
                           </option>
@@ -248,23 +416,36 @@ const Wallet: React.FC = () => {
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                         <ChevronDown className="w-5 h-5 text-gray-400" />
                       </div>
+                      {errors.bankAccount && (
+                        <p className="text-red-500 text-xs mt-1">{errors.bankAccount}</p>
+                      )}
                     </div>
                   </div>
                   )
                  }
 
                   {/* Amount Input */}
-                  <div className="space-y-2 ">
+                  <div className="space-y-2">
                     <label className="text-xs sm:text-sm text-gray-400">Enter Amount</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-base sm:text-lg">₹</span>
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                        <span className="text-white text-base sm:text-lg">₹</span>
+                      </div>
                       <input
                         type="number"
                         value={amount1}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="w-full py-3 sm:py-4 px-8 sm:px-10 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500"
+                        onChange={(e) => {
+                          setAmount(e.target.value);
+                          setErrors(prev => ({ ...prev, amount: '' }));
+                        }}
+                        className={`w-full py-3 sm:py-4 pl-8 sm:pl-10 pr-4 sm:pr-6 bg-[#1A1A2E] border ${
+                          errors.amount ? 'border-red-500' : 'border-purple-500/20'
+                        } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500`}
                         placeholder="0.00"
                       />
+                      {errors.amount && (
+                        <p className="text-red-500 text-xs mt-1">{errors.amount}</p>
+                      )}
                     </div>
                   </div>
 
@@ -275,7 +456,7 @@ const Wallet: React.FC = () => {
                       {quickAmounts.map((amt) => (
                         <button
                           key={amt}
-                          onClick={() => setAmount(amt)}
+                          onClick={() => handleQuickAmountSelect(amt)}
                           className="py-2 sm:py-3 px-3 sm:px-4 bg-[#1A1A2E] rounded-lg sm:rounded-xl text-sm sm:text-base text-white hover:bg-[#2f2f5a] transition-colors border border-purple-500/20"
                         >
                           ₹{amt}
@@ -288,7 +469,7 @@ const Wallet: React.FC = () => {
 
                   {/* Action Button */}
                   <button
-                    onClick={activeTab === 'deposit' ? handleDeposit : () => {/* Add withdraw logic */}}
+                    onClick={handleActionButtonClick}
                     disabled={isLoading}
                     className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg sm:rounded-xl text-white font-medium transition-opacity text-base sm:text-lg ${
                       isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
@@ -382,9 +563,15 @@ const Wallet: React.FC = () => {
                   <div className="relative">
                     <select
                       value={selectedCurrency}
-                      onChange={(e) => setSelectedCurrency(e.target.value)}
-                      className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none"
+                      onChange={(e) => {
+                        setSelectedCurrency(e.target.value);
+                        setErrors(prev => ({ ...prev, currency: '' }));
+                      }}
+                      className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
+                        errors.currency ? 'border-red-500' : 'border-purple-500/20'
+                      } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
                     >
+                      <option value="" className="bg-[#1A1A2E]">Select Currency</option>
                       {cryptoOptions.map((option) => (
                         <option key={option.value} value={option.value} className="bg-[#1A1A2E]">
                           {option.label}
@@ -394,6 +581,9 @@ const Wallet: React.FC = () => {
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                       <ChevronDown className="w-5 h-5 text-gray-400" />
                     </div>
+                    {errors.currency && (
+                      <p className="text-red-500 text-xs mt-1">{errors.currency}</p>
+                    )}
                   </div>
                 </div>
                  {/* Bank Account Selector */}
@@ -404,10 +594,18 @@ const Wallet: React.FC = () => {
                     <div className="relative">
                       <select
                         value={selectedBankAccount}
-                        onChange={(e) => setSelectedBankAccount(e.target.value)}
-                        className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none"
+                        onChange={(e) => {
+                          setSelectedBankAccount(e.target.value);
+                          setErrors(prev => ({ ...prev, bankAccount: '' }));
+                        }}
+                        className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
+                          errors.bankAccount ? 'border-red-500' : 'border-purple-500/20'
+                        } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
                       >
-                        {BankOptions.map((option) => (
+                        <option value="0" className="bg-[#1A1A2E]">
+                          Select Bank Account
+                        </option>
+                        {renderBankOptions().map((option) => (
                           <option key={option.value} value={option.value} className="bg-[#1A1A2E]">
                             {option.label}
                           </option>
@@ -416,6 +614,9 @@ const Wallet: React.FC = () => {
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                         <ChevronDown className="w-5 h-5 text-gray-400" />
                       </div>
+                      {errors.bankAccount && (
+                        <p className="text-red-500 text-xs mt-1">{errors.bankAccount}</p>
+                      )}
                     </div>
                   </div>
                   )
@@ -426,14 +627,24 @@ const Wallet: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-xs sm:text-sm text-gray-400">Enter Amount</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-base sm:text-lg">₹</span>
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                      <span className="text-white text-base sm:text-lg">₹</span>
+                    </div>
                     <input
                       type="number"
                       value={amount1}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="w-full py-3 sm:py-4 px-8 sm:px-10 bg-[#1A1A2E] border border-purple-500/20 rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500"
+                      onChange={(e) => {
+                        setAmount(e.target.value);
+                        setErrors(prev => ({ ...prev, amount: '' }));
+                      }}
+                      className={`w-full py-3 sm:py-4 pl-8 sm:pl-10 pr-4 sm:pr-6 bg-[#1A1A2E] border ${
+                        errors.amount ? 'border-red-500' : 'border-purple-500/20'
+                      } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500`}
                       placeholder="0.00"
                     />
+                    {errors.amount && (
+                      <p className="text-red-500 text-xs mt-1">{errors.amount}</p>
+                    )}
                   </div>
                 </div>
 
@@ -444,7 +655,7 @@ const Wallet: React.FC = () => {
                     {quickAmounts.map((amt) => (
                       <button
                         key={amt}
-                        onClick={() => setAmount(amt)}
+                        onClick={() => handleQuickAmountSelect(amt)}
                         className="py-2 sm:py-3 px-3 sm:px-4 bg-[#1A1A2E] rounded-lg sm:rounded-xl text-sm sm:text-base text-white hover:bg-[#2f2f5a] transition-colors border border-purple-500/20"
                       >
                         ₹{amt}
@@ -456,7 +667,7 @@ const Wallet: React.FC = () => {
                 
                 {/* Action Button */}
                 <button
-                  onClick={activeTab === 'deposit' ? launchGateway : () => {/* Add withdraw logic */}}
+                  onClick={handleActionButtonClick}
                   disabled={isLoading}
                   className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg sm:rounded-xl text-white font-medium transition-opacity text-base sm:text-lg ${
                     isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
