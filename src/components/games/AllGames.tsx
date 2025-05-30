@@ -57,7 +57,7 @@ const generateRandom10Digits = () => {
 const AllGames: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const gameProviders: GameProvider[] = [
-    { id: 'jili', name: 'JILI', games: jiliGames },
+    // { id: 'jili', name: 'JILI', games: jiliGames },
     { id: 'pragmatic', name: 'PRAGMATIC', games: pragmaticGames },
     { id: 'spribe', name: 'SPRIBE', games: spribeGames },
     { id: 'apollo', name: 'APOLLO', games: apolloGames },

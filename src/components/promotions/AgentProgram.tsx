@@ -3,10 +3,12 @@ import { Copy, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import InvitationRulesModal from './InvitationRulesModal';
 
 const AgentProgram: React.FC = () => {
   const [referralCode, setReferralCode] = React.useState('');
   const [isHovered, setIsHovered] = React.useState('');
+  const [isRulesModalOpen, setIsRulesModalOpen] = React.useState(false);
   const navigate = useNavigate();
   
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -192,8 +194,12 @@ const AgentProgram: React.FC = () => {
             {[
               { title: 'Subordinate data', icon: '👥', route: '/promotions/team-report' },
               { title: 'Commission detail', icon: '💰', onClick: handleNavigateToCommissionDetails },
-              { title: 'Invitation rules', icon: '📜', route: '#', onClick: () => {} },
-              { title: 'Agent line customer service', icon: '🎮', route: '#', onClick: () => {} }
+              { 
+                title: 'Invitation rules', 
+                icon: '📜', 
+                onClick: () => setIsRulesModalOpen(true) 
+              },
+             
             ].map((item, index) => (
               <div
                 key={index}
@@ -218,6 +224,11 @@ const AgentProgram: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <InvitationRulesModal 
+        isOpen={isRulesModalOpen}
+        onClose={() => setIsRulesModalOpen(false)}
+      />
     </div>
   );
 };

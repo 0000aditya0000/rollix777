@@ -324,15 +324,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   };
 
   const cryptoOptions = [
-    { value: "btc", label: "Bitcoin (BTC)", symbol: "₿", color: "yellow" },
-    { value: "eth", label: "Ethereum (ETH)", symbol: "Ξ", color: "blue" },
     { value: "usdt", label: "USDT", symbol: "₮", color: "green" },
     { value: "inr", label: "INR", symbol: "₹", color: "orange" },
-  ];
-  const BankOptions = [
-    { value: "pnb", label: "Punjab  National Bank", symbol: "", color: "" },
-    { value: "sbi", label: "State Bank Of India", symbol: "", color: "" },
-    { value: "cbi", label: "Central Bank Of India", symbol: "", color: "" },
   ];
 
 
@@ -417,19 +410,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                   </div>
                   <span>Bitcoin</span>
                 </button> */}
-                <button
-                  className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 ${
-                    selectedCrypto === "eth"
-                      ? "bg-blue-500/20 border border-blue-500/30 text-white"
-                      : "bg-[#1A1A2E] border border-gray-700 text-gray-400 hover:border-blue-500/30"
-                  }`}
-                  onClick={() => setSelectedCrypto("eth")}
-                >
-                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">
-                    Ξ
-                  </div>
-                  <span>Ethereum</span>
-                </button>
+               
                 <button
                   className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 ${
                     selectedCrypto === "usdt"

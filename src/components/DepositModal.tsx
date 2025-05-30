@@ -20,7 +20,7 @@ interface DepositRequest {
 
 const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
-  const [activeTab, setActiveTab] = useState<'crypto' | 'card'>('crypto');
+  const [activeTab, setActiveTab] = useState<'crypto' | 'usdt'>('crypto');
   const [selectedCrypto, setSelectedCrypto] = useState<'btc' | 'eth' | 'usdt' | 'inr'>('btc');
   const [selectedServer, setSelectedServer] = useState<'server1' | 'server2'>('server1');
   const [copied, setCopied] = useState(false);
@@ -52,6 +52,9 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
     setError('');
     setCardError('');
   }, [activeTab]);
+  const [usdtAmount, setUsdtAmount] = useState<string>('');
+  const [usdtLoading, setUsdtLoading] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState<'trc20' | 'erc20'>('trc20');
 
   if (!isOpen) return null;
 
@@ -68,6 +71,11 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
 
   const currencySymbols = {
     inr: '₹'
+  };
+
+  const networkAddresses = {
+    trc20: 'TKrx8cXrpYM1iaVvU3mVMzMUEtXw1Lj8gu',
+    erc20: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
   };
 
   const handleCopy = () => {
@@ -104,7 +112,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleTabChange = (tab: 'crypto' | 'card') => {
+  const handleTabChange = (tab: 'crypto' | 'usdt') => {
     setActiveTab(tab);
   };
 
@@ -198,6 +206,31 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
     onClose();
   };
 
+  const handleUsdtDeposit = () => {
+    if (!usdtAmount || isNaN(Number(usdtAmount))) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    const amount = parseFloat(usdtAmount);
+    if (amount < 10) {
+      toast.error('Minimum deposit amount is 10 USDT');
+      return;
+    }
+
+    const uid = localStorage.getItem('userId');
+    if (!uid) {
+      toast.error('Please Login First');
+      return;
+    }
+
+    // tyid: 1 for TRC20, 2 for ERC20
+    const tyid = selectedNetwork === 'trc20' ? 1 : 2;
+    
+    // Redirect to the USDT payment gateway
+    window.location.href = `https://cryptousdt.rollix777.com/?uid=${uid}&amount=${amount}&tyid=${tyid}`;
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 mt-12">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleModalClose}></div>
@@ -233,15 +266,15 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
           </button>
           <button 
             className={`flex-1 py-3 px-4 text-center font-medium ${
-              activeTab === 'card' 
+              activeTab === 'usdt' 
                 ? 'text-white border-b-2 border-green-500' 
                 : 'text-gray-400 hover:text-gray-300'
             }`}
-            onClick={() => handleTabChange('card')}
+            onClick={() => handleTabChange('usdt')}
           >
             <div className="flex items-center justify-center gap-2">
-              <CreditCard size={18} />
-              <span>Card</span>
+              <Bitcoin size={18} />
+              <span>USDT</span>
             </div>
           </button>
         </div>
@@ -351,61 +384,71 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Card Number</label>
-                <input 
-                  type="text" 
-                  className="w-full py-3 px-4 bg-[#1A1A2E] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
-                  placeholder="1234 5678 9012 3456"
-                  required
-                />
-              </div>
-              
-              <div className="flex gap-4">
-                <div className="flex-1 space-y-1">
-                  <label className="text-sm text-gray-300">Expiry Date</label>
-                  <input 
-                    type="text" 
-                    className="w-full py-3 px-4 bg-[#1A1A2E] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
-                    placeholder="MM/YY"
-                    required
-                  />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <label className="text-sm text-gray-300">CVV</label>
-                  <input 
-                    type="text" 
-                    className="w-full py-3 px-4 bg-[#1A1A2E] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
-                    placeholder="123"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Cardholder Name</label>
-                <input 
-                  type="text" 
-                  className="w-full py-3 px-4 bg-[#1A1A2E] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Amount (USDT)</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <DollarSign className="w-5 h-5 text-green-400" />
+              {/* Network Selection */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <button
+                  onClick={() => setSelectedNetwork('trc20')}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedNetwork === 'trc20'
+                      ? 'bg-green-500/20 border-green-500 text-white'
+                      : 'bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">TRC20</span>
+                    <span className="text-xs">Recommended</span>
                   </div>
-                  <input 
-                    type="text" 
-                    value={cardAmount}
-                    onChange={(e) => handleAmountChange(e, 'card')}
-                    className={`w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border ${cardError ? 'border-red-500' : 'border-green-500/20'} rounded-lg text-white focus:outline-none focus:border-green-500`}
-                    placeholder="10.00"
-                    required
-                  />
+                </button>
+                
+                <button
+                  onClick={() => setSelectedNetwork('erc20')}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedNetwork === 'erc20'
+                      ? 'bg-green-500/20 border-green-500 text-white'
+                      : 'bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">ERC20</span>
+                    <span className="text-xs">Alternative</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* USDT Amount Input */}
+              <div className="p-4 bg-[#1A1A2E] rounded-lg border border-green-500/20">
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Amount (USDT)</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Bitcoin className="w-5 h-5 text-green-400" />
+                      </div>
+                      <input 
+                        type="number"
+                        value={usdtAmount}
+                        onChange={(e) => setUsdtAmount(e.target.value)}
+                        className="w-full py-3 pl-10 pr-4 bg-[#252547] border border-green-500/20 rounded-lg text-white focus:outline-none focus:border-green-500"
+                        placeholder="Enter amount in USDT"
+                        min="10"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleUsdtDeposit}
+                    disabled={usdtLoading}
+                    className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all ${
+                      usdtLoading
+                        ? 'bg-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90'
+                    }`}
+                  >
+                    {usdtLoading ? 'Processing...' : `Deposit via ${selectedNetwork.toUpperCase()}`}
+                  </button>
                 </div>
                 {cardError && (
                   <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
@@ -414,19 +457,18 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 )}
               </div>
-              
-              <button 
-                type="button"
-                disabled={!!cardError}
-                className={`w-full py-3 px-4 ${cardError ? 'bg-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90'} rounded-lg text-white font-medium transition-opacity`}
-              >
-                Deposit Now
-              </button>
-              
-              <div className="flex items-center justify-center gap-6 mt-4">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/200px-Visa_Inc._logo.svg.png" alt="Visa" className="h-6" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/200px-Mastercard-logo.svg.png" alt="Mastercard" className="h-6" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/American_Express_logo_%282018%29.svg/200px-American_Express_logo_%282018%29.svg.png" alt="American Express" className="h-6" />
+
+              {/* Important notes for USDT */}
+              <div className="p-4 bg-[#1A1A2E] rounded-lg border border-green-500/20 text-sm text-gray-400">
+                <p className="mb-2">Important:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Minimum deposit: 10 USDT</li>
+                  <li>Deposits are credited instantly</li>
+                  <li>Make sure to send the exact amount</li>
+                  <li>Double-check the network before sending</li>
+                  <li>TRC20 has lower fees than ERC20</li>
+                  <li>Send only USDT tokens</li>
+                </ul>
               </div>
             </div>
           )}

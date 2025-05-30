@@ -36,9 +36,7 @@ const Promotions = () => {
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">Welcome Package</h3>
                 <p className="text-gray-400 text-sm mb-4">100% Match + 50 Free Spins</p>
-                <button className="w-full group-hover:w-full py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2">
-                  Claim Now <ArrowRight className="w-4 h-4" />
-                </button>
+                
               </div>
             </div>
 
@@ -54,9 +52,7 @@ const Promotions = () => {
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">Cashback Rewards</h3>
                 <p className="text-gray-400 text-sm mb-4">10% Daily Cashback + Bonuses</p>
-                <button className="w-full group-hover:w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2">
-                  Activate <ArrowRight className="w-4 h-4" />
-                </button>
+             
               </div>
             </div>
 
@@ -72,9 +68,7 @@ const Promotions = () => {
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">Weekly Boost</h3>
                 <p className="text-gray-400 text-sm mb-4">50% Reload Bonus + VIP Rewards</p>
-                <button className="w-full group-hover:w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2">
-                  Boost Now <ArrowRight className="w-4 h-4" />
-          </button>
+               
               </div>
             </div>
           </div>
@@ -128,10 +122,7 @@ const Promotions = () => {
                     Up to $1,000 Bonus
                   </li>
                 </ul>
-                <button className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 group">
-                  Claim Now
-                  <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
-                </button>
+               
               </div>
             </div>
 
@@ -160,10 +151,7 @@ const Promotions = () => {
                     Instant Withdrawals
                   </li>
                 </ul>
-                <button className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 group">
-                  Activate Now
-                  <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
-                </button>
+                
               </div>
             </div>
 
@@ -192,10 +180,7 @@ const Promotions = () => {
                     VIP Rewards
                   </li>
                 </ul>
-                <button className="w-full py-4 bg-gradient-to-r from-indigo-500 to-violet-500 hover:opacity-90 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 group">
-                  Boost Now
-                  <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
-          </button>
+             
               </div>
             </div>
         </div>

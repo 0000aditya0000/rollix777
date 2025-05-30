@@ -35,12 +35,14 @@ const Home = () => {
           <Header />
           <main>
             <Hero />
-            <GameCarousel title="Featured Games" type="featured" />
-            <TrendingGames title="Trending Games" type="trending" />
-            <div className='md:hidden'>
-              <ColorGame />
+            <div className="space-y-8 md:space-y-12">
+              <GameCarousel title="Featured Games" type="featured" />
+              <TrendingGames title="Trending Games" type="trending" />
+              <div className='md:hidden'>
+                <ColorGame />
+              </div>
+              <HotGames title="Hot Games" type="hot" />
             </div>
-            <HotGames title="Hot Games" type="hot" />
             <Promotions />
             <Features />
           </main>

@@ -1,9 +1,10 @@
 import React, { useState, useRef } from "react";
-import { Zap, Search, Loader2 } from "lucide-react";
+import { Zap, Search, Loader2, ChevronRight } from "lucide-react";
 import CryptoJS from "crypto-js";
-import jiliGames from "../gamesData/jili.json";
+import jiliGames from "../gamesData/pragmatic.json";
 import AuthModal from "./AuthModal";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface HotGamesProps {
   title: string;
@@ -32,6 +33,7 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
   const [loadingGameId, setLoadingGameId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const hotGames = jiliGames;
+  const navigate = useNavigate();
 
   // Filter games based on search query
   const filteredGames = hotGames.filter((game) =>
@@ -196,6 +198,13 @@ const HotGames: React.FC<HotGamesProps> = ({ title, type }) => {
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-yellow-500" />
             <h2 className="text-xl font-bold text-white">{title}</h2>
+            <button
+              onClick={() => navigate('/games')}
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1 ml-2"
+            >
+              View All
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-gray-400 text-sm">

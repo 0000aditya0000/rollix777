@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import sportBettingGames from "../gamesData/sportbetting.json";
+import sportBettingGames from "../gamesData/apex.json";
 import axios from "axios";
 import AuthModal from "./AuthModal";
-import { Flame, Search } from "lucide-react";
+import { Flame, Search, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface GameCarouselProps {
@@ -178,6 +178,13 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title }) => {
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-orange-500" />
             <h2 className="text-xl font-bold text-white">{title}</h2>
+            <button
+              onClick={() => navigate('/games')}
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1 ml-2"
+            >
+              View All
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-gray-400 text-sm">

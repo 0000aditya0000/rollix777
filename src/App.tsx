@@ -43,6 +43,12 @@ const ReferralRedirect: React.FC = () => {
   return <Navigate to="/" replace />;
 };
 
+// Add this new component for conditional routing
+const ConditionalHome: React.FC = () => {
+  const userId = localStorage.getItem('userId');
+  return userId ? <Dashboard /> : <Home />;
+};
+
 function App() {
   const authenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
@@ -69,7 +75,7 @@ function App() {
                   <main className="min-h-screen">
                     <Routes>
                       {/* Public Routes - Always accessible */}
-                      <Route path="/" element={<Home />} />
+                      <Route path="/" element={<ConditionalHome />} />
                       <Route path="/games" element={<AllGames />} />
                       {/* <Route path="/featured=games" element={< />} /> */}
                       <Route path="/featured-games" element={<GameCarousel title="Featured Games" type="featured" />} />

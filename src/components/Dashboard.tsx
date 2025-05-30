@@ -36,7 +36,10 @@ const Dashboard = () => {
  
     fetchData();
   }, [userId]);
-
+  // function launchGame() {
+  //   window.location.href = "https://fusion.imitator-host.site/post?gameId=229&mobile=52&agentId=Imitatorbhai_Seamless&agentKey=118e35769483ef7508b4616c308d84458b26a5e7&referrerUrl=https://jili.rollix777.com";
+  // }
+  
   const mainBalance = wallets.find(w => w.cryptoname === "INR")?.balance || "0.00";
 
   return (
@@ -105,6 +108,7 @@ const Dashboard = () => {
       <div className="hidden md:block  w-full mt-12">
         <div className="w-full lg:px-2">
           {/* Top Bar */}
+         
           <div className="w-full bg-[#151525] border-b border-gray-800/50 ">
             <div className="w-full max-w-[1920px] mx-auto px-6 lg:px-8">
               <div className="flex items-center justify-between py-6">
@@ -118,6 +122,7 @@ const Dashboard = () => {
                     <p className="text-gray-400 text-sm">Balance</p>
                     <p className="text-2xl font-bold text-white">₹{mainBalance}</p>
                   </div>
+                  {/* <button onClick={launchGame}>JILI GAME Launch</button> */}
                 </div>
                 <div className="flex gap-3">
                   <button 
