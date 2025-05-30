@@ -536,31 +536,31 @@ const BankAccounts = () => {
         </div>
 
         {/* Pagination */}
-        {pagination.totalPages > 1 && (
+        {pagination?.totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-purple-500/10">
             <div className="text-sm text-gray-400 order-2 sm:order-1">
-              Showing {(pagination.currentPage - 1) * pagination.limit + 1} to{" "}
-              {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} of{" "}
-              {pagination.totalRecords} entries
+              Showing {((pagination?.currentPage || 1) - 1) * (pagination?.limit || 20) + 1} to{" "}
+              {Math.min((pagination?.currentPage || 1) * (pagination?.limit || 20), pagination?.totalRecords || 0)} of{" "}
+              {pagination?.totalRecords || 0} entries
             </div>
             <div className="flex gap-2 order-1 sm:order-2">
               <button
-                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
+                onClick={() => handlePageChange((pagination?.currentPage || 1) - 1)}
+                disabled={pagination?.currentPage === 1}
                 className={`p-2 rounded-lg ${
-                  pagination.currentPage === 1
+                  pagination?.currentPage === 1
                     ? "bg-purple-500/10 text-gray-500 cursor-not-allowed"
                     : "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30"
                 }`}
               >
                 <ChevronLeft size={16} />
               </button>
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+              {Array.from({ length: pagination?.totalPages || 1 }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    pagination.currentPage === page
+                    pagination?.currentPage === page
                       ? "bg-purple-600 text-white"
                       : "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30"
                   }`}
@@ -569,10 +569,10 @@ const BankAccounts = () => {
                 </button>
               ))}
               <button
-                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === pagination.totalPages}
+                onClick={() => handlePageChange((pagination?.currentPage || 1) + 1)}
+                disabled={pagination?.currentPage === pagination?.totalPages}
                 className={`p-2 rounded-lg ${
-                  pagination.currentPage === pagination.totalPages
+                  pagination?.currentPage === pagination?.totalPages
                     ? "bg-purple-500/10 text-gray-500 cursor-not-allowed"
                     : "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30"
                 }`}
