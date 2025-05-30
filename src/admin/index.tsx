@@ -8,8 +8,9 @@ import Withdrawals from './pages/Withdrawals';
 import Reports from './pages/Reports';
 import Sliders from './pages/Sliders';
 import Games from './pages/Games';
-
+import KYCRequest from './pages/KYCRequest';
 import Userdetail from './pages/Userdetail';
+
 
 import Coupon from './pages/Coupon';
 import Recharge from './pages/Recharge';
@@ -33,6 +34,7 @@ const AdminRoutes = () => {
         <Route path="reports" element={<Reports />} />
         <Route path="sliders" element={<Sliders />} />
         <Route path="games" element={<Games />} />
+        <Route path="kyc-requests" element={<KYCRequest />} />
         {/* <Route path="settings" element={<Settings />} /> */}
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
