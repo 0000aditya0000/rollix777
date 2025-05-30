@@ -11,7 +11,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Tag
+  Tag,
+  FileCheck
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -33,8 +34,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar, onNa
     { icon: <BarChart3 size={20} />, label: 'Reports', path: '/admin/reports' },
     { icon: <Image size={20} />, label: 'Sliders', path: '/admin/sliders' },
     { icon: <Gamepad2 size={20} />, label: 'Games', path: '/admin/games' },
+    { icon: <FileCheck size={20} />, label: 'KYC Requests', path: '/admin/kyc-requests' },
     { icon: <Settings size={20} />, label: 'Settings', path: '/admin/settings' },
-
   ];
 
   const handleNavigation = () => {
