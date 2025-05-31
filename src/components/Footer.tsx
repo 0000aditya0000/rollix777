@@ -28,83 +28,43 @@ const Footer: React.FC = () => {
       title: "Casino",
       links: [
         { label: "Casino Games", url: "/games" },
-        { label: "Slots", url: "/games/slots" },
-        { label: "Live Casino", url: "/games/live" },
-        { label: "Roulette", url: "/games/roulette" },
-        { label: "Blackjack", url: "/games/blackjack" },
-        { label: "Poker", url: "/games/poker" },
-        { label: "Providers", url: "/providers" },
+        { label: "Slots", url: "/games" },
+        { label: "Live Casino", url: "/games" },
+        { label: "Roulette", url: "/games" },
+        { label: "Blackjack", url: "/games" },
+        { label: "Poker", url: "/games" },
+      
         { label: "Promos & Competitions", url: "/promotions" }
       ]
     },
     {
       title: "Sports",
       links: [
-        { label: "Sportsbook", url: "/sports" },
-        { label: "Live Sports", url: "/sports/live" },
-        { label: "Soccer", url: "/sports/soccer" },
-        { label: "Basketball", url: "/sports/basketball" },
-        { label: "Tennis", url: "/sports/tennis" },
-        { label: "eSports", url: "/sports/esports" },
-        { label: "Bet Bonuses", url: "/sports/bonuses" },
-        { label: "Sports Rules", url: "/sports/rules" }
+        { label: "Sportsbook", url: "/games" },
+        { label: "Live Sports", url: "/games" },
+        { label: "Soccer", url: "/games" },
+        { label: "Basketball", url: "/games" },
+        { label: "Tennis", url: "/games" },
+        { label: "eSports", url: "/games" },
+        { label: "Bet Bonuses", url: "/games" },
+        { label: "Sports Rules", url: "/games" }
       ]
     },
     {
       title: "Support",
       links: [
-        { label: "Help Center", url: "/help", external: true },
-        { label: "Fairness", url: "/fairness" },
-        { label: "Gambling Helpline", url: "/help/gambling", external: true },
+        { label: "Help Center", url: "/support", external: true },
+        
+        { label: "Gambling Helpline", url: "/support", external: true },
         { label: "Live Support", url: "/support" },
-        { label: "Self Exclusion", url: "/self-exclusion" }
+       
       ]
     },
-    {
-      title: "About Us",
-      links: [
-        { label: "VIP Club", url: "/vip" },
-        { label: "Affiliate", url: "/affiliate" },
-        { label: "Privacy Policy", url: "/privacy" },
-        { label: "AML Policy", url: "/aml" },
-        { label: "Terms of Service", url: "/terms" }
-      ]
-    },
-    {
-      title: "Payment Info",
-      links: [
-        { label: "Deposit & Withdrawals", url: "/payments" },
-        { label: "Currency Guide", url: "/currency" },
-        { label: "Crypto Guide", url: "/crypto" },
-        { label: "Supported Crypto", url: "/crypto/supported" },
-        { label: "How to Use the Vault", url: "/vault" },
-        { label: "How Much to Bet With", url: "/betting-guide" }
-      ]
-    },
-    {
-      title: "How-to Guides",
-      links: [
-        { label: "How-to Guides", url: "/guides" },
-        { label: "Online Casino Guide", url: "/guides/casino" },
-        { label: "Sports Betting Guide", url: "/guides/sports" },
-        { label: "How to Live Stream Sports", url: "/guides/streaming" },
-        { label: "VIP Guide", url: "/guides/vip" },
-        { label: "House Edge Guide", url: "/guides/house-edge" }
-      ]
-    }
+   
+   
   ];
 
-  // Social media icons using Lucide
-  const socialLinks = [
-    { icon: <Linkedin size={18} />, url: "https://linkedin.com" },
-    { icon: <MessageSquare size={18} />, url: "https://discord.com" },
-    { icon: <Facebook size={18} />, url: "https://facebook.com" },
-    { icon: <Twitter size={18} />, url: "https://twitter.com" },
-    { icon: <Instagram size={18} />, url: "https://instagram.com" },
-    { icon: <Youtube size={18} />, url: "https://youtube.com" },
-    { icon: <Twitch size={18} />, url: "https://twitch.tv" },
-    { icon: <Crown size={18} />, url: "/vip" }
-  ];
+
 
   return (
     <>
@@ -175,32 +135,20 @@ const Footer: React.FC = () => {
 
       {/* Desktop Footer - Simplified version */}
       <footer className="hidden md:block bg-[#0c1520] text-gray-300 border-t border-gray-800/30 pb-10">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-6 ">
           {/* Top section with logo, copyright, and social icons */}
-          <div className="py-6 flex justify-between items-center border-b border-gray-800/30">
+          <div className="py-6 flex justify-between items-center border-b border-gray-800/30 ">
             <div className="flex items-center">
               <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 Rollix777
               </div>
               <span className="ml-4 text-sm text-gray-400">© 2025 Rollix777 | All Rights Reserved.</span>
             </div>
-            <div className="flex gap-4">
-              {socialLinks.map((social, index) => (
-                <a 
-                  key={index} 
-                  href={social.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  {social.icon}
-                </a>
-              ))}
-            </div>
+           
           </div>
 
           {/* Main footer links section */}
-          <div className="grid grid-cols-6 gap-8 py-10">
+          <div className="grid grid-cols-8  gap-36 py-10">
             {footerCategories.map((category, index) => (
               <div key={index}>
                 <h3 className="text-white font-medium mb-4">{category.title}</h3>

@@ -273,7 +273,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
             onClick={() => handleTabChange('usdt')}
           >
             <div className="flex items-center justify-center gap-2">
-              <Bitcoin size={18} />
+              <DollarSign size={18} />
               <span>USDT</span>
             </div>
           </button>
@@ -282,7 +282,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
         {/* Body */}
         <div className="p-5">
           {activeTab === 'crypto' ? (
-            <div className="space-y-4">
+            <div className="space-y-4 ">
               {/* Server Selection */}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <button
@@ -383,7 +383,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4  ">
               {/* Network Selection */}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <button
@@ -424,7 +424,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
                     <label className="text-sm text-gray-400 mb-2 block">Amount (USDT)</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Bitcoin className="w-5 h-5 text-green-400" />
+                        <DollarSign className="w-5 h-5 text-green-400" />
                       </div>
                       <input 
                         type="number"

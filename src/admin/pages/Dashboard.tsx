@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, DollarSign, Eye, Check, X, User } from 'lucide-react';
+import { Users, DollarSign, Eye, Check, X, User,IndianRupeeIcon } from 'lucide-react';
 import axios from 'axios';
 
 const Dashboard = () => {
@@ -23,7 +23,7 @@ const Dashboard = () => {
   // Dummy data
   const totalUsers = users.length;
 
-  const totalTransactions = '$1,245,789.00';
+  const totalTransactions = '₹1,245,789.00';
   
   const kycRequests = [
     { id: 'KYC-001', user: 'John Doe', email: 'john@example.com', date: '2025-04-10', status: 'pending' },
@@ -77,10 +77,10 @@ const Dashboard = () => {
               <div>
                 <p className="text-gray-400 mb-1">Total Transactions</p>
                 <h2 className="text-3xl font-bold text-white">{totalTransactions}</h2>
-                <p className="text-green-400 text-sm mt-2">+$45,678 this week</p>
+                <p className="text-green-400 text-sm mt-2">+₹45,678 this week</p>
               </div>
               <div className="p-3 bg-green-500/20 rounded-xl">
-                <DollarSign className="w-8 h-8 text-green-400" />
+                <IndianRupeeIcon className="w-8 h-8 text-green-400" />
               </div>
             </div>
             <button className="mt-4 py-2 px-4 bg-[#1A1A2E] text-green-400 rounded-lg text-sm hover:bg-green-500/10 transition-colors flex items-center gap-2">

@@ -555,7 +555,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                 <p className="mb-2">Important:</p>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>
-                    Minimum withdrawal: 0.001 {selectedCrypto.toUpperCase()}
+                    Minimum withdrawal: 10 {selectedCrypto.toUpperCase()}
                   </li>
                   <li>Processing time: 10-30 minutes</li>
                   <li>Double-check your wallet address before confirming</li>
@@ -714,7 +714,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
               <div className="text-sm text-gray-400">
                 <p className="mb-2">Important:</p>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>Minimum withdrawal: ₹50.00</li>
+                  <li>Minimum withdrawal: ₹200.00</li>
                   <li>Processing time: 1-3 business days</li>
                   <li>Bank transfer fees may apply</li>
                 </ul>

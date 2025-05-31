@@ -71,21 +71,21 @@ const LatestGames: React.FC<LatestGamesProps> = ({ title, type }) => {
   return (
     <section className="py-8 px-4 bg-[#1A1A2E]">
       <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <Zap className="w-6 h-6 text-yellow-500" />
+        <div className="flex items-center gap-3 ">
+          <Zap className="w-6 h-6 text-yellow-500 border-2 " />
           <h2 className="text-2xl font-bold text-white">Latest Games</h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 ">
           <button
             onClick={scrollLeft}
-                       className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
+                       className=" text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
 
           >
             &lt;
           </button>
           <button
             onClick={scrollRight}
-                       className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
+                       className=" text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
 
           >
             &gt;

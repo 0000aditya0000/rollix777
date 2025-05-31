@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Wallet, ArrowDown, Clock, Trophy, Gamepad2, History, ChevronRight } from 'lucide-react';
 import ImageSlider from './ImageSlider';
 import ColorGame from './ColorGame';
@@ -20,7 +21,7 @@ const Dashboard = () => {
   const userId = Number(localStorage.getItem('userId'));
   const dispatch = useDispatch();
   const { wallets } = useSelector((state: RootState) => state.wallet);
- 
+  const navigate = useNavigate();
   async function fetchData() {
     if (userId) {
       try {
@@ -195,9 +196,9 @@ const Dashboard = () => {
             <Clock className="w-5 h-5 text-purple-500" />
             <h3 className="text-sm font-bold text-white">Latest Games</h3>
           </div>
-          <button className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
+          <button onClick={() => navigate('/games')} className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
             View All
-            <ChevronRight className="w-3 h-3" />
+            <ChevronRight  className="w-3 h-3" />
           </button>
         </div>
       </div>

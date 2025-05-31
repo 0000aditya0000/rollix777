@@ -123,7 +123,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     // Validate required fields
-    if (!name.trim() || !username.trim() || !email.trim() || !phoneNumber.trim() || !password.trim()) {
+    if (!referalCode || !name.trim() || !username.trim() || !email.trim() || !phoneNumber.trim() || !password.trim()) {
       setError("Please fill in all required fields");
       return;
     }
@@ -333,7 +333,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
                   <div>
                     <label className="text-sm text-gray-300 block mb-1">
-                      Referral Code (Optional)
+                      Referral Code 
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
