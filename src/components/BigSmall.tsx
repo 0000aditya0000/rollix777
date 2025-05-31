@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import { X, ArrowLeft, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -6,6 +6,7 @@ import { RootState } from "../store";
 import { useDispatch } from "react-redux";
 import { deposit, withdraw } from "../slices/walletSlice";
 import { fetchResults, generateResult, getBetHistory, checkValidBet, placeBet } from "../lib/services/BigSmallServices";
+import axios from "axios";
 
 type Record = {
   id: number;
@@ -30,32 +31,15 @@ type BetHistory = {
   amountReceived: number;
 };
 
-const DB_NAME = 'wingoTimerDB';
-const STORE_NAME = 'timerState';
-const DB_VERSION = 1;
 
-const initDB = async () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
 
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    };
-  });
-};
 
 const BigSmall = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
   const [timeLeft, setTimeLeft] = useState(60);
   const [isRunning, setIsRunning] = useState(false);
-  const [activeTime, setActiveTime] = useState<number | null>(1);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<"big" | "small" | "">("");
@@ -71,45 +55,114 @@ const BigSmall = () => {
   const [result, setResult] = useState<Record | null>(null);
   const [betHistory, setbetHistory] = useState<BetHistory | null>(null);
   const dispatch = useDispatch();
+  const [activeTab, setActiveTab] = useState('1min');
+  const intervalRefs = useRef({});
+  const isFetchingRef = useRef({});
   const [error, setError] = useState<string | null>(null);
+  const [timers, setTimers] = useState({
+    '1min': 0,
+    '3min': 0,
+    '5min': 0,
+    '10min': 0
+  });
 
   useEffect(() => {
-    const initializeDB = async () => {
-      try {
-        const db = await initDB() as IDBDatabase;
-        const transaction = db.transaction(STORE_NAME, 'readonly');
-        const store = transaction.objectStore(STORE_NAME);
-        const request = store.get('timerState');
+    // Initial fetch for all timers
+    ['1min', '3min', '5min', '10min'].forEach(duration => {
+      fetchTimerData(duration);
+    });
 
-        request.onsuccess = () => {
-          if (request.result) {
-            const { timeRemaining, lastUpdated } = request.result;
-            const timePassed = Math.floor((Date.now() - lastUpdated) / 1000);
-            const newTimeLeft = Math.max(0, timeRemaining - timePassed);
-            setTimeLeft(newTimeLeft);
-          }
-          setIsRunning(true);
-        };
-      } catch (error) {
-        setIsRunning(true);
-      }
+    // Cleanup intervals when component unmounts
+    return () => {
+      Object.values(intervalRefs.current).forEach(clearInterval);
     };
+  }, []); // Empty dependency array means this runs once on mount
 
-    initializeDB();
-  }, []);
-
-  const saveTimerState = async () => {
-    try {
-      const db = await initDB() as IDBDatabase;
-      const transaction = db.transaction(STORE_NAME, 'readwrite');
-      const store = transaction.objectStore(STORE_NAME);
-      store.put({
-        timeRemaining: timeLeft,
-        lastUpdated: Date.now()
-      }, 'timerState');
-    } catch (error) {
-      // Handle error silently
+  const fetchTimerData = async (duration) => {
+    if (isFetchingRef.current[duration]) {
+      return;
     }
+
+    try {
+      isFetchingRef.current[duration] = true;
+      const response = await axios.post('https://rollix777.com/api/color/timer', { duration });
+      const data = response.data;
+      
+      let remainingSeconds;
+      if (duration === '1min') {
+        remainingSeconds = data.remainingTimeSeconds;
+      } else {
+        remainingSeconds = (data.remainingTimeMinutes * 60) + data.remainingTimeSeconds;
+      }
+
+      if (typeof remainingSeconds === 'number' && !isNaN(remainingSeconds)) {
+        startLocalCountdown(duration, remainingSeconds);
+      } else {
+        console.error(`Invalid timer data received for ${duration}:`, data);
+      }
+    } catch (err) {
+      console.error(`Failed to fetch ${duration} timer:`, err);
+      // Set a default value if the API call fails
+      startLocalCountdown(duration, duration === '1min' ? 60 : 
+        duration === '3min' ? 180 : 
+        duration === '5min' ? 300 : 600);
+    } finally {
+      isFetchingRef.current[duration] = false;
+    }
+  };
+
+  const startLocalCountdown = (duration, initialTime) => {
+    if (typeof initialTime !== 'number' || isNaN(initialTime)) {
+      console.error(`Invalid initial time for ${duration}:`, initialTime);
+      return;
+    }
+
+    // Clear existing interval for this duration
+    if (intervalRefs.current[duration]) {
+      clearInterval(intervalRefs.current[duration]);
+    }
+
+    // Set initial time
+    setTimers(prev => ({
+      ...prev,
+      [duration]: Math.floor(initialTime)
+    }));
+
+    let hasShownAlert = false;
+
+    // Start local countdown
+    intervalRefs.current[duration] = setInterval(() => {
+      setTimers(current => {
+        const currentTime = current[duration];
+        if (currentTime <= 1) {
+          if (!hasShownAlert) {
+            hasShownAlert = true;
+            console.log(`Timer ended for ${duration}, active tab is ${activeTab}`); // Debug log
+            
+            // Call getResult when timer ends
+            getResult().then(() => {
+              console.log('getResult completed, fetching new timer data'); // Debug log
+              // After getResult completes, fetch new timer data
+              fetchTimerData(duration);
+            }).catch(error => {
+              console.error('Error in getResult:', error);
+            });
+          }
+          return { ...current, [duration]: 0 };
+        }
+        return { ...current, [duration]: currentTime - 1 };
+      });
+    }, 1000);
+  };
+
+  const formatTime = (seconds) => {
+    if (typeof seconds !== 'number' || isNaN(seconds)) {
+      return '00:00';
+    }
+    
+    const mins = Math.floor(Math.abs(seconds) / 60);
+    const secs = Math.abs(seconds) % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   useEffect(() => {
@@ -130,18 +183,23 @@ const BigSmall = () => {
 
   const getResult = async () => {
     try {
+      console.log('getResult called'); // Debug log
       if (!currentPeriod || isNaN(currentPeriod)) {
+        console.error('Invalid period number:', currentPeriod);
         setError("Invalid period number");
         return;
       }
 
+      console.log('Generating result for period:', currentPeriod); // Debug log
       const data = await generateResult(currentPeriod);
       
       if (!data) {
+        console.error('No data received from generateResult');
         setError("Failed to generate result. Please try again.");
         return;
       }
 
+      console.log('Result generated:', data); // Debug log
       setResult(data);
       setRecords((prev) => [data, ...prev]);
       await fetchTableData();
@@ -149,9 +207,9 @@ const BigSmall = () => {
       setBets([]);
       setError(null);
     } catch (error) {
+      console.error('Error in getResult:', error);
       const errorMessage = error instanceof Error ? error.message : "Failed to generate result. Please try again later.";
       setError(errorMessage);
-      console.error("Error generating result:", error);
     }
   };
 
@@ -244,34 +302,9 @@ const BigSmall = () => {
     }
   };
 
-  useEffect(() => {
-    if (!isRunning) return;
   
-    if (timeLeft === 0) {
-      getResult();
-      
-      if (activeTime) {
-        setTimeout(() => setTimeLeft(activeTime * 60), 0);
-      }
-      return;
-    }
-  
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        const newTime = prev - 1;
-        saveTimerState();
-        return newTime;
-      });
-    }, 1000);
-  
-    return () => clearInterval(timer);
-  }, [isRunning, timeLeft]);
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? `0${secs}` : secs}`;
-  };
+
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -298,17 +331,20 @@ const BigSmall = () => {
           <div className="lg:col-span-2 space-y-8 ">
             {/* Time Buttons */}
             <div className="grid grid-cols-4 gap-8">
-              {[1, 3, 5, 10].map((min) => (
+              {['1min', '3min', '5min', '10min'].map((duration) => (
                 <button
-                  key={min}
+                  key={duration}
                   className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                    activeTime === min
+                    activeTab === duration
                       ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                       : "bg-[#252547] border border-purple-500/20 text-gray-300 hover:bg-[#2f2f5a]"
                   }`}
-                  onClick={() => setActiveTime(min)}
+                  onClick={() => setActiveTab(duration)}
                 >
-                  {min} min
+                  {duration}
+                  <div className="text-sm mt-1">
+                    {formatTime(timers[duration])}
+                  </div>
                 </button>
               ))}
             </div>
@@ -322,20 +358,20 @@ const BigSmall = () => {
               </div>
               <div
                 className={`flex items-center justify-center gap-2 bg-[#252547] border border-purple-500/20 text-center py-3 px-4 rounded-lg ${
-                  timeLeft < 10 ? "bg-red-500/20 border-red-500/30" : ""
+                  timers[activeTab] < 10 ? "bg-red-500/20 border-red-500/30" : ""
                 }`}
               >
                 <Clock
                   className={`w-5 h-5 ${
-                    timeLeft < 10 ? "text-red-400" : "text-purple-400"
+                    timers[activeTab] < 10 ? "text-red-400" : "text-purple-400"
                   }`}
                 />
                 <span
                   className={`font-bold ${
-                    timeLeft < 10 ? "text-red-400" : "text-white"
+                    timers[activeTab] < 10 ? "text-red-400" : "text-white"
                   }`}
                 >
-                  Time Left: {formatTime(timeLeft)}
+                  Time Left: {formatTime(timers[activeTab])}
                 </span>
               </div>
             </div>
@@ -344,11 +380,11 @@ const BigSmall = () => {
             <div className="grid grid-cols-3 gap-2">
               <button
                 className={`px-4 py-3 rounded-lg font-medium ${
-                  timeLeft < 10
+                  timers[activeTab] < 10
                     ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed"
                     : "bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30"
                 }`}
-                disabled={timeLeft < 10}
+                disabled={timers[activeTab] < 10}
                 onClick={() => setSelectedColor("green")}
               >
                 Join Green
@@ -356,11 +392,11 @@ const BigSmall = () => {
 
               <button
                 className={`px-4 py-3 rounded-lg font-medium ${
-                  timeLeft < 10
+                  timers[activeTab] < 10
                     ? "bg-[#252547] border border-purple-500/20 text-gray-400 cursor-not-allowed"
                     : "bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
                 }`}
-                disabled={timeLeft < 10}
+                disabled={timers[activeTab] < 10}
                 onClick={() => setSelectedColor("voilet")}
               >
                 Join Violet
@@ -368,11 +404,11 @@ const BigSmall = () => {
 
               <button
                 className={`px-4 py-3 rounded-lg font-medium ${
-                  timeLeft < 10
+                  timers[activeTab] < 10
                     ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed"
                     : "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
                 }`}
-                disabled={timeLeft < 10}
+                disabled={timers[activeTab] < 10}
                 onClick={() => setSelectedColor("red")}
               >
                 Join Red
@@ -385,10 +421,10 @@ const BigSmall = () => {
                 {Array.from({ length: 10 }, (_, i) => (
                   <button
                     key={i}
-                    onClick={() => timeLeft >= 10 && setSelectedNumber(i)}
-                    disabled={timeLeft < 10}
+                    onClick={() => timers[activeTab] >= 10 && setSelectedNumber(i)}
+                    disabled={timers[activeTab] < 10}
                     className={`relative px-0 py-3 text-white font-bold rounded-lg ${
-                      timeLeft < 10
+                      timers[activeTab] < 10
                         ? "bg-[#252547] border border-gray-600/20 text-gray-500 cursor-not-allowed"
                         : i === 0 || i === 5
                         ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
@@ -407,22 +443,22 @@ const BigSmall = () => {
             <div className="grid grid-cols-2 gap-3">
               <button
                 className={`px-4 py-3 rounded-lg font-medium ${
-                  timeLeft < 10
+                  timers[activeTab] < 10
                     ? "bg-[#252547] border border-red-500/20 text-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-red-600 to-red-500 text-white hover:opacity-90"
                 }`}
-                disabled={timeLeft < 10}
+                disabled={timers[activeTab] < 10}
                 onClick={() => setSelectedSize("big")}
               >
                 Big
               </button>
               <button
                 className={`px-4 py-3 rounded-lg font-medium ${
-                  timeLeft < 10
+                  timers[activeTab] < 10
                     ? "bg-[#252547] border border-green-500/20 text-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-green-600 to-green-500 text-white hover:opacity-90"
                 }`}
-                disabled={timeLeft < 10}
+                disabled={timers[activeTab] < 10}
                 onClick={() => setSelectedSize("small")}
               >
                 Small

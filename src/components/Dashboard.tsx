@@ -17,8 +17,8 @@ import { fetchUserWallets } from '../lib/services/WalletServices.js';
 const Dashboard = () => {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const userName = localStorage.getItem('userName'); 
-  const userId = Number(localStorage.getItem('userId'));
+  const userName = localStorage.getItem('userName') || '';
+  const userId = Number(localStorage.getItem('userId')) || 0;
   const dispatch = useDispatch();
   const { wallets } = useSelector((state: RootState) => state.wallet);
   const navigate = useNavigate();
@@ -26,25 +26,25 @@ const Dashboard = () => {
     if (userId) {
       try {
         const data = await fetchUserWallets(userId);
-        
-        dispatch(setWallets(data));
+        if (data) {
+          dispatch(setWallets(data));
+        }
       } catch (error) {
         console.error("Error fetching wallet data:", error);
       }
     }
   }
   useEffect(() => {
- 
     fetchData();
-  }, [userId]);
+  }, [userId, dispatch]);
   // function launchGame() {
   //   window.location.href = "https://fusion.imitator-host.site/post?gameId=229&mobile=52&agentId=Imitatorbhai_Seamless&agentKey=118e35769483ef7508b4616c308d84458b26a5e7&referrerUrl=https://jili.rollix777.com";
   // }
   
-  const mainBalance = wallets.find(w => w.cryptoname === "INR")?.balance || "0.00";
+  const mainBalance = wallets?.find(w => w?.cryptoname === "INR")?.balance || "0.00";
 
   return (
-    <div className="min-h-screen bg-[#0F0F19] w-full  ">
+    <div className="min-h-screen bg-[#0F0F19] w-full">
       {/* Mobile View */}
       <div className="md:hidden w-full mx-auto px-0">
         <div className="pt-16 pb-20">
@@ -106,7 +106,7 @@ const Dashboard = () => {
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block  w-full mt-12">
+      <div className="hidden md:block w-full mt-12">
         <div className="w-full lg:px-2">
           {/* Top Bar */}
          
@@ -186,76 +186,78 @@ const Dashboard = () => {
                 <div className="bg-[#151525] rounded-xl overflow-hidden mb-6">
                   <ImageSlider />
                 </div>
-                <div className="col-span-8">
-  <div className="grid grid-cols-2 gap-8">
-    {/* Latest Activity (Latest Games) */}
-    <div className="bg-[#151525] rounded-xl overflow-hidden">
-      <div className="p-3 border-b border-gray-800/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-purple-500" />
-            <h3 className="text-sm font-bold text-white">Latest Games</h3>
-          </div>
-          <button onClick={() => navigate('/games')} className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
-            View All
-            <ChevronRight  className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-      <div className="p-3">
-        <LatestGames title="" type="latest" compact />
-      </div>
-    </div>
 
-    {/* Recent Games */}
-    <div className="bg-[#151525] rounded-xl overflow-hidden ml-6">
-      <div className="p-3 border-b border-gray-800/50">
-        <h3 className="text-sm font-bold text-white">Recent Games</h3>
-      </div>
-      <div className="p-3">
-        <div className="space-y-2">
-          {[1, 2, 3].map((_, index) => (
-            <div key={index} className="flex items-center gap-2 p-2 bg-gray-800/50 rounded-lg">
-              <div className="w-8 h-8 bg-gray-700 rounded-lg"></div>
-              <div>
-                <p className="text-xs font-medium text-white">Game Name</p>
-                <p className="text-[10px] text-gray-400">2 hours ago</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                {/* Latest Games and Recent Games Section */}
+                <div className="grid grid-cols-2 gap-8 mb-6">
+                  {/* Latest Games */}
+                  <div className="bg-[#151525] rounded-xl overflow-hidden">
+                    <div className="p-3 border-b border-gray-800/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-5 h-5 text-purple-500" />
+                          <h3 className="text-sm font-bold text-white">Latest Games</h3>
+                        </div>
+                        <button  onClick={() => navigate('/games')} className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
+                          View All
+                          <ChevronRight className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <LatestGames title="" type="latest" compact />
+                    </div>
+                  </div>
+
+                  {/* Recent Games */}
+                  <div className="bg-[#151525] rounded-xl overflow-hidden">
+                    <ColorGame/>
+                    {/* <div className="p-3 border-b border-gray-800/50">
+                      <h3 className="text-sm font-bold text-white">Recent Games</h3>
+                    </div>
+                    <div className="p-3">
+                      <div className="space-y-2">
+                        {[1, 2, 3].map((_, index) => (
+                          <div key={index} className="flex items-center gap-2 p-2 bg-gray-800/50 rounded-lg">
+                            <div className="w-8 h-8 bg-gray-700 rounded-lg"></div>
+                            <div>
+                              <p className="text-xs font-medium text-white">Game Name</p>
+                              <p className="text-[10px] text-gray-400">2 hours ago</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div> */}
+                  </div>
+                </div>
+
                 {/* Games Sections */}
-                <div className="space-y-6 w-full ">
-                  <GameCarousel  title="Popular Games" type="popular" />
+                <div className="space-y-6 w-full">
+                  <GameCarousel title="Popular Games" type="popular" />
                   <TrendingGames title="Trending Games" type="trending" />
                   <HotGames title="Hot Games" type="hot" />
                 </div>
-                
               </div>
-
-   {/* Sidebar */}
-
             </div>
           </div>
         </div>
       </div>
 
       {/* Modals */}
-      <DepositModal 
-        isOpen={isDepositModalOpen} 
-        onClose={() => setIsDepositModalOpen(false)}
-        userId={userId}
-      />
-      <WithdrawModal 
-        isOpen={isWithdrawModalOpen} 
-        onClose={() => setIsWithdrawModalOpen(false)} 
-        mainBalance={Number(mainBalance)}
-        fetchData={fetchData}
-      />
+      {userId > 0 && (
+        <>
+          <DepositModal 
+            isOpen={isDepositModalOpen} 
+            onClose={() => setIsDepositModalOpen(false)}
+            userId={userId}
+          />
+          <WithdrawModal 
+            isOpen={isWithdrawModalOpen} 
+            onClose={() => setIsWithdrawModalOpen(false)} 
+            mainBalance={Number(mainBalance)}
+            fetchData={fetchData}
+          />
+        </>
+      )}
     </div>
   );
 };
