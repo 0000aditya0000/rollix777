@@ -1,7 +1,9 @@
 import React, { useState, useRef } from "react";
 import { Zap } from "lucide-react";
 import CryptoJS from "crypto-js";
-import vegasGames from "../gamesData/vegas.json";
+import rubyplayGames from "../gamesData/rubyplay.json";
+import netentGames from "../gamesData/netent.json";
+import microgamingGames from "../gamesData/microgaming.json";
 import AuthModal from "./AuthModal";
 import axios from "axios";
 
@@ -35,7 +37,7 @@ const openJsGame = async (id: string): Promise<void> => {
       return;
     }
 
-    const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+    const response = await axios.post("http://191.101.81.104:5000/api/color/launchGame", {
       userId,
       id,
     });
@@ -54,7 +56,19 @@ const openJsGame = async (id: string): Promise<void> => {
 const LatestGames: React.FC<LatestGamesProps> = ({ title, type }) => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const latestGames = vegasGames;
+
+  // Get 3 random games from each provider
+  const getRandomGames = (games: any[], count: number) => {
+    const shuffled = [...games].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
+  // Combine games from all providers
+  const latestGames = [
+    ...getRandomGames(rubyplayGames, 3),
+    ...getRandomGames(netentGames, 3),
+    ...getRandomGames(microgamingGames, 3)
+  ];
 
   const scrollLeft = () => {
     if (scrollRef.current) {
@@ -78,15 +92,13 @@ const LatestGames: React.FC<LatestGamesProps> = ({ title, type }) => {
         <div className="flex gap-2 ">
           <button
             onClick={scrollLeft}
-                       className=" text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
-
+            className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
           >
             &lt;
           </button>
           <button
             onClick={scrollRight}
-                       className=" text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
-
+            className="text-white bg-purple-900/20 p-2 rounded-full transition-colors hover:bg-purple-700 flex items-center justify-center w-8 h-8"
           >
             &gt;
           </button>
@@ -101,22 +113,27 @@ const LatestGames: React.FC<LatestGamesProps> = ({ title, type }) => {
           latestGames.map((game) => (
             <div
               key={game.id}
-              className="min-w-[140px] bg-[#252547] rounded-xl border border-purple-500/10 shadow-lg relative"
+              className="group cursor-pointer transform hover:scale-105 transition-transform duration-200 min-w-[180px]"
+              onClick={() => openJsGame(game.id)}
             >
-              <div className="relative">
-                <img
-                  src={game.img}
+              {/* Game Image */}
+              <div className="relative overflow-hidden bg-gray-800">
+                <img 
+                  src={game.img} 
                   alt={game.name}
-                  onClick={() => openJsGame(game.id)}
-                  className="w-full h-full object-cover cursor-pointer rounded-xl"
+                  className="w-full h-52 object-fill"
+                  style={{ objectPosition: 'center' }}
                 />
-                {/* Game Name Overlay */}
-                {/* <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 rounded-b-xl">
-                  <h3 className="text-white font-bold text-center text-lg rounded-lg">
-                    {game.game_name}
-                  </h3>
-                </div> */}
+                {/* Play Button Overlay */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
+                    Play Now
+                  </button>
+                </div>
               </div>
+              
+              {/* Game Title on Black Background */}
+              
             </div>
           ))
         ) : (

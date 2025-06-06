@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://rollix777.com/api';
+const API_BASE_URL = 'http://191.101.81.104:5000/api';
 
 interface DepositRequest {
   userId: number;

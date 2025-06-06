@@ -18,7 +18,9 @@ import WingoGame from "./WingoGame";
 import axios from "axios";
 
 // Import games data
-import gamesData from "../gamesData/apex.json";
+import rubyplayGames from "../gamesData/rubyplay.json";
+import netentGames from "../gamesData/netent.json";
+import microgamingGames from "../gamesData/microgaming.json";
 
 interface GameData {
   game_name: string;
@@ -45,20 +47,31 @@ const Hero: React.FC = () => {
   const gamesPerPage = 8;
 
   useEffect(() => {
-    if (gamesData && gamesData.length > 0) {
-      const randomGames = [...(gamesData as any[])]
+    // Get 3 random games from each provider
+    const getRandomGames = (games: any[], count: number) => {
+      return [...games]
         .sort(() => 0.5 - Math.random())
-        .slice(0, 24) // Get more games for pagination
-        .map(game => ({
-          id: game.id || game.game_uid,
-          title: game.name || game.game_name,
-          image: game.img || game.icon,
-          provider: game.title || game.game_type,
-          category: game.categories || game.game_category
-        }));
-      
-      setFeaturedGames(randomGames);
-    }
+        .slice(0, count);
+    };
+
+    const rubyplayRandom = getRandomGames(rubyplayGames, 3);
+    const netentRandom = getRandomGames(netentGames, 3);
+    const microgamingRandom = getRandomGames(microgamingGames, 3);
+
+    // Combine all random games
+    const allRandomGames = [
+      ...rubyplayRandom,
+      ...netentRandom,
+      ...microgamingRandom
+    ].map(game => ({
+      id: game.id,
+      title: game.name,
+      image: game.img,
+      provider: game.title,
+      category: game.categories
+    }));
+    
+    setFeaturedGames(allRandomGames);
   }, []);
 
   const totalPages = Math.ceil(featuredGames.length / gamesPerPage);
@@ -95,7 +108,7 @@ const openJsGame = async (id: string): Promise<void> => {
       return;
     }
 
-      const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+      const response = await axios.post("http://191.101.81.104:5000/api/color/launchGame", {
       userId,
       id,
     });
@@ -331,31 +344,29 @@ const openJsGame = async (id: string): Promise<void> => {
                   </div>
                 </div>
 
-            {/* Horizontal scrollable row for mobile */}
+            {/* Mobile View */}
             <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
               {featuredGames.map(game => (
                 <div
                   key={game.id}
-                  className="flex-shrink-0 w-[160px]"
+                  className="group cursor-pointer transform hover:scale-105 transition-transform duration-200 flex-shrink-0 w-[180px]"
+                  onClick={() => openJsGame(game.id)}
                 >
-                  <div 
-                    onClick={() => openJsGame(game.id)}
-                    className="relative w-full h-[180px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
-                  >
-                    <img
-                      src={game.image}
+                  {/* Game Image */}
+                  <div className="relative overflow-hidden bg-gray-800">
+                    <img 
+                      src={game.image} 
                       alt={game.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-52 object-fill"
+                      style={{ objectPosition: 'center' }}
                     />
+                    {/* Play Button Overlay */}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
                         Play Now
                       </button>
                     </div>
                   </div>
-                  <h3 className="text-white font-medium text-sm text-center line-clamp-1">
-                    {game.title}
-                  </h3>
                 </div>
               ))}
             </div>
@@ -389,31 +400,29 @@ const openJsGame = async (id: string): Promise<void> => {
               </div>
             </div>
 
-            {/* Single row grid for desktop */}
-            <div className="grid grid-cols-6 gap-6">
+            {/* Desktop View */}
+            <div className="grid grid-cols-6 gap-4">
               {currentGames.slice(0, 6).map(game => (
                 <div
                   key={game.id}
-                  className="flex flex-col items-center group"
+                  className="group cursor-pointer transform hover:scale-105 transition-transform duration-200 max-w-[200px] mx-auto w-full"
+                  onClick={() => openJsGame(game.id)}
                 >
-                  <div 
-                    onClick={() => openJsGame(game.id)}
-                    className="relative w-full h-[240px] bg-[#252547] rounded-2xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-3 flex items-center justify-center group"
-                  >
-                  <img
-                    src={game.image}
-                    alt={game.title}
-                      className="w-full h-full object-fit"
+                  {/* Game Image */}
+                  <div className="relative overflow-hidden bg-gray-800">
+                    <img 
+                      src={game.image} 
+                      alt={game.title}
+                      className="w-full h-52 object-fill"
+                      style={{ objectPosition: 'center' }}
                     />
+                    {/* Play Button Overlay */}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button className="bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+                      <button className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
                         Play Now
-                        </button>
+                      </button>
                     </div>
                   </div>
-                  <h3 className="text-gray-400 font-medium text-sm text-center line-clamp-1">
-                    {game.title}
-                  </h3>
                 </div>
               ))}
             </div>

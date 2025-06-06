@@ -31,6 +31,7 @@ import CommissionDetails from "./components/promotions/CommissionDetails";
 import LatestGames from "./components/LatestGames";
 import Coupon from "./components/coupon/Coupon";
 import KYCVerification from "./pages/KYCVerification";
+import ErrorPage from "./components/ErrorPage";
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
   const location = useLocation();
@@ -78,7 +79,12 @@ function App() {
                       <Route path="/" element={<ConditionalHome />} />
                       <Route path="/games" element={<AllGames />} />
                       {/* <Route path="/featured=games" element={< />} /> */}
-                      <Route path="/featured-games" element={<GameCarousel title="Featured Games" type="featured" />} />
+                     
+
+                      {/* Protected Routes - Only accessible when authenticated */}
+                      {authenticated ? (
+                        <> 
+                         <Route path="/featured-games" element={<GameCarousel title="Featured Games" type="featured" />} />
                       <Route path="/trending-games" element={<TrendingGames title="Trending Games" type="trending" />} />
                       <Route path="/hot-games" element={<HotGames title="Hot Games" type="hot" />} />
                       <Route path="/color-game" element={<ColorGame />} />
@@ -87,10 +93,6 @@ function App() {
                       <Route path="/rewards" element={<Promotions />} />
                       <Route path="/coupon" element={<Coupon />} />
                       <Route path="/kyc-verification" element={<KYCVerification />} />
-
-                      {/* Protected Routes - Only accessible when authenticated */}
-                      {authenticated ? (
-                        <>
                           <Route path="/dashboard" element={<Dashboard />} />
                           <Route path="/account" element={<MyAccount />} />
                           <Route path="/wallet" element={<Wallet />} />
@@ -116,8 +118,24 @@ function App() {
                           {/* Landing Page Components - Only shown when not authenticated */}
                           <Route path="/hero" element={<Hero />} />
                           <Route path="/features" element={<Features />} />
+                          {/* Show error page for protected routes when not authenticated */}
+                          <Route path="/*" element={
+                            <ErrorPage 
+                              title="Authentication Required" 
+                              message="Please login to access this page."
+                              showLoginButton={true}
+                            />
+                          } />
                         </>
                       )}
+
+                      {/* Catch all route for undefined routes */}
+                      <Route path="*" element={
+                        <ErrorPage 
+                          title="Page Not Found" 
+                          message="The page you're looking for doesn't exist."
+                        />
+                      } />
                     </Routes>
                   </main>
                   <Footer />

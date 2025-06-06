@@ -85,7 +85,7 @@ const BigSmall = () => {
 
     try {
       isFetchingRef.current[duration] = true;
-      const response = await axios.post('https://rollix777.com/api/color/timer', { duration });
+      const response = await axios.post('http://191.101.81.104:5000/api/color/timer', { duration });
       const data = response.data;
       
       let remainingSeconds;

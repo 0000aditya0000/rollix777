@@ -88,8 +88,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
   // Handle login form submission
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim() === "" || password.trim() === "") {
-      setError("Please enter both email and password");
+    if (password.trim() === "") {
+      setError("Please enter your password");
       return;
     }
 
@@ -122,8 +122,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    // Validate required fields
-    if (!referalCode || !name.trim() || !username.trim() || !email.trim() || !phoneNumber.trim() || !password.trim()) {
+    // Validate required fields (removed email from required fields)
+    if (!referalCode || !name.trim() || !username.trim() || !phoneNumber.trim() || !password.trim()) {
       setError("Please fill in all required fields");
       return;
     }
@@ -193,7 +193,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
           {mode === "login" ? (
             <form className="space-y-4" onSubmit={handleLogin}>
               <div className="space-y-1">
-                <label className="text-sm text-gray-300">Email / Username</label>
+                <label className="text-sm text-gray-300">Email / Username / Phone</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <Mail className="w-5 h-5 text-purple-400" />
@@ -201,7 +201,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   <input
                     type="text"
                     className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                    placeholder="Enter your email OR Username"
+                    placeholder="Enter your email OR Username Or Phone"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -292,7 +292,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-sm text-gray-300 block mb-1">Email</label>
+                    <label className="text-sm text-gray-300 block mb-1">Email (Optional)</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <Mail className="w-5 h-5 text-purple-400" />
@@ -300,10 +300,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       <input
                         type="email"
                         className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                        placeholder="Enter your email"
+                        placeholder="Enter your email (optional)"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        required
                       />
                     </div>
                   </div>

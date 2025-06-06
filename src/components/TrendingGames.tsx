@@ -37,7 +37,7 @@ const openJsGame = async (id: string): Promise<void> => {
       return;
     }
 
-    const response = await axios.post("https://rollix777.com/api/color/launchGame", {
+    const response = await axios.post("http://191.101.81.104:5000/api/color/launchGame", {
       userId,
       id,
     });
@@ -162,30 +162,28 @@ const TrendingGames: React.FC<TrendingGamesProps> = ({ title, type }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {filteredGames.map((game) => (
             <div
               key={game.id}
-              className="flex flex-col items-center"
+              className="group cursor-pointer transform hover:scale-105 transition-transform duration-200 max-w-[180px] mx-auto w-full"
+              onClick={() => handleGameLaunch(game.id)}
             >
-              <div 
-                onClick={() => handleGameLaunch(game.id)}
-                className="relative w-full h-[100px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-1 group"
-              >
-                <img
-                  src={game.img}
+              {/* Game Image */}
+              <div className="relative overflow-hidden bg-gray-800">
+                <img 
+                  src={game.img} 
                   alt={game.name}
-                  className="w-full h-full object-fit"
+                  className="w-full h-52 object-fill"
+                  style={{ objectPosition: 'center' }}
                 />
+                {/* Play Button Overlay */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
                     Play Now
                   </button>
                 </div>
               </div>
-              <h3 className="text-white font-medium text-sm text-center line-clamp-1">
-                {game.name}
-              </h3>
             </div>
           ))}
         </div>
@@ -227,30 +225,28 @@ const TrendingGames: React.FC<TrendingGamesProps> = ({ title, type }) => {
         </div>
         
         {/* Game grid */}
-        <div className="grid grid-cols-6 gap-6">
+        <div className="grid grid-cols-6 gap-4">
           {currentGames.map((game) => (
             <div 
               key={game.id} 
-              className="flex flex-col items-center group"
+              className="group cursor-pointer transform hover:scale-105 transition-transform duration-200 max-w-[200px] mx-auto w-full"
+              onClick={() => handleGameLaunch(game.id)}
             >
-              <div 
-                onClick={() => handleGameLaunch(game.id)}
-                className="relative w-full h-[240px] bg-[#252547] rounded-2xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-3 flex items-center justify-center group"
-              >
-                <img
-                  src={game.img}
+              {/* Game Image */}
+              <div className="relative overflow-hidden bg-gray-800">
+                <img 
+                  src={game.img} 
                   alt={game.name}
-                  className="w-full h-full object-fit"
+                  className="w-full h-52 object-fill"
+                  style={{ objectPosition: 'center' }}
                 />
+                {/* Play Button Overlay */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button className="bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+                  <button className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
                     Play Now
                   </button>
                 </div>
               </div>
-              <h3 className="text-gray-400 font-medium text-sm text-center line-clamp-1">
-                {game.name}
-              </h3>
             </div>
           ))}
         </div>

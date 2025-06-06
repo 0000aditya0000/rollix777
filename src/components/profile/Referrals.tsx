@@ -35,14 +35,14 @@ const Referrals = () => {
   
   const referralCode = localStorage.getItem("referralCode");
   
-  const referralLink = `https://rollix777.com/refer/${referralCode}`;
+  const referralLink = `http://191.101.81.104:5000/refer/${referralCode}`;
 
   useEffect(() => {
     const userId = Number(localStorage.getItem('userId'));
     const fetchData = async () => {
       try {
         // Fetch referral data
-        const referralResponse = await fetch(`https://rollix777.com/api/user/referrals/${userId}`);
+        const referralResponse = await fetch(`http://191.101.81.104:5000/api/user/referrals/${userId}`);
         if (!referralResponse.ok) {
           throw new Error('Failed to fetch referral data');
         }
@@ -50,7 +50,7 @@ const Referrals = () => {
         setReferralData(referralData);
 
         // Fetch pending commissions
-        const pendingResponse = await fetch(`https://rollix777.com/api/user/pending-commissions/${userId}`);
+        const pendingResponse = await fetch(`http://191.101.81.104:5000/api/user/pending-commissions/${userId}`);
         if (!pendingResponse.ok) {
           throw new Error('Failed to fetch pending commissions');
         }
