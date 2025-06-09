@@ -1,23 +1,26 @@
 import axios from "axios";
 import { baseUrl } from "../config/server.js";
 
-export const fetchResults = async () => {
+export const fetchResults = async (duration) => {
   try {
-    const response = await axios.get(`${baseUrl}/api/color/results`);
+    const response = await axios.post(`${baseUrl}/api/color/results`, {
+      duration
+    });
     return response.data;
   } catch (error) {
     throw error;
   }
 };
 
-export const generateResult = async periodNumber => {
+export const generateResult = async(periodNumber, duration)  => {
   try {
     if (!periodNumber || isNaN(periodNumber)) {
       throw new Error("Invalid period number");
     }
 
     const response = await axios.post(`${baseUrl}/api/color/generate-result`, {
-      periodNumber: Number(periodNumber)
+      periodNumber: Number(periodNumber),
+      duration
     });
 
     if (!response.data) {
@@ -55,10 +58,10 @@ export const getBetHistory = async userId => {
   }
 };
 
-export const checkValidBet = async userId => {
+export const checkValidBet = async (userId,duration) => {
   try {
     const response = await axios.post(`${baseUrl}/api/color/checkValidBet`, {
-      userId
+      userId,duration
     });
     return response.data;
   } catch (error) {

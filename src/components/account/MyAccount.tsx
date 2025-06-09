@@ -136,7 +136,7 @@ const MyAccount: React.FC = () => {
     { 
       icon: HelpCircle, 
       label: 'Help Center', 
-      route: '/help',
+      route: '/support',
       description: '24/7 customer support',
       bgColor: 'from-rose-600/10 to-red-500/10',
       hoverBg: 'from-rose-600/20 to-red-500/20'

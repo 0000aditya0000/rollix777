@@ -37,6 +37,7 @@ import spribeGames from '../../gamesData/spribe.json';
 import vegasGames from '../../gamesData/vegas.json';
 import wazdanGames from '../../gamesData/wazdan.json';
 import zitroGames from '../../gamesData/zitro.json';
+import pgsoftGames from '../../gamesData/pgsoft.json';
 
 const aesKey = "126c2e86c418427c4aa717f971063e0e";
 const serverUrl = "https://api.workorder.icu/proxy";
@@ -54,10 +55,47 @@ const generateRandom10Digits = () => {
   return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };
 
+// Add new interface for JILI game format
+interface JiliGame {
+  gameID: string;
+  gameNameEn: string;
+  img: string;
+  vendorId: number;
+  vendorCode: string;
+  imgUrl2: string | null;
+  customGameType: number;
+}
+
+interface JiliGameData {
+  data: {
+    gameCustomTypeLists: any[];
+    gameLists: JiliGame[];
+  }
+}
+
 const AllGames: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const gameProviders: GameProvider[] = [
-    // { id: 'jili', name: 'JILI', games: jiliGames },
+    { 
+      id: 'jili', 
+      name: 'JILI', 
+      games: (jiliGames as JiliGameData).data.gameLists.map(game => ({
+        id: game.gameID,
+        name: game.gameNameEn,
+        img: game.img,
+        vendor: game.vendorCode
+      }))
+    },
+    { 
+      id: 'pgsoft', 
+      name: 'PGSOFT', 
+      games: pgsoftGames.map(game => ({
+        id: game.id,
+        name: game.name,
+        img: game.img,
+        vendor: 'PGSOFT'
+      }))
+    },
     { id: 'pragmatic', name: 'PRAGMATIC', games: pragmaticGames },
     { id: 'spribe', name: 'SPRIBE', games: spribeGames },
     { id: 'apollo', name: 'APOLLO', games: apolloGames },
@@ -119,7 +157,7 @@ const AllGames: React.FC = () => {
   //   (currentPage + 1) * gamesPerPage
   // );
 
-  const openJsGame = async (id: string): Promise<void> => {
+  const openJsGame = async (id: string, vendor?: string): Promise<void> => {
     try {
       setIsLoading(true);
       const userId = localStorage.getItem("userId");
@@ -130,7 +168,15 @@ const AllGames: React.FC = () => {
         return;
       }
 
-      const response = await axios.post("http://191.101.81.104:5000/api/color/launchGame", {
+      // Handle JILI games differently
+      if (vendor === 'JILI') {
+        const gameUrl = `https://fusion.imitator-host.site/post?gameId=${id}&mobile=${userId}&agentId=Imitatorbhai_Seamless&agentKey=118e35769483ef7508b4616c308d84458b26a5e7&referrerUrl=https://jili.rollix777.com/`;
+        window.location.href = gameUrl;
+        return;
+      }
+
+      // Original game launch logic for other providers
+      const response = await axios.post("https://api.rollix777.com/api/color/launchGame", {
         userId,
         id,
       });
@@ -255,7 +301,7 @@ const AllGames: React.FC = () => {
               className="flex flex-col items-center"
             >
               <div 
-                onClick={() => openJsGame(game.id)}
+                onClick={() => openJsGame(game.id, game.vendor)}
                 className="relative w-full h-[100px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
               >
                 <img
@@ -353,7 +399,7 @@ const AllGames: React.FC = () => {
       className="flex flex-col items-center group"
     >
       <div 
-        onClick={() => openJsGame(game.id)}
+        onClick={() => openJsGame(game.id, game.vendor)}
         className="relative w-full h-[240px] bg-[#252547] rounded-2xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-3 flex items-center justify-center group"
               >
                 <img 

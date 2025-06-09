@@ -58,7 +58,7 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title }) => {
         return;
       }
 
-      const response = await axios.post("http://191.101.81.104:5000/api/color/launchGame", {
+      const response = await axios.post("https://api.rollix777.com/api/color/launchGame", {
         userId,
         id,
       });
@@ -134,52 +134,43 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title }) => {
 
       {/* Mobile View */}
       <section className="md:hidden py-8 px-4 bg-[#1A1A2E]">
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <Flame className="w-6 h-6 text-orange-500" />
-              <h2 className="text-2xl font-bold text-white">{title}</h2>
-            </div>
-          </div>
-          
-          {/* Search Bar for Mobile */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search Games..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#252547] text-white rounded-lg pl-10 pr-4 py-2 border border-purple-500/20 focus:outline-none focus:border-purple-500/50"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <Flame className="w-5 h-5 text-orange-500" />
+            <h2 className="text-xl font-bold text-white">{title}</h2>
+            <button
+              onClick={() => navigate('/games')}
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1 ml-2"
+            >
+              View All
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           {filteredGames.map((game) => (
             <div
               key={game.id}
-              className="group cursor-pointer transform hover:scale-105 transition-transform duration-200 max-w-[180px] mx-auto w-full"
-              onClick={() => openJsGame(game.id)}
+              className="flex flex-col items-center"
             >
-              {/* Game Image */}
-              <div className="relative overflow-hidden bg-gray-800">
-                <img 
-                  src={game.img} 
+              <div 
+                onClick={() => openJsGame(game.id)}
+                className="relative w-full h-[100px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
+              >
+                <img
+                  src={game.img}
                   alt={game.name}
-                  className="w-full h-52 object-fill"
-                  style={{ objectPosition: 'center' }}
+                  className="w-full h-full object-fit"
                 />
-                {/* Play Button Overlay */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
                     Play Now
                   </button>
                 </div>
               </div>
-              
-              {/* Game Title on Black Background */}
-             
+              <h3 className="text-white font-medium text-sm text-center line-clamp-1">
+                {game.name}
+              </h3>
             </div>
           ))}
         </div>

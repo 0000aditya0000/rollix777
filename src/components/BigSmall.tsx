@@ -7,6 +7,9 @@ import { useDispatch } from "react-redux";
 import { deposit, withdraw } from "../slices/walletSlice";
 import { fetchResults, generateResult, getBetHistory, checkValidBet, placeBet } from "../lib/services/BigSmallServices";
 import axios from "axios";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
 
 type Record = {
   id: number;
@@ -66,6 +69,17 @@ const BigSmall = () => {
     '10min': 0
   });
 
+  // Add a state to track periods for different timers
+  const [periods, setPeriods] = useState({
+    '1min': 0,
+    '3min': 0,
+    '5min': 0,
+    '10min': 0
+  });
+
+  // Add a new state to track which timers have already triggered their API calls
+  const [triggeredTimers, setTriggeredTimers] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     // Initial fetch for all timers
     ['1min', '3min', '5min', '10min'].forEach(duration => {
@@ -85,7 +99,7 @@ const BigSmall = () => {
 
     try {
       isFetchingRef.current[duration] = true;
-      const response = await axios.post('http://191.101.81.104:5000/api/color/timer', { duration });
+      const response = await axios.post('https://api.rollix777.com/api/color/timer', { duration });
       const data = response.data;
       
       let remainingSeconds;
@@ -122,30 +136,54 @@ const BigSmall = () => {
       clearInterval(intervalRefs.current[duration]);
     }
 
+    // Reset the triggered state for this timer when starting a new countdown
+    setTriggeredTimers(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(duration);
+      return newSet;
+    });
+
     // Set initial time
     setTimers(prev => ({
       ...prev,
       [duration]: Math.floor(initialTime)
     }));
 
-    let hasShownAlert = false;
-
     // Start local countdown
     intervalRefs.current[duration] = setInterval(() => {
       setTimers(current => {
         const currentTime = current[duration];
         if (currentTime <= 1) {
-          if (!hasShownAlert) {
-            hasShownAlert = true;
-            console.log(`Timer ended for ${duration}, active tab is ${activeTab}`); // Debug log
+          // Check if this timer has already triggered its API calls
+          if (!triggeredTimers.has(duration)) {
+            console.log(`Timer ended for ${duration}, making API calls`); // Debug log
             
-            // Call getResult when timer ends
-            getResult().then(() => {
-              console.log('getResult completed, fetching new timer data'); // Debug log
+            // Mark this timer as triggered immediately to prevent duplicate calls
+            setTriggeredTimers(prev => new Set(prev).add(duration));
+            
+            // Get the current period for this duration
+            const currentPeriodForTimer = periods[duration];
+            console.log(`Current period for ${duration}:`, currentPeriodForTimer); // Debug log
+
+            if (!currentPeriodForTimer || isNaN(currentPeriodForTimer)) {
+              console.error(`Invalid period number for ${duration}:`, currentPeriodForTimer);
+              setError(`Invalid period number for ${duration}`);
+              return { ...current, [duration]: 0 };
+            }
+
+            // Call getResult with the current period and duration
+            getResult(duration, currentPeriodForTimer).then(() => {
+              console.log(`API calls completed for ${duration}, fetching new timer data`); // Debug log
               // After getResult completes, fetch new timer data
               fetchTimerData(duration);
             }).catch(error => {
-              console.error('Error in getResult:', error);
+              console.error(`Error in getResult for ${duration}:`, error);
+              // Remove from triggered timers if there was an error
+              setTriggeredTimers(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(duration);
+                return newSet;
+              });
             });
           }
           return { ...current, [duration]: 0 };
@@ -166,13 +204,25 @@ const BigSmall = () => {
   };
 
   useEffect(() => {
-    fetchTableData();
-  }, []);
+    if (activeTab) {
+      fetchTableData();
+    }
+  }, [activeTab]);
 
   const fetchTableData = async () => {
     try {
-      const response = await fetchResults();
-      setCurrentPeriod(response.results[0].period_number + 1);
+      console.log('Fetching results for duration:', activeTab); // Debug log
+      const response = await fetchResults(activeTab);
+      
+      // Update the period for the current active timer
+      const newPeriod = response.results[0].period_number + 1;
+      setPeriods(prev => ({
+        ...prev,
+        [activeTab]: newPeriod
+      }));
+      
+      // Set the current period based on active timer
+      setCurrentPeriod(newPeriod);
       setRecords(response.results);
       setError(null);
     } catch (error) {
@@ -181,17 +231,18 @@ const BigSmall = () => {
     }
   };
 
-  const getResult = async () => {
+  const getResult = async (duration: string, periodNumber: number) => {
     try {
-      console.log('getResult called'); // Debug log
-      if (!currentPeriod || isNaN(currentPeriod)) {
-        console.error('Invalid period number:', currentPeriod);
+      console.log('getResult called with duration:', duration, 'period:', periodNumber); // Debug log
+      
+      if (!periodNumber || isNaN(periodNumber)) {
+        console.error('Invalid period number:', periodNumber);
         setError("Invalid period number");
         return;
       }
 
-      console.log('Generating result for period:', currentPeriod); // Debug log
-      const data = await generateResult(currentPeriod);
+      console.log('Generating result for period:', periodNumber, 'and duration:', duration); // Debug log
+      const data = await generateResult(periodNumber, duration);
       
       if (!data) {
         console.error('No data received from generateResult');
@@ -202,7 +253,26 @@ const BigSmall = () => {
       console.log('Result generated:', data); // Debug log
       setResult(data);
       setRecords((prev) => [data, ...prev]);
-      await fetchTableData();
+      
+      // Get the new period number from the API response
+      const newPeriodNumber = data.period_number + 1;
+      
+      // Update the period for this timer
+      setPeriods(prev => ({
+        ...prev,
+        [duration]: newPeriodNumber
+      }));
+      
+      // If this is the active timer, update currentPeriod
+      if (duration === activeTab) {
+        setCurrentPeriod(newPeriodNumber);
+      }
+      
+      // Only fetch table data if this is the active tab
+      if (duration === activeTab) {
+        await fetchTableData();
+      }
+      
       await checkWinLose(data);
       setBets([]);
       setError(null);
@@ -210,6 +280,7 @@ const BigSmall = () => {
       console.error('Error in getResult:', error);
       const errorMessage = error instanceof Error ? error.message : "Failed to generate result. Please try again later.";
       setError(errorMessage);
+      throw error; // Re-throw the error to be caught by the caller
     }
   };
 
@@ -219,7 +290,8 @@ const BigSmall = () => {
       const latestBetHistory = response.betHistory[0] as BetHistory;
       setbetHistory(latestBetHistory);
 
-      if (latestBetHistory.periodNumber === currentPeriod) {
+      const periodForTimer = periods[activeTab];
+      if (latestBetHistory.periodNumber === periodForTimer) {
         if (latestBetHistory.status === "won") {
           dispatch(
             deposit({
@@ -243,16 +315,28 @@ const BigSmall = () => {
 
   const handleBet = async () => {
     try {
-      const checkResponse = await checkValidBet(userId);
-  
+      const checkResponse = await checkValidBet(userId, activeTab);
+
       if (checkResponse.pendingBets > 0) {
-        setError("You have already placed a bet for this period.");
+        toast.error("You have already placed a bet", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            background: 'red',
+            color: 'white',
+          },
+        });
         return;
       }
-  
+
       let betType: string;
       let betValue: string | number;
-  
+
       if (selectedNumber !== null) {
         betType = "number";
         betValue = selectedNumber;
@@ -266,25 +350,33 @@ const BigSmall = () => {
         setError("Please select a valid bet type.");
         return;
       }
-  
+
+      const periodForTimer = periods[activeTab];
       const payload = {
         userId,
         betType,
         betValue,
         amount: contractMoney,
-        periodNumber: currentPeriod,
+        periodNumber: periodForTimer,
+        duration: activeTab
       };
 
-      const response = await placeBet(payload);
+      console.log('Placing bet with payload:', payload); // Debug log
 
-      if (response.status === 200) {
+      const response = await placeBet(payload);
+      console.log('Bet placement response:', response); // Debug log
+
+      // Check if response exists and has success message
+      if (response) {
         const bet: Bet = {
-          period: currentPeriod!,
+          period: periodForTimer,
           number: selectedNumber !== null ? selectedNumber : null,
           color: selectedColor || undefined,
           big_small: selectedSize || undefined,
           amount: contractMoney,
         };
+        
+        // Update UI and state
         dispatch(withdraw({ cryptoname: "INR", amount: contractMoney }));
         setBets((prev) => [...prev, bet]);
         setSelectedNumber(null);
@@ -292,13 +384,45 @@ const BigSmall = () => {
         setSelectedSize("");
         setContractMoney(0);
         setAgreed(false);
-        setError(null);
+        
+        // Show success message in green toast
+        toast.success(response.message, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            background: '#4CAF50',
+            color: 'white',
+          },
+        });
+        
+        // Close the bet popup if it exists
+        setSelectedNumber(null);
+        setSelectedColor("");
+        setSelectedSize("");
       } else {
-        setError("Failed to place bet. Please try again.");
+        console.error('Invalid response from placeBet:', response);
+        toast.error(response.message, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            background: '#4CAF50',
+            color: 'white',
+          },
+        });
       }
     } catch (error) {
-      setError("Failed to place bet. Please try again later.");
       console.error("Error placing bet:", error);
+      setError("Failed to place bet. Please try again later.");
     }
   };
 
@@ -339,7 +463,9 @@ const BigSmall = () => {
                       ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                       : "bg-[#252547] border border-purple-500/20 text-gray-300 hover:bg-[#2f2f5a]"
                   }`}
-                  onClick={() => setActiveTab(duration)}
+                  onClick={() => {
+                    setActiveTab(duration);
+                  }}
                 >
                   {duration}
                   <div className="text-sm mt-1">
@@ -745,6 +871,18 @@ const BigSmall = () => {
           </div>
         </div>
       )}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 };

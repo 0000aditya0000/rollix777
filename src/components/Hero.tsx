@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import WingoGame from "./WingoGame";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 // Import games data
 import rubyplayGames from "../gamesData/rubyplay.json";
@@ -45,6 +46,7 @@ const Hero: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const gamesPerPage = 8;
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Get 3 random games from each provider
@@ -108,7 +110,7 @@ const openJsGame = async (id: string): Promise<void> => {
       return;
     }
 
-      const response = await axios.post("http://191.101.81.104:5000/api/color/launchGame", {
+      const response = await axios.post("https://api.rollix777.com/api/color/launchGame", {
       userId,
       id,
     });
@@ -336,37 +338,44 @@ const openJsGame = async (id: string): Promise<void> => {
                       </div>
 
           {/* Popular Games Section - Mobile */}
-          <div className="md:hidden py-8 px-4">
+          <div className="md:hidden py-8 px-4 bg-[#1A1A2E]">
             <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <Flame className="w-6 h-6 text-orange-500" />
-                <h2 className="text-2xl font-bold text-white">Popular Games</h2>
-                  </div>
-                </div>
-
-            {/* Mobile View */}
-            <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-orange-500" />
+                <h2 className="text-xl font-bold text-white">Popular Games</h2>
+                <button
+                  onClick={() => navigate('/games')}
+                  className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1 ml-2"
+                >
+                  View All
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
               {featuredGames.map(game => (
                 <div
                   key={game.id}
-                  className="group cursor-pointer transform hover:scale-105 transition-transform duration-200 flex-shrink-0 w-[180px]"
-                  onClick={() => openJsGame(game.id)}
+                  className="flex flex-col items-center"
                 >
-                  {/* Game Image */}
-                  <div className="relative overflow-hidden bg-gray-800">
-                    <img 
-                      src={game.image} 
+                  <div 
+                    onClick={() => openJsGame(game.id)}
+                    className="relative w-full h-[100px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
+                  >
+                    <img
+                      src={game.image}
                       alt={game.title}
-                      className="w-full h-52 object-fill"
-                      style={{ objectPosition: 'center' }}
+                      className="w-full h-full object-fit"
                     />
-                    {/* Play Button Overlay */}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
                         Play Now
                       </button>
                     </div>
                   </div>
+                  <h3 className="text-white font-medium text-sm text-center line-clamp-1">
+                    {game.title}
+                  </h3>
                 </div>
               ))}
             </div>

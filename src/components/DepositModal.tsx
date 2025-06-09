@@ -189,7 +189,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
     // Different URLs for different servers
     const serverUrls = {
       server1: `https://pay.rollix777.com/index.php?uid=${uid}&amount=${amount}&phone=${phone}`,
-      server2: `https://pay.rollix777.com/novapay.php?uid=${uid}&amount=${amount}&phone=${phone}`
+      server2: `https://pay.rollix777.com/novapay.php?uid=${uid}&amount=${amount}&phone=${phone}&tyid=1`
     };
     window.location.href = serverUrls[selectedServer];
   }

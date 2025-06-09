@@ -37,7 +37,7 @@ interface UserAllDataResponse {
 
 export const fetchUserAllData = async (userId: string | number): Promise<UserAllDataResponse> => {
   try {
-    const response = await axios.get(`http://191.101.81.104:5000/api/user/user-all-data/${userId}`);
+    const response = await axios.get(`https://api.rollix777.com/api/user/user-all-data/${userId}`);
     return response.data;
   } catch (error) {
     throw error;

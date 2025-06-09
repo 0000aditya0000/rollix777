@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowLeft, HelpCircle, ChevronRight, MessageCircle, Phone, Mail, Send, X, Loader2, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { Search, ArrowLeft, HelpCircle, UserRoundCog, ChevronRight, MessageCircle, Phone, Mail, Send, X, Loader2, CheckCircle, AlertCircle, Info, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface FAQItem {
@@ -12,6 +12,7 @@ interface QueryFormData {
   name: string;
   email: string;
   phone: string;
+  telegramId: string;
   queryType: string;
   queryText: string;
 }
@@ -26,6 +27,7 @@ interface FormValidation {
   name: ValidationState;
   email: ValidationState;
   phone: ValidationState;
+  telegramId: ValidationState;
   queryText: ValidationState;
 }
 
@@ -39,6 +41,7 @@ interface ValidationErrors {
   name?: string;
   email?: string;
   phone?: string;
+  telegramId?: string;
   queryType?: string;
   queryText?: string;
 }
@@ -64,7 +67,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: "What payment methods do you accept?",
-    answer: "We accept all major credit cards, PayPal, and bank transfers.",
+    answer: "We accept UPI and USDT deposits and withdrawals",
     category: "Billing"
   }
 ];
@@ -73,8 +76,9 @@ const categories = [
   { name: "Getting Started", icon: HelpCircle },
   { name: "Account", icon: MessageCircle },
   { name: "Billing", icon: Mail },
-  { name: "Technical Support", icon: Phone },
-  { name: "Send Query", icon: Send }
+  { name: "Find A Teacher", icon: UserRoundCog },
+  { name: "Send Query", icon: Send },
+  { name: "Track Query", icon: History }
 ];
 
 export const HelpCenter: React.FC = () => {
@@ -90,6 +94,7 @@ export const HelpCenter: React.FC = () => {
     name: { isValid: false, message: '', isTouched: false },
     email: { isValid: false, message: '', isTouched: false },
     phone: { isValid: false, message: '', isTouched: false },
+    telegramId: { isValid: false, message: '', isTouched: false },
     queryText: { isValid: false, message: '', isTouched: false }
   });
 
@@ -98,6 +103,7 @@ export const HelpCenter: React.FC = () => {
     name: '',
     email: '',
     phone: '',
+    telegramId: '',
     queryType: queryTypes[0],
     queryText: ''
   });
@@ -120,6 +126,11 @@ export const HelpCenter: React.FC = () => {
       case 'phone':
         if (!value.trim()) return 'Phone number is required';
         if (!/^\d{10}$/.test(value)) return 'Phone number must be exactly 10 digits';
+        return '';
+      
+      case 'telegramId':
+        if (!value.trim()) return 'Telegram ID is required';
+        if (value.trim().length < 3) return 'Telegram ID must be at least 3 characters';
         return '';
       
       case 'queryText':
@@ -164,6 +175,7 @@ export const HelpCenter: React.FC = () => {
       name: validateField('name', queryFormData.name),
       email: validateField('email', queryFormData.email),
       phone: validateField('phone', queryFormData.phone),
+      telegramId: validateField('telegramId', queryFormData.telegramId),
       queryType: validateField('queryType', queryFormData.queryType),
       queryText: validateField('queryText', queryFormData.queryText)
     };
@@ -189,6 +201,7 @@ export const HelpCenter: React.FC = () => {
           name: '',
           email: '',
           phone: '',
+          telegramId: '',
           queryType: queryTypes[0],
           queryText: ''
         });
@@ -317,6 +330,27 @@ export const HelpCenter: React.FC = () => {
               </div>
               
               <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Telegram ID *</label>
+                <input
+                  type="text"
+                  name="telegramId"
+                  value={queryFormData.telegramId}
+                  onChange={handleInputChange}
+                  onBlur={() => handleBlur('telegramId')}
+                  className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 ${
+                    errors.telegramId ? 'border-red-500/50' : 'border-purple-500/20'
+                  }`}
+                  placeholder="Enter your Telegram ID"
+                />
+                {errors.telegramId && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <AlertCircle size={14} />
+                    {errors.telegramId}
+                  </p>
+                )}
+              </div>
+              
+              <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Query Type *</label>
                 <select
                   name="queryType"
@@ -419,7 +453,7 @@ export const HelpCenter: React.FC = () => {
                   <button
                     key={name}
                     onClick={() => {
-                      if (name === "Send Query") {
+                      if (name === "Send Query" || name === "Find A Teacher") {
                         setIsQueryModalOpen(true);
                       } else {
                         setSelectedCategory(name === selectedCategory ? null : name);
@@ -505,7 +539,7 @@ export const HelpCenter: React.FC = () => {
         </div>
 
         {/* Contact Support Section */}
-        <div className="mt-8">
+        {/* <div className="mt-8">
           <div className="bg-gradient-to-br from-[#1A1A2E] to-[#252547] rounded-xl p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
             <div className="relative max-w-2xl mx-auto text-center">
@@ -531,7 +565,7 @@ export const HelpCenter: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </main>
     </div>
   );
