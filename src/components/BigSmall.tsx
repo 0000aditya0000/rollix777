@@ -69,21 +69,22 @@ const BigSmall = () => {
     '10min': 0
   });
 
-  // Add a state to track periods for different timers
-  const [periods, setPeriods] = useState({
+  // Add a new state to track which timers have already triggered their API calls
+  const [triggeredTimers, setTriggeredTimers] = useState<Set<string>>(new Set());
+
+  // Add state for period numbers for each timer
+  const [periodNumbers, setPeriodNumbers] = useState({
     '1min': 0,
     '3min': 0,
     '5min': 0,
     '10min': 0
   });
 
-  // Add a new state to track which timers have already triggered their API calls
-  const [triggeredTimers, setTriggeredTimers] = useState<Set<string>>(new Set());
-
   useEffect(() => {
     // Initial fetch for all timers
     ['1min', '3min', '5min', '10min'].forEach(duration => {
       fetchTimerData(duration);
+      fetchPeriodNumber(duration);
     });
 
     // Cleanup intervals when component unmounts
@@ -92,6 +93,34 @@ const BigSmall = () => {
     };
   }, []); // Empty dependency array means this runs once on mount
 
+  // Modify fetchPeriodNumber to use mins in payload
+  const fetchPeriodNumber = async (duration: string) => {
+    try {
+      const response = await axios.post('https://api.rollix777.com/api/color/period', {
+        mins: duration // Changed back to mins for period API
+      });
+      
+      if (response.data && typeof response.data.period_number === 'number') {
+        setPeriodNumbers(prev => ({
+          ...prev,
+          [duration]: response.data.period_number
+        }));
+        
+        if (duration === activeTab) {
+          setCurrentPeriod(response.data.period_number);
+        }
+        return response.data.period_number;
+      } else {
+        console.error('Invalid period number received from API:', response.data);
+        throw new Error('Invalid period number received from API');
+      }
+    } catch (error) {
+      console.error(`Failed to fetch period number for ${duration}:`, error);
+      throw error;
+    }
+  };
+
+  // Keep fetchTimerData with duration in payload
   const fetchTimerData = async (duration) => {
     if (isFetchingRef.current[duration]) {
       return;
@@ -99,7 +128,12 @@ const BigSmall = () => {
 
     try {
       isFetchingRef.current[duration] = true;
-      const response = await axios.post('https://api.rollix777.com/api/color/timer', { duration });
+      
+      await fetchPeriodNumber(duration);
+      
+      const response = await axios.post('https://api.rollix777.com/api/color/timer', { 
+        duration: duration // Keep duration for timer API
+      });
       const data = response.data;
       
       let remainingSeconds;
@@ -113,10 +147,11 @@ const BigSmall = () => {
         startLocalCountdown(duration, remainingSeconds);
       } else {
         console.error(`Invalid timer data received for ${duration}:`, data);
+        throw new Error('Invalid timer data received');
       }
     } catch (err) {
       console.error(`Failed to fetch ${duration} timer:`, err);
-      // Set a default value if the API call fails
+      setError(`Failed to fetch timer data: ${err.message}`);
       startLocalCountdown(duration, duration === '1min' ? 60 : 
         duration === '3min' ? 180 : 
         duration === '5min' ? 300 : 600);
@@ -136,7 +171,7 @@ const BigSmall = () => {
       clearInterval(intervalRefs.current[duration]);
     }
 
-    // Reset the triggered state for this timer when starting a new countdown
+    // Reset the triggered state for this timer
     setTriggeredTimers(prev => {
       const newSet = new Set(prev);
       newSet.delete(duration);
@@ -149,42 +184,47 @@ const BigSmall = () => {
       [duration]: Math.floor(initialTime)
     }));
 
+    let isProcessing = false; // Add flag to track if we're processing the timer end
+
     // Start local countdown
-    intervalRefs.current[duration] = setInterval(() => {
+    intervalRefs.current[duration] = setInterval(async () => {
       setTimers(current => {
         const currentTime = current[duration];
         if (currentTime <= 1) {
-          // Check if this timer has already triggered its API calls
-          if (!triggeredTimers.has(duration)) {
-            console.log(`Timer ended for ${duration}, making API calls`); // Debug log
+          // Only process if not already processing and not triggered
+          if (!isProcessing && !triggeredTimers.has(duration)) {
+            isProcessing = true; // Set processing flag
+            console.log(`Timer ended for ${duration}, making API calls`);
             
-            // Mark this timer as triggered immediately to prevent duplicate calls
+            // Mark this timer as triggered
             setTriggeredTimers(prev => new Set(prev).add(duration));
             
-            // Get the current period for this duration
-            const currentPeriodForTimer = periods[duration];
-            console.log(`Current period for ${duration}:`, currentPeriodForTimer); // Debug log
-
-            if (!currentPeriodForTimer || isNaN(currentPeriodForTimer)) {
-              console.error(`Invalid period number for ${duration}:`, currentPeriodForTimer);
-              setError(`Invalid period number for ${duration}`);
-              return { ...current, [duration]: 0 };
-            }
-
-            // Call getResult with the current period and duration
-            getResult(duration, currentPeriodForTimer).then(() => {
-              console.log(`API calls completed for ${duration}, fetching new timer data`); // Debug log
-              // After getResult completes, fetch new timer data
-              fetchTimerData(duration);
-            }).catch(error => {
-              console.error(`Error in getResult for ${duration}:`, error);
-              // Remove from triggered timers if there was an error
-              setTriggeredTimers(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(duration);
-                return newSet;
+            // Fetch new period number and process result
+            fetchPeriodNumber(duration)
+              .then(newPeriodNumber => {
+                if (newPeriodNumber && !isNaN(newPeriodNumber)) {
+                  return getResult(duration, newPeriodNumber);
+                } else {
+                  throw new Error('Invalid period number received');
+                }
+              })
+              .then(() => {
+                console.log(`API calls completed for ${duration}, fetching new timer data`);
+                return fetchTimerData(duration);
+              })
+              .catch(error => {
+                console.error(`Error in timer end process for ${duration}:`, error);
+                setError(`Error processing timer end: ${error.message}`);
+                // Remove from triggered timers if there was an error
+                setTriggeredTimers(prev => {
+                  const newSet = new Set(prev);
+                  newSet.delete(duration);
+                  return newSet;
+                });
+              })
+              .finally(() => {
+                isProcessing = false; // Reset processing flag
               });
-            });
           }
           return { ...current, [duration]: 0 };
         }
@@ -203,8 +243,24 @@ const BigSmall = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Modify useEffect to fetch period numbers for all timers on mount
+  useEffect(() => {
+    // Initial fetch for all timers
+    ['1min', '3min', '5min', '10min'].forEach(duration => {
+      fetchTimerData(duration);
+      fetchPeriodNumber(duration);
+    });
+
+    // Cleanup intervals when component unmounts
+    return () => {
+      Object.values(intervalRefs.current).forEach(clearInterval);
+    };
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Modify useEffect for activeTab changes
   useEffect(() => {
     if (activeTab) {
+      fetchPeriodNumber(activeTab);
       fetchTableData();
     }
   }, [activeTab]);
@@ -214,15 +270,8 @@ const BigSmall = () => {
       console.log('Fetching results for duration:', activeTab); // Debug log
       const response = await fetchResults(activeTab);
       
-      // Update the period for the current active timer
-      const newPeriod = response.results[0].period_number + 1;
-      setPeriods(prev => ({
-        ...prev,
-        [activeTab]: newPeriod
-      }));
-      
       // Set the current period based on active timer
-      setCurrentPeriod(newPeriod);
+      setCurrentPeriod(response.results[0].period_number + 1);
       setRecords(response.results);
       setError(null);
     } catch (error) {
@@ -231,9 +280,10 @@ const BigSmall = () => {
     }
   };
 
+  // Modify getResult to fetch new period number after result generation
   const getResult = async (duration: string, periodNumber: number) => {
     try {
-      console.log('getResult called with duration:', duration, 'period:', periodNumber); // Debug log
+      console.log('getResult called with duration:', duration, 'period:', periodNumber);
       
       if (!periodNumber || isNaN(periodNumber)) {
         console.error('Invalid period number:', periodNumber);
@@ -241,7 +291,6 @@ const BigSmall = () => {
         return;
       }
 
-      console.log('Generating result for period:', periodNumber, 'and duration:', duration); // Debug log
       const data = await generateResult(periodNumber, duration);
       
       if (!data) {
@@ -250,25 +299,12 @@ const BigSmall = () => {
         return;
       }
 
-      console.log('Result generated:', data); // Debug log
       setResult(data);
       setRecords((prev) => [data, ...prev]);
       
-      // Get the new period number from the API response
-      const newPeriodNumber = data.period_number + 1;
+      // Fetch new period number after result generation
+      await fetchPeriodNumber(duration);
       
-      // Update the period for this timer
-      setPeriods(prev => ({
-        ...prev,
-        [duration]: newPeriodNumber
-      }));
-      
-      // If this is the active timer, update currentPeriod
-      if (duration === activeTab) {
-        setCurrentPeriod(newPeriodNumber);
-      }
-      
-      // Only fetch table data if this is the active tab
       if (duration === activeTab) {
         await fetchTableData();
       }
@@ -280,7 +316,7 @@ const BigSmall = () => {
       console.error('Error in getResult:', error);
       const errorMessage = error instanceof Error ? error.message : "Failed to generate result. Please try again later.";
       setError(errorMessage);
-      throw error; // Re-throw the error to be caught by the caller
+      throw error;
     }
   };
 
@@ -290,8 +326,10 @@ const BigSmall = () => {
       const latestBetHistory = response.betHistory[0] as BetHistory;
       setbetHistory(latestBetHistory);
 
-      const periodForTimer = periods[activeTab];
-      if (latestBetHistory.periodNumber === periodForTimer) {
+      // Get the current period for the active timer from periodNumbers state
+      const currentPeriodForTimer = periodNumbers[activeTab];
+      
+      if (latestBetHistory.periodNumber === result.period_number) {
         if (latestBetHistory.status === "won") {
           dispatch(
             deposit({
@@ -351,13 +389,12 @@ const BigSmall = () => {
         return;
       }
 
-      const periodForTimer = periods[activeTab];
       const payload = {
         userId,
         betType,
         betValue,
         amount: contractMoney,
-        periodNumber: periodForTimer,
+        periodNumber: periodNumbers[activeTab], // Use period number from periodNumbers state
         duration: activeTab
       };
 
@@ -369,7 +406,7 @@ const BigSmall = () => {
       // Check if response exists and has success message
       if (response) {
         const bet: Bet = {
-          period: periodForTimer,
+          period: currentPeriod,
           number: selectedNumber !== null ? selectedNumber : null,
           color: selectedColor || undefined,
           big_small: selectedSize || undefined,
@@ -576,7 +613,7 @@ const BigSmall = () => {
                 disabled={timers[activeTab] < 10}
                 onClick={() => setSelectedSize("big")}
               >
-                Big
+                BIG
               </button>
               <button
                 className={`px-4 py-3 rounded-lg font-medium ${
@@ -587,7 +624,7 @@ const BigSmall = () => {
                 disabled={timers[activeTab] < 10}
                 onClick={() => setSelectedSize("small")}
               >
-                Small
+                SMALL
               </button>
             </div>
           </div>
@@ -596,7 +633,7 @@ const BigSmall = () => {
           <div className="  bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
             <div className="p-4 border-b border-purple-500/10">
               <h2 className="text-xl font-bold text-white">
-                {selected} min Record
+                {activeTab}  Record
               </h2>
             </div>
 

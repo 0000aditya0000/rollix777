@@ -96,7 +96,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <ImageSlider />
+          {/* <ImageSlider /> */}
           <ColorGame />
           <LatestGames title="Latest Games" type="latest" />
           <GameCarousel title="Popular Games" type="popular" />
@@ -183,9 +183,9 @@ const Dashboard = () => {
                 </div>
 
                 {/* Featured Section */}
-                <div className="bg-[#151525] rounded-xl overflow-hidden mb-6">
+                {/* <div className="bg-[#151525] rounded-xl overflow-hidden mb-6">
                   <ImageSlider />
-                </div>
+                </div> */}
 
                 {/* Latest Games and Recent Games Section */}
                 <div className="grid grid-cols-2 gap-8 mb-6">

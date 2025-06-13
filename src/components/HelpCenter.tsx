@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ArrowLeft, HelpCircle, UserRoundCog, ChevronRight, MessageCircle, Phone, Mail, Send, X, Loader2, CheckCircle, AlertCircle, Info, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { submitQuery } from '../lib/services/queryService';
 
 interface FAQItem {
   question: string;
@@ -47,11 +48,11 @@ interface ValidationErrors {
 }
 
 const queryTypes = [
-  "Technical Issue",
-  "Billing Query",
-  "Feature Request",
-  "General Inquiry",
-  "Other"
+  "general",
+  "account",
+  "payment",
+  "technical",
+  "other"
 ];
 
 const faqData: FAQItem[] = [
@@ -189,27 +190,37 @@ export const HelpCenter: React.FC = () => {
 
     setIsLoading(true);
     try {
-    
-      localStorage.setItem('queries', JSON.stringify(queryFormData));
+      // Prepare payload for API with the correct query type
+      const payload = {
+        name: queryFormData.name,
+        email: queryFormData.email,
+        phone: queryFormData.phone,
+        telegram_id: queryFormData.telegramId,
+        query_type: queryFormData.queryType, // This will now be one of: 'general', 'account', 'payment', 'technical', 'other'
+        message: queryFormData.queryText
+      };
+
+      // Call API service
+      await submitQuery(payload);
 
       setShowSuccess(true);
-  
-        setTimeout(() => {
-          setShowSuccess(false);
+      
+      setTimeout(() => {
+        setShowSuccess(false);
         setIsQueryModalOpen(false);
         setQueryFormData({
           name: '',
           email: '',
           phone: '',
           telegramId: '',
-          queryType: queryTypes[0],
+          queryType: queryTypes[0], // This will default to 'general'
           queryText: ''
         });
         setErrors({});
-      
-        }, 1000);
+      }, 1000);
     } catch (error) {
-      console.error('Error storing query:', error);
+      console.error('Error submitting query:', error);
+      // You might want to show an error message to the user here
     } finally {
       setIsLoading(false);
     }
@@ -361,7 +372,9 @@ export const HelpCenter: React.FC = () => {
                 >
                   <option value="">Select Query Type</option>
                   {queryTypes.map(type => (
-                    <option key={type} value={type} className="bg-[#1A1A2E]">{type}</option>
+                    <option key={type} value={type} className="bg-[#1A1A2E]">
+                      {type.charAt(0).toUpperCase() + type.slice(1)} {/* Capitalize first letter for display */}
+                    </option>
                   ))}
                 </select>
               </div>

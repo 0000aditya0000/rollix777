@@ -9,14 +9,16 @@ import {
   RefreshCw,
   Clock,
   CreditCard,
-  ChevronDown
+  ChevronDown,
+  Eye,
+  X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { setWallets } from '../../slices/walletSlice';
 import { fetchUserWallets } from '../../lib/services/WalletServices.js';
-import { depositService } from '../../services/api';
+import { depositService } from '../../services/api.js';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { baseUrl } from '../../lib/config/server';
@@ -53,7 +55,9 @@ const Wallet: React.FC = () => {
     amount: '',
     bankAccount: ''
   });
-  const [transactionFilter, setTransactionFilter] = useState<'all' | 'success' | 'pending'>('all');
+  const [transactionFilter, setTransactionFilter] = useState<'all' | 'approved' | 'pending' | 'rejected'>('all');
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
   const cryptoOptions = [
     { value: 'btc', label: 'Bitcoin (BTC)', symbol: '₿', color: 'yellow' },
@@ -301,10 +305,74 @@ const Wallet: React.FC = () => {
     if (transactionFilter === 'all') {
       return transactions;
     }
-    return transactions.filter(txn => 
-      transactionFilter === 'success' 
-        ? txn.status.toLowerCase() === 'success'
-        : txn.status.toLowerCase() === 'pending'
+    return transactions.filter(txn => {
+      switch (transactionFilter) {
+        case 'approved':
+          return txn.status.toLowerCase() === 'approved';
+        case 'pending':
+          return txn.status.toLowerCase() === 'pending';
+        case 'rejected':
+          return txn.status.toLowerCase() === 'rejected';
+        default:
+          return true;
+      }
+    });
+  };
+
+  // Add function to handle viewing rejection note
+  const handleViewRejection = (transaction: any) => {
+    setSelectedTransaction(transaction);
+    setShowRejectionModal(true);
+  };
+
+  // Add function to close rejection modal
+  const handleCloseRejectionModal = () => {
+    setShowRejectionModal(false);
+    setSelectedTransaction(null);
+  };
+
+  // Add the rejection modal component
+  const renderRejectionModal = () => {
+    if (!showRejectionModal || !selectedTransaction) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleCloseRejectionModal}></div>
+        
+        <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+          
+          {/* Header */}
+          <div className="flex justify-between items-center p-4 border-b border-purple-500/10">
+            <h2 className="text-lg font-bold text-white">Rejection Details</h2>
+            <button
+              onClick={handleCloseRejectionModal}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-4">
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-300 mb-2">Transaction Details</h3>
+              <div className="bg-[#1A1A2E] p-3 rounded-lg">
+                <p className="text-white mb-2">Amount: ₹{selectedTransaction.amount}</p>
+                <p className="text-gray-400 text-sm">Order ID: {selectedTransaction.order_id}</p>
+                <p className="text-gray-400 text-sm">Date: {selectedTransaction.transaction_date}</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">Rejection Note</h3>
+              <div className="bg-[#1A1A2E] p-3 rounded-lg">
+                <p className="text-white">{selectedTransaction.note || 'No rejection note available'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -380,14 +448,14 @@ const Wallet: React.FC = () => {
                     All
                   </button>
                   <button
-                    onClick={() => setTransactionFilter('success')}
+                    onClick={() => setTransactionFilter('approved')}
                     className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                      transactionFilter === 'success'
+                      transactionFilter === 'approved'
                         ? 'bg-green-600 text-white'
                         : 'bg-[#1A1A2E] text-gray-400 hover:text-white'
                     }`}
                   >
-                    Success
+                    Approved
                   </button>
                   <button
                     onClick={() => setTransactionFilter('pending')}
@@ -398,6 +466,16 @@ const Wallet: React.FC = () => {
                     }`}
                   >
                     Pending
+                  </button>
+                  <button
+                    onClick={() => setTransactionFilter('rejected')}
+                    className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                      transactionFilter === 'rejected'
+                        ? 'bg-red-600 text-white'
+                        : 'bg-[#1A1A2E] text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Rejected
                   </button>
                 </div>
               </div>
@@ -417,11 +495,18 @@ const Wallet: React.FC = () => {
                         ? <ArrowDownCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
                         : <ArrowUpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />;
                       const amountSign = isDeposit ? '+' : isWithdrawal ? '-' : '';
-                      const amountColor = isDeposit ? 'text-green-500' : isWithdrawal ? 'text-red-500' : 'text-white';
+                      
+                      // Update amount color based on status
+                      const amountColor = txn.status.toLowerCase() === 'approved'
+                        ? 'text-green-500'
+                        : txn.status.toLowerCase() === 'rejected'
+                        ? 'text-red-500'
+                        : 'text-yellow-500';
+
                       const statusColor =
-                        txn.status.toLowerCase() === 'success'
+                        txn.status.toLowerCase() === 'approved'
                           ? 'text-green-500'
-                          : txn.status.toLowerCase() === 'failed'
+                          : txn.status.toLowerCase() === 'rejected'
                           ? 'text-red-500'
                           : 'text-yellow-500';
 
@@ -439,7 +524,18 @@ const Wallet: React.FC = () => {
                                 {typeLabel}
                               </p>
                               <p className="text-xs sm:text-sm text-gray-400">{txn.transaction_date}</p>
-                              <p className={`text-xs sm:text-sm ${statusColor}`}>{txn.status}</p>
+                              <div className="flex items-center gap-2">
+                                <p className={`text-xs sm:text-sm ${statusColor}`}>{txn.status}</p>
+                                {txn.status.toLowerCase() === 'rejected' && (
+                                  <button
+                                    onClick={() => handleViewRejection(txn)}
+                                    className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                                    title="View rejection details"
+                                  >
+                                    <Eye size={14} />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <div className="text-right">
@@ -460,6 +556,9 @@ const Wallet: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Add the rejection modal */}
+      {renderRejectionModal()}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { baseUrl } from '../lib/config/server';
@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 const KYCVerification: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [kycDetails, setKycDetails] = useState<any>(null);
   const [documents, setDocuments] = useState({
     aadharFront: null as File | null,
     aadharBack: null as File | null,
@@ -18,6 +19,32 @@ const KYCVerification: React.FC = () => {
     aadharBack: '',
     panCard: ''
   });
+
+  // Add useEffect to fetch KYC details
+  useEffect(() => {
+    const fetchKycDetails = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          toast.error('User ID not found. Please login again.');
+          navigate('/login');
+          return;
+        }
+
+        const response = await axios.get(`${baseUrl}/api/user/kyc-details/${userId}`);
+        setKycDetails(response.data.data);
+      } catch (error: any) {
+        console.error('Error fetching KYC details:', error);
+        if (error.response?.data?.message) {
+          toast.error(error.response.data.message);
+        } else {
+          toast.error('Failed to fetch KYC details');
+        }
+      }
+    };
+
+    fetchKycDetails();
+  }, [navigate]);
 
   const handleFileUpload = (type: keyof typeof documents) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -265,8 +292,86 @@ const KYCVerification: React.FC = () => {
             </button>
           </div>
         </form>
+
+        {/* Add KYC Details Section */}
+        {kycDetails && (
+          <div className="mt-8 bg-[#1A1A2E] rounded-xl p-6">
+            <h2 className="text-xl font-bold text-white mb-4">KYC Details</h2>
+            
+            {/* Personal Details */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-purple-400 mb-3">Personal Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-[#0F0F19] p-3 rounded-lg">
+                  <p className="text-gray-400 text-sm">Username</p>
+                  <p className="text-white font-medium">{kycDetails.personal_details.username}</p>
+                </div>
+                <div className="bg-[#0F0F19] p-3 rounded-lg">
+                  <p className="text-gray-400 text-sm">Name</p>
+                  <p className="text-white font-medium">{kycDetails.personal_details.name}</p>
+                </div>
+                <div className="bg-[#0F0F19] p-3 rounded-lg">
+                  <p className="text-gray-400 text-sm">Email</p>
+                  <p className="text-white font-medium">{kycDetails.personal_details.email}</p>
+                </div>
+                <div className="bg-[#0F0F19] p-3 rounded-lg">
+                  <p className="text-gray-400 text-sm">Phone</p>
+                  <p className="text-white font-medium">{kycDetails.personal_details.phone}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* KYC Status */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-purple-400 mb-3">KYC Status</h3>
+              <div className="bg-[#0F0F19] p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${
+                    kycDetails.kyc_status.code === 0 ? 'bg-yellow-500' : 
+                    kycDetails.kyc_status.code === 1 ? 'bg-green-500' : 'bg-red-500'
+                  }`}></div>
+                  <p className="text-white font-medium">{kycDetails.kyc_status.text}</p>
+                </div>
+                {kycDetails.kyc_status.note && (
+                  <p className="text-gray-400 text-sm mt-2">{kycDetails.kyc_status.note}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Document Status */}
+            <div>
+              <h3 className="text-lg font-semibold text-purple-400 mb-3">Document Status</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-[#0F0F19] p-4 rounded-lg">
+                  <p className="text-gray-400 text-sm mb-2">Aadhar Card</p>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      kycDetails.documents.aadhar.submitted ? 'bg-green-500' : 'bg-red-500'
+                    }`}></div>
+                    <p className="text-white">
+                      {kycDetails.documents.aadhar.submitted ? 'Submitted' : 'Not Submitted'}
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-[#0F0F19] p-4 rounded-lg">
+                  <p className="text-gray-400 text-sm mb-2">PAN Card</p>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      kycDetails.documents.pan.submitted ? 'bg-green-500' : 'bg-red-500'
+                    }`}></div>
+                    <p className="text-white">
+                      {kycDetails.documents.pan.submitted ? 'Submitted' : 'Not Submitted'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+     
     </div>
+   
   );
 };
 

@@ -76,16 +76,8 @@ interface JiliGameData {
 const AllGames: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const gameProviders: GameProvider[] = [
-    { 
-      id: 'jili', 
-      name: 'JILI', 
-      games: (jiliGames as JiliGameData).data.gameLists.map(game => ({
-        id: game.gameID,
-        name: game.gameNameEn,
-        img: game.img,
-        vendor: game.vendorCode
-      }))
-    },
+   
+    { id: 'pragmatic', name: 'PRAGMATIC', games: pragmaticGames },
     { 
       id: 'pgsoft', 
       name: 'PGSOFT', 
@@ -96,10 +88,20 @@ const AllGames: React.FC = () => {
         vendor: 'PGSOFT'
       }))
     },
-    { id: 'pragmatic', name: 'PRAGMATIC', games: pragmaticGames },
+    
     { id: 'spribe', name: 'SPRIBE', games: spribeGames },
     { id: 'apollo', name: 'APOLLO', games: apolloGames },
     { id: 'booming', name: 'BOOMING', games: boomingGames },
+    { 
+      id: 'jili', 
+      name: 'JILI', 
+      games: (jiliGames as JiliGameData).data.gameLists.map(game => ({
+        id: game.gameID,
+        name: game.gameNameEn,
+        img: game.img,
+        vendor: game.vendorCode
+      }))
+    },
     { id: 'fish', name: 'FISH', games: fishGames },
     { id: 'microgaming', name: 'MICROGAMING', games: microgamingGames },
     { id: 'netent', name: 'NETENT', games: netentGames },
@@ -170,7 +172,7 @@ const AllGames: React.FC = () => {
 
       // Handle JILI games differently
       if (vendor === 'JILI') {
-        const gameUrl = `https://fusion.imitator-host.site/post?gameId=${id}&mobile=${userId}&agentId=Imitatorbhai_Seamless&agentKey=118e35769483ef7508b4616c308d84458b26a5e7&referrerUrl=https://jili.rollix777.com/`;
+        const gameUrl = `https://fusion.imitator-host.site/post?gameId=${id}&mobile=${userId}&agentId=Imitatorbhai_Seamless&agentKey=118e35769483ef7508b4616c308d84458b26a5e7&referrerUrl=https://jili.rollix777.com`;
         window.location.href = gameUrl;
         return;
       }

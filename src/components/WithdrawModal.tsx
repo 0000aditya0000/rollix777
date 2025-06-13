@@ -79,6 +79,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   const [error, setError] = useState<string>("");
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const userId = localStorage.getItem('userId');
+  const [rate,setRate] = useState(Number(mainBalance))
 
   // Initial states
   const initialCryptoPayload: cryptoPayload = {
@@ -105,6 +106,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   const [errorBank, setErrorBank] = useState<errorBank>(initialErrorState.bank);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string>("");
+ 
 
   // Reset all states when modal closes
   const handleClose = () => {
@@ -121,6 +123,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
   useEffect(() => {
     // Reset states when modal opens
+   
     if (isOpen) {
       setBankPayload(initialBankPayload);
       setErrorCrypto(initialErrorState.crypto);
@@ -142,6 +145,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
           if (response.success) {
             console.log('data is coming',response.data)
             setBankAccounts(response.data.bankAccounts);
+            const money = response.data.wallet[0].balance;
+            setRate(Number(money))
             const usdtAccount = response.data.bankAccounts.find(
               (account: any) => account.network === "TRC20" && account.usdt
             );
@@ -252,7 +257,17 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   };
 
   const handleChangeOfBank = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    
     const { name, value } = e.target;
+      if(name === "currency" && value === "usdt")
+      {
+        fetchRates()
+      }
+      if(name === "currency" && value === "inr")
+        {
+          deConvert()
+        }
+
     
     if (name === "amount" && !/^\d*\.?\d{0,2}$/.test(value.replace(/,/g, ""))) return;
     
@@ -261,6 +276,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
     
     setBankPayload(newPayload);
     setErrorBank(errors);
+   
   };
 
   const handleMaxAmount = () => {
@@ -313,7 +329,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
     if (validationResult?.isValid && payload) {
       setIsLoading(true);
       const result = await makeWithdrawalRequest(payload);
-      setIsLoading(false);
+      setIsLoading(false);  
 
       if (result.success) {
         handleClose();
@@ -328,10 +344,33 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
     { value: "inr", label: "INR", symbol: "₹", color: "orange" },
   ];
 
+const fetchRates = async () => {
+  
+  
+   const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
+   const newdata = await data.json()
+ 
+   const conversionrate = ((newdata.rate));
+   
+   
+   const updatedBalance = Number((rate/Number(conversionrate)));
+   console.log("updatesBalance",updatedBalance);
+   
+   setRate(updatedBalance);
+}
 
+const deConvert = async() =>{
+  const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
+  const newdata = await data.json()
+
+  const conversionrate = ((newdata.rate));
+  console.log("inr balance",(rate*conversionrate));
+  
+  setRate(rate*conversionrate)
+}
 
   if (!isOpen) return null;
-
+  
 
 
   return (
@@ -584,6 +623,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                         key={option.value}
                         value={option.value}
                         className="bg-[#1A1A2E]"
+                      
                       >
                         {option.label}
                       </option>
@@ -663,7 +703,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                 )}
                 <div className="flex justify-between text-xs mt-1">
                   <span className="text-gray-400">
-                    Available: ₹{Number(mainBalance || 0).toLocaleString("en-IN")}
+                    Available: ₹{rate.toLocaleString("en-IN")}
                   </span>
                   <button
                     className="text-purple-400"
@@ -677,11 +717,11 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
               <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Fee:</span>
-                  <span className="text-white">₹5.00</span>
+                  <span className="text-white">₹0.00</span>
                 </div>
                 <div className="flex justify-between text-sm mt-1">
                   <span className="text-gray-400">You will receive:</span>
-                  <span className="text-white">₹0.00</span>
+                  <span className="text-white">₹{rate.toLocaleString("en-IN")}</span>
                 </div>
               </div>
 

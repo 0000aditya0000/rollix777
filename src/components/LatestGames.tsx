@@ -183,7 +183,7 @@ const LatestGames: React.FC<LatestGamesProps> = ({ title, type }) => {
                 <img 
                   src={game.img} 
                   alt={game.name}
-                  className="w-full h-36 object-cover"
+                  className="w-full h-44 "
                   style={{ objectPosition: 'center' }}
                 />
                 {/* Play Button Overlay */}

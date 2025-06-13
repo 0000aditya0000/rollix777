@@ -242,12 +242,12 @@ const Header: React.FC = () => {
               {isAuthenticated ? (
                 <div className="flex items-center gap-4">
                   {/* Notification Bell */}
-                  <button className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors border border-purple-500/10">
+                  {/* <button className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors border border-purple-500/10">
                     <Bell size={20} />
                     <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
                       3
                     </span>
-                  </button>
+                  </button> */}
 
                   {/* Hamburger Menu */}
                   <button
@@ -350,12 +350,12 @@ const Header: React.FC = () => {
 
                 {/* Right side icons */}
                 <div className="flex items-center gap-3">
-                  <button className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors border border-purple-500/10">
+                  {/* <button className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors border border-purple-500/10">
                     <Bell size={20} />
                     <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
                       3
                     </span>
-                  </button>
+                  </button> */}
                   <button
                     onClick={toggleSideNav}
                     className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors border border-purple-500/10"

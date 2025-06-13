@@ -144,7 +144,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
       password,
       phoneNumber,
       referalCode: referalCode || '', // Existing referral code if any
-      myReferralCode: generatedReferralCode // New generated referral code
+      myReferralCode: generatedReferralCode,
+      kyc_note:"not verified" // New generated referral code
     };
 
     console.log("Register Payload:", registerPayload);

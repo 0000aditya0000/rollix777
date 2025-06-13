@@ -64,13 +64,7 @@ const GameCarousel: React.FC<GameCarouselProps> = ({ title }) => {
       });
 
       if (response.data.success) {
-        // Use navigate for internal routes
-        if (response.data.gameUrl.startsWith('/')) {
-          navigate(response.data.gameUrl);
-        } else {
-          // For external URLs, open in new tab
-          window.open(response.data.gameUrl, '_blank');
-        }
+        window.location.href = response.data.gameUrl;
       } else {
         alert("Failed to launch game.");
         setIsLoading(false);

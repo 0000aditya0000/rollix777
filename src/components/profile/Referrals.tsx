@@ -35,7 +35,7 @@ const Referrals = () => {
   
   const referralCode = localStorage.getItem("referralCode");
   
-  const referralLink = `https://api.rollix777.com/refer/${referralCode}`;
+  const referralLink = `https://rollix777.com/refer/${referralCode}`;
 
   useEffect(() => {
     const userId = Number(localStorage.getItem('userId'));

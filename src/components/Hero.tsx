@@ -101,32 +101,32 @@ const Hero: React.FC = () => {
 
 const openJsGame = async (id: string): Promise<void> => {
   try {
-      setIsLoading(true);
+    setIsLoading(true);
     const userId = localStorage.getItem("userId");
 
     if (!userId) {
       alert("User ID not found. Please log in.");
-        setIsLoading(false);
+      setIsLoading(false);
       return;
     }
 
-      const response = await axios.post("https://api.rollix777.com/api/color/launchGame", {
+    const response = await axios.post("https://api.rollix777.com/api/color/launchGame", {
       userId,
       id,
     });
 
     if (response.data.success) {
-      window.open(response.data.gameUrl, "_blank");
+      window.location.href = response.data.gameUrl;
     } else {
       alert("Failed to launch game.");
-        setIsLoading(false);
+      setIsLoading(false);
     }
   } catch (error) {
     console.error("Error launching game:", error);
     alert("An error occurred while launching the game.");
-      setIsLoading(false);
-    }
-  };
+    setIsLoading(false);
+  }
+};
 
   return (
     <>
