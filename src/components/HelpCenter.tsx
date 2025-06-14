@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ArrowLeft, HelpCircle, UserRoundCog, ChevronRight, MessageCircle, Phone, Mail, Send, X, Loader2, CheckCircle, AlertCircle, Info, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { submitQuery } from '../lib/services/queryService';
+import { submitQuery, getQueryById, getQuerySearch } from '../lib/services/queryService';
 
 interface FAQItem {
   question: string;
@@ -45,6 +45,28 @@ interface ValidationErrors {
   telegramId?: string;
   queryType?: string;
   queryText?: string;
+}
+
+interface QueryComment {
+  id: string | null;
+  comment: string | null;
+  created_at: string | null;
+  admin_comment: string | null;
+}
+
+interface QueryResponse {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  telegram_id: string;
+  query_type: string;
+  message: string;
+  status: 'pending' | 'resolved';
+  created_at: string;
+  updated_at: string;
+  user_id: number;
+  comments: QueryComment[];
 }
 
 const queryTypes = [
@@ -109,7 +131,11 @@ export const HelpCenter: React.FC = () => {
     queryText: ''
   });
 
-
+  const [queries, setQueries] = useState<QueryResponse[]>([]);
+  const [searchQueryId, setSearchQueryId] = useState('');
+  const [isLoadingQueries, setIsLoadingQueries] = useState(false);
+  const [queryError, setQueryError] = useState('');
+  const [expandedComments, setExpandedComments] = useState<string | null>(null);
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -190,14 +216,18 @@ export const HelpCenter: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // Prepare payload for API with the correct query type
+      // Get userId from localStorage
+      const userId = localStorage.getItem('userId');
+
+      // Prepare payload for API with the correct query type and userId
       const payload = {
         name: queryFormData.name,
         email: queryFormData.email,
         phone: queryFormData.phone,
         telegram_id: queryFormData.telegramId,
-        query_type: queryFormData.queryType, // This will now be one of: 'general', 'account', 'payment', 'technical', 'other'
-        message: queryFormData.queryText
+        query_type: queryFormData.queryType,
+        message: queryFormData.queryText,
+        user_id: userId || '' // Add userId to payload, empty string if not found
       };
 
       // Call API service
@@ -213,19 +243,64 @@ export const HelpCenter: React.FC = () => {
           email: '',
           phone: '',
           telegramId: '',
-          queryType: queryTypes[0], // This will default to 'general'
+          queryType: queryTypes[0],
           queryText: ''
         });
         setErrors({});
       }, 1000);
     } catch (error) {
       console.error('Error submitting query:', error);
-      // You might want to show an error message to the user here
     } finally {
       setIsLoading(false);
     }
   };
 
+  const fetchQueries = async () => {
+    setIsLoadingQueries(true);
+    setQueryError('');
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        setQueryError('User ID not found. Please login again.');
+        return;
+      }
+      const response = await getQueryById(userId);
+      if (response.success) {
+        setQueries(response.data);
+      }
+    } catch (error: any) {
+      setQueryError(error.message || 'Failed to fetch queries');
+    } finally {
+      setIsLoadingQueries(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedCategory === 'Track Query') {
+      fetchQueries();
+    }
+  }, [selectedCategory]);
+
+  const handleQuerySearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQueryId.trim()) {
+      setQueryError('Please enter a query ID');
+      return;
+    }
+    setIsLoadingQueries(true);
+    setQueryError('');
+    try {
+      const response = await getQuerySearch(searchQueryId);
+      if (response.success) {
+        // Since the API returns a single query object, wrap it in an array
+        setQueries([response.data]);
+      }
+    } catch (error: any) {
+      setQueryError(error.message || 'Failed to fetch query');
+    } finally {
+      setIsLoadingQueries(false);
+    }
+  };
 
   const filteredFAQs = faqData.filter(faq => {
     const matchesSearch = faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -233,6 +308,129 @@ export const HelpCenter: React.FC = () => {
     const matchesCategory = !selectedCategory || faq.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const renderTrackQuerySection = () => (
+    <div className="bg-gradient-to-br from-[#1A1A2E] to-[#252547] rounded-xl p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Track Your Queries</h2>
+      
+      <form onSubmit={handleQuerySearch} className="mb-6">
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              value={searchQueryId}
+              onChange={(e) => setSearchQueryId(e.target.value)}
+              placeholder="Search by Query ID (e.g., Q192924939)"
+              className="w-full px-4 py-2.5 bg-[#252547]/50 border border-purple-500/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500"
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-medium hover:opacity-90 transition-all"
+          >
+            Search
+          </button>
+        </div>
+      </form>
+
+      {queryError && (
+        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 text-sm">
+          {queryError}
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {isLoadingQueries ? (
+          <div className="text-center py-8">
+            <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto" />
+            <p className="text-gray-400 mt-2">Loading queries...</p>
+          </div>
+        ) : queries.length > 0 ? (
+          queries.map((query) => (
+            <div
+              key={query.id}
+              className="bg-[#252547]/50 backdrop-blur-sm rounded-xl border border-purple-500/10 p-4 hover:border-purple-500/20 transition-all"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Query #{query.id}</h3>
+                  <p className="text-sm text-gray-400">{new Date(query.created_at).toLocaleString()}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  query.status === 'pending' 
+                    ? 'bg-yellow-500/20 text-yellow-400' 
+                    : 'bg-green-500/20 text-green-400'
+                }`}>
+                  {query.status}
+                </span>
+              </div>
+              <div className="space-y-2">
+                <p className="text-gray-300">
+                  <span className="text-gray-400">Type:</span> {query.query_type}
+                </p>
+                <p className="text-gray-300">
+                  <span className="text-gray-400">Message:</span> {query.message}
+                </p>
+                <div className="flex justify-between items-center text-sm text-gray-400">
+                  <span>Last Updated: {new Date(query.updated_at).toLocaleString()}</span>
+                  {query.comments && query.comments.length > 0 && (
+                    <button
+                      onClick={() => setExpandedComments(expandedComments === query.id ? null : query.id)}
+                      className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+                    >
+                      <span>Comments ({query.comments.length})</span>
+                      <ChevronRight 
+                        className={`w-4 h-4 transform transition-transform ${
+                          expandedComments === query.id ? 'rotate-90' : ''
+                        }`} 
+                      />
+                    </button>
+                  )}
+                </div>
+                
+                {/* Expandable Comments Section */}
+                {expandedComments === query.id && query.comments && query.comments.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-purple-500/10">
+                    <div className="space-y-3">
+                      {query.comments.map((comment, index) => (
+                        comment?.comment && (
+                          <div key={index} className="bg-[#1A1A2E]/50 rounded-lg p-3">
+                            <div className="flex items-start gap-3">
+                              <div className="flex-1">
+                                <p className="text-gray-300 text-sm">{comment.comment}</p>
+                                {comment.admin_comment && (
+                                  <p className="text-purple-400 text-sm mt-1">
+                                    Admin: {comment.admin_comment}
+                                  </p>
+                                )}
+                                {comment.created_at && (
+                                  <p className="text-gray-500 text-xs mt-1">
+                                    {new Date(comment.created_at).toLocaleString()}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 bg-[#252547]/30 rounded-xl border border-purple-500/10">
+            <History className="w-12 h-12 text-purple-400/50 mx-auto mb-4" />
+            <p className="text-gray-400 mb-2 text-lg">No queries found</p>
+            <p className="text-sm text-gray-500">
+              {searchQueryId ? 'Try a different query ID' : 'Submit a new query to see it here'}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#0F0F19]">
@@ -495,59 +693,63 @@ export const HelpCenter: React.FC = () => {
             </div>
           </div>
 
-          {/* FAQ Section */}
+          {/* Main Content Area */}
           <div className="lg:col-span-3">
-            <div className="bg-gradient-to-br from-[#1A1A2E] to-[#252547] rounded-xl p-6">
-              <h2 className="text-2xl font-bold text-white mb-6">
-                Frequently Asked Questions
-              </h2>
-              {filteredFAQs.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredFAQs.map((faq, index) => (
-                    <div
-                      key={index}
-                      className={`bg-[#252547]/50 backdrop-blur-sm rounded-xl border border-purple-500/10 transition-all duration-300 ${
-                        expandedFAQ === index ? 'p-6' : 'p-4 hover:border-purple-500/20'
-                      }`}
-                      onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
-                    >
-                      <div className="flex items-start gap-4 cursor-pointer">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white mb-2">
-                            {faq.question}
-                          </h3>
-                          <div className={`overflow-hidden transition-all duration-300 ${
-                            expandedFAQ === index ? 'max-h-96' : 'max-h-0'
-                          }`}>
-                            <p className="text-gray-400 mb-4">
-                              {faq.answer}
-                            </p>
+            {selectedCategory === 'Track Query' ? (
+              renderTrackQuerySection()
+            ) : (
+              <div className="bg-gradient-to-br from-[#1A1A2E] to-[#252547] rounded-xl p-6">
+                <h2 className="text-2xl font-bold text-white mb-6">
+                  Frequently Asked Questions
+                </h2>
+                {filteredFAQs.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredFAQs.map((faq, index) => (
+                      <div
+                        key={index}
+                        className={`bg-[#252547]/50 backdrop-blur-sm rounded-xl border border-purple-500/10 transition-all duration-300 ${
+                          expandedFAQ === index ? 'p-6' : 'p-4 hover:border-purple-500/20'
+                        }`}
+                        onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
+                      >
+                        <div className="flex items-start gap-4 cursor-pointer">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-white mb-2">
+                              {faq.question}
+                            </h3>
+                            <div className={`overflow-hidden transition-all duration-300 ${
+                              expandedFAQ === index ? 'max-h-96' : 'max-h-0'
+                            }`}>
+                              <p className="text-gray-400 mb-4">
+                                {faq.answer}
+                              </p>
+                            </div>
                           </div>
+                          <ChevronRight className={`w-5 h-5 text-purple-400 transform transition-transform ${
+                            expandedFAQ === index ? 'rotate-90' : ''
+                          }`} />
                         </div>
-                        <ChevronRight className={`w-5 h-5 text-purple-400 transform transition-transform ${
-                          expandedFAQ === index ? 'rotate-90' : ''
-                        }`} />
+                        <div className={`mt-4 ${expandedFAQ === index ? 'block' : 'hidden'}`}>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-600/20 text-purple-400">
+                            {faq.category}
+                          </span>
+                        </div>
                       </div>
-                      <div className={`mt-4 ${expandedFAQ === index ? 'block' : 'hidden'}`}>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-600/20 text-purple-400">
-                          {faq.category}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 bg-[#252547]/30 rounded-xl border border-purple-500/10">
-                  <HelpCircle className="w-12 h-12 text-purple-400/50 mx-auto mb-4" />
-                  <p className="text-gray-400 mb-2 text-lg">
-                    No matching questions found
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Try adjusting your search or browse different categories
-                  </p>
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-[#252547]/30 rounded-xl border border-purple-500/10">
+                    <HelpCircle className="w-12 h-12 text-purple-400/50 mx-auto mb-4" />
+                    <p className="text-gray-400 mb-2 text-lg">
+                      No matching questions found
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Try adjusting your search or browse different categories
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

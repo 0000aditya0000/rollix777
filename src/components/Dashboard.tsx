@@ -63,14 +63,14 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 gap-3">
               <button 
                 onClick={() => setIsDepositModalOpen(true)}
-                className="py-2.5 px-4 rounded-lg bg-green-600 text-white text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                className="py-2.5 px-4 bg-green-600 text-white text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
               >
                 <Wallet className="w-4 h-4" />
                 <span>Deposit</span>
               </button>
               <button 
                 onClick={() => setIsWithdrawModalOpen(true)}
-                className="py-2.5 px-4 rounded-lg bg-purple-600 text-white text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                className="py-2.5 px-4 bg-purple-600 text-white text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
               >
                 <ArrowDown className="w-4 h-4" />
                 <span>Withdraw</span>
@@ -128,14 +128,14 @@ const Dashboard = () => {
                 <div className="flex gap-3">
                   <button 
                     onClick={() => setIsDepositModalOpen(true)}
-                    className="py-3 px-6 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                    className="py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
                   >
                     <Wallet className="w-5 h-5" />
                     <span>Deposit</span>
                   </button>
                   <button 
                     onClick={() => setIsWithdrawModalOpen(true)}
-                    className="py-3 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                    className="py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
                   >
                     <ArrowDown className="w-5 h-5" />
                     <span>Withdraw</span>

@@ -45,7 +45,7 @@ const BigSmall = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>("");
-  const [selectedSize, setSelectedSize] = useState<"big" | "small" | "">("");
+  const [selectedSize, setSelectedSize] = useState<"BIG" | "SMALL" | "">("");
   const [contractMoney, setContractMoney] = useState<number>(0);
   const [agreed, setAgreed] = useState(false);
   const [selected, setSelected] = useState(1);

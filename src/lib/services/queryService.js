@@ -17,3 +17,31 @@ export const submitQuery = async (data) => {
     }
   };
   
+  export const getQueryById = async (id) =>{
+    try{
+      const response  = await axios.get(`${baseUrl}/api/queries/user/${id}`,{
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    }catch(error){
+      throw error.response?.data || error.message;
+    }
+  }
+
+  export const getQuerySearch = async (id) =>{
+    try{
+      const response  = await axios.get(`${baseUrl}/api/queries/${id}`,{
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    }catch(error){
+      throw error.response?.data || error.message;
+    }
+  }
+

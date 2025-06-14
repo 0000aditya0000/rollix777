@@ -68,9 +68,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   // Updated function to generate referral code with random digits
-  const generateReferralCode = (firstName: string, phone: string) => {
-    // Get first 4 letters of first name (or pad with 'x' if shorter)
-    const namePrefix = (firstName.substring(0, 4) + 'xxxx').substring(0, 4).toUpperCase();
+  const generateReferralCode = (phone: string) => {
+    // Get first 4 letters of phone number (or pad with 'x' if shorter)
+    const phonePrefix = (phone.substring(0, 4) + 'xxxx').substring(0, 4).toUpperCase();
     
     // Convert phone number to array of digits and shuffle them
     const digits = phone.split('');
@@ -82,7 +82,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     // Take first 5 digits after shuffling
     const randomDigits = digits.slice(0, 5).join('');
     
-    return `${namePrefix}${randomDigits}`;
+    return `${phonePrefix}${randomDigits}`;
   };
 
   // Handle login form submission
@@ -122,9 +122,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    // Validate required fields (removed email from required fields)
-    if (!referalCode || !name.trim() || !username.trim() || !phoneNumber.trim() || !password.trim()) {
-      setError("Please fill in all required fields");
+    // Validate required fields
+    if (!phoneNumber.trim() || !password.trim()) {
+      setError("Please fill in all required fields (phone number and password)");
       return;
     }
 
@@ -133,14 +133,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    // Generate referral code using name and phone number
-    const generatedReferralCode = generateReferralCode(name, phoneNumber);
+    // Generate referral code using phone number
+    const generatedReferralCode = generateReferralCode(phoneNumber);
 
     // Create payload
     const registerPayload = {
-      name,
-      username,
-      email,
       password,
       phoneNumber,
       referalCode: referalCode || '', // Existing referral code if any
@@ -255,103 +252,48 @@ const AuthModal: React.FC<AuthModalProps> = ({
           ) : (
             <form className="space-y-4" onSubmit={handleRegister}>
               <div className="space-y-4">
-                {/* Full Name - Full width */}
+                {/* Phone Number */}
                 <div>
-                  <label className="text-sm text-gray-300 block mb-1">Full Name</label>
+                  <label className="text-sm text-gray-300 block mb-1">Phone Number</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <User className="w-5 h-5 text-purple-400" />
+                      <Phone className="w-5 h-5 text-purple-400" />
                     </div>
                     <input
-                      type="text"
+                      type="tel"
                       className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                      placeholder="Enter your full name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your phone number"
+                      value={phoneNumber}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').substring(0, 10);
+                        setPhoneNumber(value);
+                      }}
                       required
                     />
                   </div>
                 </div>
 
-                {/* Username and Email - Two columns */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-gray-300 block mb-1">Username</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <User className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <input
-                        type="text"
-                        className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                        placeholder="Choose a username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                      />
+                {/* Referral Code */}
+                <div>
+                  <label className="text-sm text-gray-300 block mb-1">
+                    Referral Code 
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Gift className="w-5 h-5 text-purple-400" />
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-gray-300 block mb-1">Email (Optional)</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Mail className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <input
-                        type="email"
-                        className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                        placeholder="Enter your email (optional)"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                      placeholder="Enter referral code"
+                      value={referalCode}
+                      onChange={(e) => setReferalCode(e.target.value)}
+                      disabled={!!localStorage.getItem('pendingReferralCode')}
+                    />
                   </div>
                 </div>
 
-                {/* Phone and Referral - Two columns */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-gray-300 block mb-1">Phone Number</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Phone className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <input
-                        type="tel"
-                        className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                        placeholder="Enter your phone number"
-                        value={phoneNumber}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '').substring(0, 10);
-                          setPhoneNumber(value);
-                        }}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-gray-300 block mb-1">
-                      Referral Code 
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Gift className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <input
-                        type="text"
-                        className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                        placeholder="Enter referral code"
-                        value={referalCode}
-                        onChange={(e) => setReferalCode(e.target.value)}
-                        disabled={!!localStorage.getItem('pendingReferralCode')}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Password - Full width */}
+                {/* Password */}
                 <div>
                   <label className="text-sm text-gray-300 block mb-1">Password</label>
                   <div className="relative">
