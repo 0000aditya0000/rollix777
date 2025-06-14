@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 interface PendingCommission {
   cryptoname: string;
-  pending_amount: string;
+  pending_amount: number;
   commission_count: number;
 }
 
@@ -32,8 +32,9 @@ const Referrals = () => {
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [pendingCommissions, setPendingCommissions] = useState<PendingCommission[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [pendingMessage, setPendingMessage] = useState<string>("");
   
-  const referralCode = localStorage.getItem("referralCode");
+  const referralCode = localStorage.getItem("referralCode") || "";
   
   const referralLink = `https://rollix777.com/refer/${referralCode}`;
 
@@ -55,7 +56,8 @@ const Referrals = () => {
           throw new Error('Failed to fetch pending commissions');
         }
         const pendingData = await pendingResponse.json();
-        setPendingCommissions(pendingData.pendingCommissions);
+        setPendingCommissions(pendingData.pendingCommissions || []);
+        setPendingMessage(pendingData.message || "");
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch data');
       }
@@ -73,9 +75,11 @@ const Referrals = () => {
   // Calculate total referrals across all levels
   const totalReferrals = referralData?.totalReferrals ?? 0;
 
-  // Calculate total earnings - ₹75 per referral
+  // Calculate total earnings - including pending commissions
   const perReferralAmount = 75;
-  const totalEarnings = (referralData?.totalReferrals ?? 0) * perReferralAmount;
+  const totalReferralEarnings = (referralData?.totalReferrals ?? 0) * perReferralAmount;
+  const totalPendingAmount = pendingCommissions.reduce((sum, commission) => sum + commission.pending_amount, 0);
+  const totalEarnings = totalReferralEarnings + totalPendingAmount;
 
   // Combine all referrals from different levels for the table
   const getAllReferrals = () => {
@@ -133,7 +137,16 @@ const Referrals = () => {
               </div>
               <span className="text-gray-400">Total Earnings</span>
             </div>
-            <p className="text-2xl font-bold text-white">₹{totalEarnings.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-white"></p>
+            {totalPendingAmount > 0 ? (
+              <p className="text-sm text-yellow-400 mt-1">
+                Pending: ₹{totalPendingAmount.toFixed(2)}
+              </p>
+            ) : pendingMessage && (
+              <p className="text-sm text-gray-400 mt-1">
+                {pendingMessage}
+              </p>
+            )}
           </div>
         </div>
 
@@ -203,16 +216,18 @@ const Referrals = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6">
-                        {pendingCommissions.length > 0 ? (
-                          <div className="flex flex-col">
-                            <span>₹{perReferralAmount.toFixed(2)}</span>
-                            {/* <span className="text-xs text-yellow-400">
-                              Pending: ₹{pendingCommissions[0].pending_amount}
-                            </span> */}
-                          </div>
-                        ) : (
-                          <span>₹{perReferralAmount.toFixed(2)}</span>
-                        )}
+                        <div className="flex flex-col">
+                          {/* <span>₹{perReferralAmount.toFixed(2)}</span> */}
+                          {pendingCommissions.length > 0 ? (
+                            <span className="text-xs text-yellow-400">
+                              Pending: ₹{pendingCommissions[0].pending_amount.toFixed(2)}
+                            </span>
+                          ) : pendingMessage && (
+                            <span className="text-xs text-gray-400">
+                              {pendingMessage}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
