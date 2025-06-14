@@ -145,17 +145,43 @@ const AuthModal: React.FC<AuthModalProps> = ({
       kyc_note:"not verified" // New generated referral code
     };
 
-    console.log("Register Payload:", registerPayload);
-
     try {
       const data = await register(registerPayload);
-      onLoginSuccess();
-    
+      
+      // Auto login after successful registration
+      try {
+        const loginData = await signin({ email: phoneNumber, password });
+        localStorage.setItem("userToken", loginData.token);
+        localStorage.setItem("userId", loginData.user.id);
+        localStorage.setItem("userName", loginData.user.username);
+        localStorage.setItem("referralCode", loginData.user.referalCode);
+        dispatch(
+          login({
+            user: { id: loginData.user.id, name: loginData.user.username },
+            token: loginData.token,
+          })
+        );
+        
+        // Clear form data
+        setPhoneNumber("");
+        setPassword("");
+        setReferalCode("");
+        setAcceptTerms(false);
+        setError("");
+        
+        onLoginSuccess();
+        navigate("/dashboard");
+      } catch (loginError: any) {
+        console.error("Auto login failed:", loginError.message);
+        setError("Registration successful but auto login failed. Please login manually.");
+      }
     } catch (error: any) {
       console.error("Registration failed:", error.message);
       setError(error.message);
     }
   };
+
+  // console.log('phoneNumber',phoneNumber);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -259,9 +285,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                       <Phone className="w-5 h-5 text-purple-400" />
                     </div>
+                    <span className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-400">+91</span>
                     <input
                       type="tel"
-                      className="w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                      className="w-full py-3 pl-20 pr-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
                       placeholder="Enter your phone number"
                       value={phoneNumber}
                       onChange={(e) => {

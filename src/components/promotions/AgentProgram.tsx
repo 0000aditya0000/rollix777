@@ -4,20 +4,106 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import InvitationRulesModal from './InvitationRulesModal';
+import { baseUrl } from '../../lib/config/server';
+import { referralService } from '../../lib/services/referralService';
+
+interface Referral {
+  id: number;
+  name: string | null;
+  username: string | null;
+  email: string | null;
+  level: number;
+  first_deposit: number | null;
+  total_deposit: number | null;
+  total_bets: number | null;
+}
+
+interface ReferralsResponse {
+  userId: string;
+  totalReferrals: number;
+  referralsByLevel: {
+    level1: Referral[];
+    level2: Referral[];
+    level3: Referral[];
+    level4: Referral[];
+    level5: Referral[];
+  };
+}
 
 const AgentProgram: React.FC = () => {
   const [referralCode, setReferralCode] = React.useState('');
   const [isHovered, setIsHovered] = React.useState('');
   const [isRulesModalOpen, setIsRulesModalOpen] = React.useState(false);
+  const [referralsData, setReferralsData] = React.useState<ReferralsResponse | null>(null);
   const navigate = useNavigate();
   
   const userId = useSelector((state: RootState) => state.auth.user?.id);
-
+  console.log('userId',userId);
   useEffect(() => {
     const referralCode = localStorage.getItem('referralCode');
     console.log(referralCode);
     setReferralCode(referralCode || '');
   }, []);
+  useEffect(() => {
+    const fetchReferrals = async () => {
+      try {
+        // Get userId from localStorage or your auth context
+    
+        if (!userId) {
+          throw new Error('User ID not found');
+        }
+
+        const data = await referralService.getReferrals(userId);
+        setReferralsData(data);
+      } catch (error) {
+        console.error('Error fetching referrals:', error);
+        
+      }
+    };
+
+    fetchReferrals();
+  }, []);
+
+
+
+  // Calculate direct subordinates stats (level 1)
+  const directSubordinatesStats = React.useMemo(() => {
+    if (!referralsData) return {
+      registered: 0,
+      depositAmount: 0,
+      firstDepositUsers: 0
+    };
+
+    const level1Referrals = referralsData.referralsByLevel.level1;
+    return {
+      registered: level1Referrals.length,
+      depositAmount: level1Referrals.reduce((sum, ref) => sum + (ref.total_deposit || 0), 0),
+      firstDepositUsers: level1Referrals.filter(ref => ref.first_deposit !== null).length
+    };
+  }, [referralsData]);
+
+  // Calculate team subordinates stats (all levels)
+  const teamSubordinatesStats = React.useMemo(() => {
+    if (!referralsData) return {
+      registered: 0,
+      depositAmount: 0,
+      firstDepositUsers: 0
+    };
+
+    const allReferrals = [
+      ...referralsData.referralsByLevel.level1,
+      ...referralsData.referralsByLevel.level2,
+      ...referralsData.referralsByLevel.level3,
+      ...referralsData.referralsByLevel.level4,
+      ...referralsData.referralsByLevel.level5
+    ];
+
+    return {
+      registered: allReferrals.length,
+      depositAmount: allReferrals.reduce((sum, ref) => sum + (ref.total_deposit || 0), 0),
+      firstDepositUsers: allReferrals.filter(ref => ref.first_deposit !== null).length
+    };
+  }, [referralsData]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(referralCode);
@@ -62,10 +148,10 @@ const AgentProgram: React.FC = () => {
             <div className="p-6 md:p-8 lg:p-10 text-center border-b border-purple-500/10
                           bg-gradient-to-r from-purple-500/5 via-transparent to-pink-500/5">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
-                           bg-gradient-to-r from-purple-400 to-pink-400 mb-3">₹0</h2>
+                           bg-gradient-to-r from-purple-400 to-pink-400 mb-3">{directSubordinatesStats.registered}</h2>
               <div className="inline-block bg-purple-500/10 rounded-full px-4 md:px-6 py-1.5 md:py-2 mb-2
                             backdrop-blur-sm">
-                <span className="text-sm md:text-base text-white/90">Yesterday's total commission</span>
+                <span className="text-sm md:text-base text-white/90">ALL Time Direct Referrals</span>
               </div>
               <p className="text-sm md:text-base text-white/60">
                 Upgrade the level to increase commission income
@@ -73,16 +159,15 @@ const AgentProgram: React.FC = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-purple-500/10">
+            <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-purple-500/10">
               {/* Direct Subordinates */}
               <div className="col-span-1 md:col-span-2 p-4 md:p-6 lg:p-8">
                 <h3 className="text-center text-white font-medium mb-4 md:mb-6">Direct subordinates</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                   {[
-                    { label: 'Number of register', value: '0' },
-                    { label: 'Deposit number', value: '0' },
-                    { label: 'Deposit amount', value: '0' },
-                    { label: 'First deposit users', value: '0' }
+                    { label: 'Number of register', value: directSubordinatesStats.registered },
+                    { label: 'Deposit amount', value: `₹${directSubordinatesStats.depositAmount.toLocaleString()}` },
+                    { label: 'First deposit ', value: directSubordinatesStats.firstDepositUsers }
                   ].map((item, index) => (
                     <div key={index} className="text-center group transition-all duration-300 hover:scale-105">
                       <p className="text-xl md:text-2xl lg:text-3xl font-bold text-white group-hover:text-purple-400 
@@ -97,12 +182,11 @@ const AgentProgram: React.FC = () => {
               {/* Team Subordinates */}
               <div className="col-span-1 md:col-span-2 p-4 md:p-6 lg:p-8">
                 <h3 className="text-center text-white font-medium mb-4 md:mb-6">Team subordinates</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                   {[
-                    { label: 'Number of register', value: '0' },
-                    { label: 'Deposit number', value: '0' },
-                    { label: 'Deposit amount', value: '0' },
-                    { label: 'First deposit users', value: '0' }
+                    { label: 'Number of register', value: teamSubordinatesStats.registered },
+                    { label: 'Deposit amount', value: `₹${teamSubordinatesStats.depositAmount.toLocaleString()}` },
+                    { label: 'First deposit ', value: teamSubordinatesStats.firstDepositUsers }
                   ].map((item, index) => (
                     <div key={index} className="text-center group transition-all duration-300 hover:scale-105">
                       <p className="text-xl md:text-2xl lg:text-3xl font-bold text-white group-hover:text-purple-400 

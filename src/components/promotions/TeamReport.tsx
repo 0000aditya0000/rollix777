@@ -6,13 +6,13 @@ import { filter } from 'framer-motion/client';
 
 interface ReferralMember {
   id: number;
-  name: string;
-  username: string;
-  email: string;
+  name: string | null;
+  username: string | null;
+  email: string | null;
   level: number;
-  depositAmount?: number;
-  totalBet?: number;
-  firstDeposit?: number;
+  first_deposit: number | null;
+  total_deposit: number | null;
+  total_bets: number | null;
   joinDate?: string;
 }
 
@@ -63,9 +63,9 @@ const TeamReport: React.FC = () => {
       username: `user${level * 100 + i + 1}`,
       email: `user${level * 100 + i + 1}@example.com`,
       level,
-      depositAmount: Math.floor(Math.random() * 10000) + 1000,
-      totalBet: Math.floor(Math.random() * 30000) + 5000,
-      firstDeposit: Math.floor(Math.random() * 3000) + 500,
+      first_deposit: Math.floor(Math.random() * 1000) + 500,
+      total_deposit: Math.floor(Math.random() * 10000) + 5000,
+      total_bets: Math.floor(Math.random() * 30000) + 5000,
       joinDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString().split('T')[0],
     }));
   };
@@ -85,9 +85,9 @@ const TeamReport: React.FC = () => {
   const calculateTotalStats = () => {
     const members = getAllMembers();
     return {
-      depositAmount: members.reduce((sum, member) => sum + (member.depositAmount || 0), 0),
-      totalBet: members.reduce((sum, member) => sum + (member.totalBet || 0), 0),
-      firstDeposit: members.reduce((sum, member) => sum + (member.firstDeposit || 0), 0),
+      depositAmount: members.reduce((sum, member) => sum + (member.total_deposit || 0), 0),
+      totalBet: members.reduce((sum, member) => sum + (member.total_bets || 0), 0),
+      firstDeposit: members.reduce((sum, member) => sum + (member.first_deposit || 0), 0),
     };
   };
 
@@ -193,11 +193,12 @@ const TeamReport: React.FC = () => {
             <div className="bg-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
               {/* Table Header */}
               <div className="hidden md:grid grid-cols-12 bg-[#252547] px-6 py-3 text-gray-400 text-sm font-medium">
-                <div className="col-span-4">Member</div>
+                <div className="col-span-3">Member</div>
                 <div className="col-span-2">Level</div>
-                <div className="col-span-2 text-right">Deposit</div>
+                <div className="col-span-2 text-right">First Deposit</div>
+                <div className="col-span-2 text-right">Total Deposit</div>
                 <div className="col-span-2 text-right">Total Bet</div>
-                <div className="col-span-2 text-right">Joined</div>
+                <div className="col-span-1 text-right">Joined</div>
               </div>
 
               {loading ? (
@@ -214,14 +215,14 @@ const TeamReport: React.FC = () => {
                     >
                       {/* Mobile View */}
                       <div className="md:hidden">
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-700/20 flex items-center justify-center">
                               <User className="w-5 h-5 text-purple-400" />
                             </div>
                             <div>
-                              <h3 className="text-white font-medium">{member.name}</h3>
-                              <p className="text-gray-400 text-xs">@{member.username}</p>
+                              <h3 className="text-white font-medium">{member.name || 'N/A'}</h3>
+                              <p className="text-gray-400 text-xs">@{member.username || 'N/A'}</p>
                             </div>
                           </div>
                           <div className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-sm">
@@ -229,30 +230,42 @@ const TeamReport: React.FC = () => {
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-3">
                           <div className="bg-[#252547]/50 rounded-lg p-3">
-                            <p className="text-gray-400 text-xs mb-1">Deposit</p>
-                            <p className="text-white font-medium">₹{member.depositAmount?.toLocaleString()}</p>
+                            <div className="flex justify-between items-center">
+                              <p className="text-gray-400 text-xs">First Deposit</p>
+                              <p className="text-white font-medium">₹{member.first_deposit?.toLocaleString() || '0'}</p>
+                            </div>
                           </div>
                           <div className="bg-[#252547]/50 rounded-lg p-3">
-                            <p className="text-gray-400 text-xs mb-1">Total Bet</p>
-                            <p className="text-white font-medium">₹{member.totalBet?.toLocaleString()}</p>
+                            <div className="flex justify-between items-center">
+                              <p className="text-gray-400 text-xs">Total Deposit</p>
+                              <p className="text-white font-medium">₹{member.total_deposit?.toLocaleString() || '0'}</p>
+                            </div>
                           </div>
                           <div className="bg-[#252547]/50 rounded-lg p-3">
-                            <p className="text-gray-400 text-xs mb-1">Joined</p>
-                            <p className="text-white font-medium text-sm">{member.joinDate}</p>
+                            <div className="flex justify-between items-center">
+                              <p className="text-gray-400 text-xs">Total Bet</p>
+                              <p className="text-white font-medium">₹{member.total_bets?.toLocaleString() || '0'}</p>
+                            </div>
+                          </div>
+                          <div className="bg-[#252547]/50 rounded-lg p-3">
+                            <div className="flex justify-between items-center">
+                              <p className="text-gray-400 text-xs">Joined</p>
+                              <p className="text-white font-medium text-sm">{member.joinDate || 'N/A'}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
                       
                       {/* Desktop View - Member Info */}
-                      <div className="hidden md:flex items-center col-span-4">
+                      <div className="hidden md:flex items-center col-span-3">
                         <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mr-3">
                           <User className="w-5 h-5 text-purple-400" />
                         </div>
                         <div>
-                          <h3 className="text-white font-medium">{member.name}</h3>
-                          <p className="text-gray-400 text-xs">@{member.username}</p>
+                          <h3 className="text-white font-medium">{member.name || 'N/A'}</h3>
+                          <p className="text-gray-400 text-xs">@{member.username || 'N/A'}</p>
                         </div>
                       </div>
                       
@@ -261,19 +274,24 @@ const TeamReport: React.FC = () => {
                         Level {member.level}
                       </div>
                       
-                      {/* Desktop View - Deposit */}
+                      {/* Desktop View - First Deposit */}
                       <div className="hidden md:flex items-center justify-end col-span-2">
-                        <div className="text-white">₹{member.depositAmount?.toLocaleString()}</div>
+                        <div className="text-white">₹{member.first_deposit?.toLocaleString() || '0'}</div>
+                      </div>
+                      
+                      {/* Desktop View - Total Deposit */}
+                      <div className="hidden md:flex items-center justify-end col-span-2">
+                        <div className="text-white">₹{member.total_deposit?.toLocaleString() || '0'}</div>
                       </div>
                       
                       {/* Desktop View - Total Bet */}
                       <div className="hidden md:flex items-center justify-end col-span-2">
-                        <div className="text-white">₹{member.totalBet?.toLocaleString()}</div>
+                        <div className="text-white">₹{member.total_bets?.toLocaleString() || '0'}</div>
                       </div>
                       
                       {/* Desktop View - Join Date */}
-                      <div className="hidden md:flex items-center justify-end col-span-2 text-gray-300 text-sm">
-                        {member.joinDate}
+                      <div className="hidden md:flex items-center justify-end col-span-1 text-gray-300 text-sm">
+                        {member.joinDate || 'N/A'}
                       </div>
                     </div>
                   ))}
