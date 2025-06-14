@@ -47,7 +47,7 @@ const BigSmall = () => {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<"BIG" | "SMALL" | "">("");
   const [contractMoney, setContractMoney] = useState<number>(0);
-  const [agreed, setAgreed] = useState(false);
+  const [agreed, setAgreed] = useState(true);
   const [selected, setSelected] = useState(1);
   const [records, setRecords] = useState<Record[]>([]);
   const [currentPeriod, setCurrentPeriod] = useState<number>();
@@ -420,7 +420,7 @@ const BigSmall = () => {
         setSelectedColor("");
         setSelectedSize("");
         setContractMoney(0);
-        setAgreed(false);
+        setAgreed(true);
         
         // Show success message in green toast
         toast.success(response.message, {
@@ -548,7 +548,10 @@ const BigSmall = () => {
                     : "bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30"
                 }`}
                 disabled={timers[activeTab] < 10}
-                onClick={() => setSelectedColor("green")}
+                onClick={() => {
+                  setSelectedColor("green");
+                  setAgreed(true);
+                }}
               >
                 Join Green
               </button>
@@ -560,7 +563,10 @@ const BigSmall = () => {
                     : "bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
                 }`}
                 disabled={timers[activeTab] < 10}
-                onClick={() => setSelectedColor("voilet")}
+                onClick={() => {
+                  setSelectedColor("voilet");
+                  setAgreed(true);
+                }}
               >
                 Join Violet
               </button>
@@ -572,7 +578,10 @@ const BigSmall = () => {
                     : "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
                 }`}
                 disabled={timers[activeTab] < 10}
-                onClick={() => setSelectedColor("red")}
+                onClick={() => {
+                  setSelectedColor("red");
+                  setAgreed(true);
+                }}
               >
                 Join Red
               </button>
@@ -584,7 +593,10 @@ const BigSmall = () => {
                 {Array.from({ length: 10 }, (_, i) => (
                   <button
                     key={i}
-                    onClick={() => timers[activeTab] >= 10 && setSelectedNumber(i)}
+                    onClick={() => {
+                      timers[activeTab] >= 10 && setSelectedNumber(i);
+                      setAgreed(true);
+                    }}
                     disabled={timers[activeTab] < 10}
                     className={`relative px-0 py-3 text-white font-bold rounded-lg ${
                       timers[activeTab] < 10
@@ -611,7 +623,10 @@ const BigSmall = () => {
                     : "bg-gradient-to-r from-red-600 to-red-500 text-white hover:opacity-90"
                 }`}
                 disabled={timers[activeTab] < 10}
-                onClick={() => setSelectedSize("big")}
+                onClick={() => {
+                  setSelectedSize("BIG");
+                  setAgreed(true);
+                }}
               >
                 BIG
               </button>
@@ -622,7 +637,10 @@ const BigSmall = () => {
                     : "bg-gradient-to-r from-green-600 to-green-500 text-white hover:opacity-90"
                 }`}
                 disabled={timers[activeTab] < 10}
-                onClick={() => setSelectedSize("small")}
+                onClick={() => {
+                  setSelectedSize("SMALL");
+                  setAgreed(true);
+                }}
               >
                 SMALL
               </button>
