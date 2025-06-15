@@ -18,6 +18,12 @@ interface Referral {
   total_bets: number | null;
 }
 
+interface PendingCommission {
+  cryptoname: string;
+  pending_amount: number;
+  commission_count: number;
+}
+
 interface ReferralsResponse {
   userId: string;
   totalReferrals: number;
@@ -35,6 +41,7 @@ const AgentProgram: React.FC = () => {
   const [isHovered, setIsHovered] = React.useState('');
   const [isRulesModalOpen, setIsRulesModalOpen] = React.useState(false);
   const [referralsData, setReferralsData] = React.useState<ReferralsResponse | null>(null);
+  const [pendingCommissions, setPendingCommissions] = React.useState<PendingCommission[]>([]);
   const navigate = useNavigate();
   
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -45,24 +52,38 @@ const AgentProgram: React.FC = () => {
     setReferralCode(referralCode || '');
   }, []);
   useEffect(() => {
-    const fetchReferrals = async () => {
+    const fetchData = async () => {
       try {
-        // Get userId from localStorage or your auth context
-    
         if (!userId) {
           throw new Error('User ID not found');
         }
 
+        // Fetch referrals data
         const data = await referralService.getReferrals(userId);
         setReferralsData(data);
+
+        // Fetch pending commissions
+        const response = await fetch(`${baseUrl}/api/user/pending-commissions/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch pending commissions');
+        }
+
+        const pendingData = await response.json();
+        setPendingCommissions(pendingData.pendingCommissions || []);
       } catch (error) {
-        console.error('Error fetching referrals:', error);
-        
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchReferrals();
-  }, []);
+    fetchData();
+  }, [userId]);
 
 
 
@@ -71,14 +92,16 @@ const AgentProgram: React.FC = () => {
     if (!referralsData) return {
       registered: 0,
       depositAmount: 0,
-      firstDepositUsers: 0
+      firstDepositUsers: 0,
+      totalFirstDepositAmount: 0
     };
 
     const level1Referrals = referralsData.referralsByLevel.level1;
     return {
       registered: level1Referrals.length,
-      depositAmount: level1Referrals.reduce((sum, ref) => sum + (ref.total_deposit || 0), 0),
-      firstDepositUsers: level1Referrals.filter(ref => ref.first_deposit !== null).length
+      depositAmount: level1Referrals.reduce((sum, ref) => sum + (parseFloat(ref.total_deposit?.toString() || '0')), 0),
+      firstDepositUsers: level1Referrals.filter(ref => ref.first_deposit !== null).length,
+      totalFirstDepositAmount: level1Referrals.reduce((sum, ref) => sum + (parseFloat(ref.first_deposit?.toString() || '0')), 0)
     };
   }, [referralsData]);
 
@@ -87,7 +110,8 @@ const AgentProgram: React.FC = () => {
     if (!referralsData) return {
       registered: 0,
       depositAmount: 0,
-      firstDepositUsers: 0
+      firstDepositUsers: 0,
+      totalFirstDepositAmount: 0
     };
 
     const allReferrals = [
@@ -100,8 +124,9 @@ const AgentProgram: React.FC = () => {
 
     return {
       registered: allReferrals.length,
-      depositAmount: allReferrals.reduce((sum, ref) => sum + (ref.total_deposit || 0), 0),
-      firstDepositUsers: allReferrals.filter(ref => ref.first_deposit !== null).length
+      depositAmount: allReferrals.reduce((sum, ref) => sum + (parseFloat(ref.total_deposit?.toString() || '0')), 0),
+      firstDepositUsers: allReferrals.filter(ref => ref.first_deposit !== null).length,
+      totalFirstDepositAmount: allReferrals.reduce((sum, ref) => sum + (parseFloat(ref.first_deposit?.toString() || '0')), 0)
     };
   }, [referralsData]);
 
@@ -148,10 +173,10 @@ const AgentProgram: React.FC = () => {
             <div className="p-6 md:p-8 lg:p-10 text-center border-b border-purple-500/10
                           bg-gradient-to-r from-purple-500/5 via-transparent to-pink-500/5">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
-                           bg-gradient-to-r from-purple-400 to-pink-400 mb-3">{directSubordinatesStats.registered}</h2>
+                           bg-gradient-to-r from-purple-400 to-pink-400 mb-3">₹{pendingCommissions.find(p => p.cryptoname === 'INR')?.pending_amount?.toLocaleString() || '0'}</h2>
               <div className="inline-block bg-purple-500/10 rounded-full px-4 md:px-6 py-1.5 md:py-2 mb-2
                             backdrop-blur-sm">
-                <span className="text-sm md:text-base text-white/90">ALL Time Direct Referrals</span>
+                <span className="text-sm md:text-base text-white/90">Yesterday's Total Commission</span>
               </div>
               <p className="text-sm md:text-base text-white/60">
                 Upgrade the level to increase commission income
@@ -159,40 +184,104 @@ const AgentProgram: React.FC = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-purple-500/10">
+            <div className="hidden md:grid md:grid-cols-4 md:gap-0 ">
               {/* Direct Subordinates */}
-              <div className="col-span-1 md:col-span-2 p-4 md:p-6 lg:p-8">
-                <h3 className="text-center text-white font-medium mb-4 md:mb-6">Direct subordinates</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <div className="flex-1 md:col-span-2 p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-500/5 to-blue-500/10 rounded-xl">
+                <div className="flex items-center justify-center gap-3 mb-4 md:mb-6">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-center text-white font-medium text-lg">Direct subordinates</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-2 md:gap-6">
                   {[
-                    { label: 'Number of register', value: directSubordinatesStats.registered },
-                    { label: 'Deposit amount', value: `₹${directSubordinatesStats.depositAmount.toLocaleString()}` },
-                    { label: 'First deposit ', value: directSubordinatesStats.firstDepositUsers }
+                    { label: 'Number of register', value: directSubordinatesStats.registered, valueColor: 'text-blue-400' },
+                    { label: 'Deposit amount', value: `₹${directSubordinatesStats.depositAmount.toLocaleString()}`, valueColor: 'text-purple-400' },
+                    { label: 'First deposit', value: `₹${directSubordinatesStats.totalFirstDepositAmount.toLocaleString()}`, valueColor: 'text-green-400' },
+                    { label: 'Number of people making first deposit', value: directSubordinatesStats.firstDepositUsers, valueColor: 'text-pink-400' }
                   ].map((item, index) => (
-                    <div key={index} className="text-center group transition-all duration-300 hover:scale-105">
-                      <p className="text-xl md:text-2xl lg:text-3xl font-bold text-white group-hover:text-purple-400 
-                                  transition-colors duration-300">{item.value}</p>
-                      <p className="text-sm text-white/60 mt-1 group-hover:text-white/80 
-                                  transition-colors duration-300">{item.label}</p>
+                    <div key={index} className="flex flex-col items-center justify-center text-center group transition-all duration-300 hover:scale-105">
+                      <p className={`text-base md:text-2xl lg:text-3xl font-bold ${item.valueColor} group-hover:opacity-90 mb-1 transition-colors duration-300`}>{item.value}</p>
+                      <p className="text-xs md:text-sm text-white/60 group-hover:text-white/80 transition-colors duration-300">{item.label}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Team Subordinates */}
-              <div className="col-span-1 md:col-span-2 p-4 md:p-6 lg:p-8">
-                <h3 className="text-center text-white font-medium mb-4 md:mb-6">Team subordinates</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <div className="flex-1 md:col-span-2 p-4 md:p-6 lg:p-8 bg-gradient-to-br from-green-500/5 to-green-500/10 rounded-xl">
+                <div className="flex items-center justify-center gap-3 mb-4 md:mb-6">
+                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-center text-white font-medium text-lg">Team subordinates</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-2 md:gap-6">
                   {[
-                    { label: 'Number of register', value: teamSubordinatesStats.registered },
-                    { label: 'Deposit amount', value: `₹${teamSubordinatesStats.depositAmount.toLocaleString()}` },
-                    { label: 'First deposit ', value: teamSubordinatesStats.firstDepositUsers }
+                    { label: 'Number of register', value: teamSubordinatesStats.registered, valueColor: 'text-blue-400' },
+                    { label: 'Deposit amount', value: `₹${teamSubordinatesStats.depositAmount.toLocaleString()}`, valueColor: 'text-purple-400' },
+                    { label: 'First deposit', value: `₹${teamSubordinatesStats.totalFirstDepositAmount.toLocaleString()}`, valueColor: 'text-green-400' },
+                    { label: 'Number of people making first deposit', value: teamSubordinatesStats.firstDepositUsers, valueColor: 'text-pink-400' }
                   ].map((item, index) => (
-                    <div key={index} className="text-center group transition-all duration-300 hover:scale-105">
-                      <p className="text-xl md:text-2xl lg:text-3xl font-bold text-white group-hover:text-purple-400 
-                                  transition-colors duration-300">{item.value}</p>
-                      <p className="text-sm text-white/60 mt-1 group-hover:text-white/80 
-                                  transition-colors duration-300">{item.label}</p>
+                    <div key={index} className="flex flex-col items-center justify-center text-center group transition-all duration-300 hover:scale-105">
+                      <p className={`text-base md:text-2xl lg:text-3xl font-bold ${item.valueColor} group-hover:opacity-90 mb-1 transition-colors duration-300`}>{item.value}</p>
+                      <p className="text-xs md:text-sm text-white/60 group-hover:text-white/80 transition-colors duration-300">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile-only layout: value above, label below, like the image */}
+            <div className="flex  gap-0 md:hidden">
+              {/* Direct Subordinates */}
+              <div className="p-4 bg-gradient-to-br from-blue-500/5 to-blue-500/10 ">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-white font-medium text-sm">Direct subordinates</h3>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { label: 'Number of register', value: directSubordinatesStats.registered, valueColor: 'text-blue-400' },
+                    { label: 'First Deposit', value: `₹${directSubordinatesStats.totalFirstDepositAmount.toLocaleString()}`, valueColor: 'text-green-400' },
+                    { label: 'Deposit amount', value: `₹${directSubordinatesStats.depositAmount.toLocaleString()}`, valueColor: 'text-purple-400' },
+                    { label: 'Number of people making first deposit', value: directSubordinatesStats.firstDepositUsers, valueColor: 'text-pink-400' }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex flex-col items-center justify-center py-2">
+                      <span className={`text-2xl font-bold ${item.valueColor}`}>{item.value}</span>
+                      <span className="text-xs text-white/70 mt-1">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Team Subordinates */}
+              <div className="p-4 bg-gradient-to-br from-green-500/5 to-green-500/10 ">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-white font-medium text-sm">Team subordinates</h3>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { label: 'Number of register', value: teamSubordinatesStats.registered, valueColor: 'text-blue-400' },
+                    { label: 'First Deposit', value: `₹${teamSubordinatesStats.totalFirstDepositAmount.toLocaleString()}`, valueColor: 'text-green-400' },
+                    { label: 'Deposit amount', value: `₹${teamSubordinatesStats.depositAmount.toLocaleString()}`, valueColor: 'text-purple-400' },
+                    { label: 'Number of people making first deposit', value: teamSubordinatesStats.firstDepositUsers, valueColor: 'text-pink-400' }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex flex-col items-center justify-center py-2">
+                      <span className={`text-2xl font-bold ${item.valueColor}`}>{item.value}</span>
+                      <span className="text-xs text-white/70 mt-1">{item.label}</span>
                     </div>
                   ))}
                 </div>
