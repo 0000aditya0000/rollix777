@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Copy, Gift, Users, DollarSign, Share2, IndianRupee } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
+import { baseUrl } from '../../lib/config/server';
 interface PendingCommission {
   cryptoname: string;
   pending_amount: number;
   commission_count: number;
+}
+
+interface Referral {
+  id: number;
+  name: string | null;
+  username: string | null;
+  email: string | null;
+  level: number;
+  first_deposit: string;
+  total_deposit: string;
+  total_bets: string | null;
+  pending_commission: string;
 }
 
 interface ReferralData {
@@ -20,13 +32,6 @@ interface ReferralData {
   };
 }
 
-interface Referral {
-  id: string;
-  username: string;
-  email: string;
-  level?: string;
-}
-
 const Referrals = () => {
   const [copied, setCopied] = React.useState(false);
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
@@ -38,12 +43,25 @@ const Referrals = () => {
   
   const referralLink = `https://rollix777.com/refer/${referralCode}`;
 
+  // Combine all referrals from different levels for the table
+  const getAllReferrals = () => {
+    if (!referralData) return [];
+    
+    const allReferrals: Referral[] = [];
+    Object.entries(referralData.referralsByLevel).forEach(([level, referrals]) => {
+      referrals.forEach((referral: Referral) => {
+        allReferrals.push(referral);
+      });
+    });
+    return allReferrals;
+  };
+
   useEffect(() => {
     const userId = Number(localStorage.getItem('userId'));
     const fetchData = async () => {
       try {
         // Fetch referral data
-        const referralResponse = await fetch(`https://api.rollix777.com/api/user/referrals/${userId}`);
+        const referralResponse = await fetch(`${baseUrl}/api/user/referrals/${userId}`);
         if (!referralResponse.ok) {
           throw new Error('Failed to fetch referral data');
         }
@@ -51,7 +69,7 @@ const Referrals = () => {
         setReferralData(referralData);
 
         // Fetch pending commissions
-        const pendingResponse = await fetch(`https://api.rollix777.com/api/user/pending-commissions/${userId}`);
+        const pendingResponse = await fetch(`${baseUrl}/api/user/pending-commissions/${userId}`);
         if (!pendingResponse.ok) {
           throw new Error('Failed to fetch pending commissions');
         }
@@ -78,24 +96,9 @@ const Referrals = () => {
   // Calculate total earnings - including pending commissions
   const perReferralAmount = 75;
   const totalReferralEarnings = (referralData?.totalReferrals ?? 0) * perReferralAmount;
-  const totalPendingAmount = pendingCommissions.reduce((sum, commission) => sum + commission.pending_amount, 0);
+  const totalPendingAmount = getAllReferrals().reduce((sum, referral) => 
+    sum + parseFloat(referral.pending_commission || '0'), 0);
   const totalEarnings = totalReferralEarnings + totalPendingAmount;
-
-  // Combine all referrals from different levels for the table
-  const getAllReferrals = () => {
-    if (!referralData) return [];
-    
-    const allReferrals: Referral[] = [];
-    Object.entries(referralData.referralsByLevel).forEach(([level, referrals]) => {
-      referrals.forEach((referral: Referral) => {
-        allReferrals.push({
-          ...referral,
-          level: level.replace('level', '')
-        });
-      });
-    });
-    return allReferrals;
-  };
 
   if (error) {
     return (
@@ -140,7 +143,7 @@ const Referrals = () => {
             <p className="text-2xl font-bold text-white"></p>
             {totalPendingAmount > 0 ? (
               <p className="text-sm text-yellow-400 mt-1">
-                Pending: ₹{totalPendingAmount.toFixed(2)}
+                 ₹{totalPendingAmount?.toFixed(2)}
               </p>
             ) : pendingMessage && (
               <p className="text-sm text-gray-400 mt-1">
@@ -217,16 +220,9 @@ const Referrals = () => {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex flex-col">
-                          {/* <span>₹{perReferralAmount.toFixed(2)}</span> */}
-                          {pendingCommissions.length > 0 ? (
-                            <span className="text-xs text-yellow-400">
-                              Pending: ₹{pendingCommissions[0].pending_amount.toFixed(2)}
-                            </span>
-                          ) : pendingMessage && (
-                            <span className="text-xs text-gray-400">
-                              {pendingMessage}
-                            </span>
-                          )}
+                          <span className="text-xs text-yellow-400">
+                             ₹{parseFloat(referral.pending_commission).toFixed(2)}
+                          </span>
                         </div>
                       </td>
                     </tr>
