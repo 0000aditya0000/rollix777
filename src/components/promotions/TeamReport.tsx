@@ -12,7 +12,8 @@ interface ReferralMember {
   level: number;
   first_deposit: number | null;
   total_deposit: number | null;
-  total_bets: number | null;
+  total_bets: string | number | null;
+  pending_commission?: string;
   joinDate?: string;
 }
 
@@ -82,13 +83,31 @@ const TeamReport: React.FC = () => {
     ];
   };
 
+  // Helper function to safely parse number values
+  const parseNumber = (value: string | number | null): number => {
+    if (value === null) return 0;
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return value;
+  };
+
   const calculateTotalStats = () => {
     const members = getAllMembers();
     return {
-      depositAmount: members.reduce((sum, member) => sum + (member.total_deposit || 0), 0),
-      totalBet: members.reduce((sum, member) => sum + (member.total_bets || 0), 0),
-      firstDeposit: members.reduce((sum, member) => sum + (member.first_deposit || 0), 0),
+      depositAmount: members.reduce((sum, member) => sum + parseNumber(member.total_deposit), 0),
+      totalBet: members.reduce((sum, member) => sum + parseNumber(member.total_bets), 0),
+      firstDeposit: members.reduce((sum, member) => sum + parseNumber(member.first_deposit), 0),
     };
+  };
+
+  // Helper function to format currency
+  const formatCurrency = (value: number): string => {
+    return value.toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   };
 
   const members = getAllMembers();
@@ -166,9 +185,9 @@ const TeamReport: React.FC = () => {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {[
-                { title: 'Total Deposit', value: `₹${totals.depositAmount.toLocaleString()}`, trend: 'up' },
-                { title: 'Total Bet Amount', value: `₹${totals.totalBet.toLocaleString()}`, trend: 'up' },
-                { title: 'First Deposit', value: `₹${totals.firstDeposit.toLocaleString()}`, trend: 'down' }
+                { title: 'Total Deposit', value: `₹${formatCurrency(totals.depositAmount)}`, trend: 'up' },
+                { title: 'Total Bet Amount', value: `₹${formatCurrency(totals.totalBet)}`, trend: 'up' },
+                { title: 'First Deposit', value: `₹${formatCurrency(totals.firstDeposit)}`, trend: 'down' }
               ].map((stat, index) => (
                 <div 
                   key={index}
@@ -234,19 +253,19 @@ const TeamReport: React.FC = () => {
                           <div className="bg-[#252547]/50 rounded-lg p-3">
                             <div className="flex justify-between items-center">
                               <p className="text-gray-400 text-xs">First Deposit</p>
-                              <p className="text-white font-medium">₹{member.first_deposit?.toLocaleString() || '0'}</p>
+                              <p className="text-white font-medium">₹{formatCurrency(parseNumber(member.first_deposit))}</p>
                             </div>
                           </div>
                           <div className="bg-[#252547]/50 rounded-lg p-3">
                             <div className="flex justify-between items-center">
                               <p className="text-gray-400 text-xs">Total Deposit</p>
-                              <p className="text-white font-medium">₹{member.total_deposit?.toLocaleString() || '0'}</p>
+                              <p className="text-white font-medium">₹{formatCurrency(parseNumber(member.total_deposit))}</p>
                             </div>
                           </div>
                           <div className="bg-[#252547]/50 rounded-lg p-3">
                             <div className="flex justify-between items-center">
                               <p className="text-gray-400 text-xs">Total Bet</p>
-                              <p className="text-white font-medium">₹{member.total_bets?.toLocaleString() || '0'}</p>
+                              <p className="text-white font-medium">₹{formatCurrency(parseNumber(member.total_bets))}</p>
                             </div>
                           </div>
                           <div className="bg-[#252547]/50 rounded-lg p-3">
@@ -276,17 +295,17 @@ const TeamReport: React.FC = () => {
                       
                       {/* Desktop View - First Deposit */}
                       <div className="hidden md:flex items-center justify-end col-span-2">
-                        <div className="text-white">₹{member.first_deposit?.toLocaleString() || '0'}</div>
+                        <div className="text-white">₹{formatCurrency(parseNumber(member.first_deposit))}</div>
                       </div>
                       
                       {/* Desktop View - Total Deposit */}
                       <div className="hidden md:flex items-center justify-end col-span-2">
-                        <div className="text-white">₹{member.total_deposit?.toLocaleString() || '0'}</div>
+                        <div className="text-white">₹{formatCurrency(parseNumber(member.total_deposit))}</div>
                       </div>
                       
                       {/* Desktop View - Total Bet */}
                       <div className="hidden md:flex items-center justify-end col-span-2">
-                        <div className="text-white">₹{member.total_bets?.toLocaleString() || '0'}</div>
+                        <div className="text-white">₹{formatCurrency(parseNumber(member.total_bets))}</div>
                       </div>
                       
                       {/* Desktop View - Join Date */}
