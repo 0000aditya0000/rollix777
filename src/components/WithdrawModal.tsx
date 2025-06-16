@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Wallet,
@@ -25,6 +25,7 @@ interface BankAccount {
   ifsccode: string;
   branch: string;
   status: number;
+  usdt?: string;
 }
 
 interface WithdrawModalProps {
@@ -34,37 +35,30 @@ interface WithdrawModalProps {
   fetchData: () => void;
 }
 
-interface cryptoPayload {
-  walletAddress: string;
-  amount: string;
-  cryptoname?: string;
-  network?: string;
-}
-
-interface bankPayload {
-  bankname: string;
-  amount: string;
-  currency: string;
-}
-
-interface errorCrypto {
-  walletAddress: string;
-  amount: string;
-}
-interface errorBank {
-  bankname: string;
-  amount: string;
-  currency: string;
-}
-
 interface WithdrawPayload {
-  type: "crypto" | "bank";
-  userId: string | null;
+  currency: string;
   amount: string;
-  [key: string]: any;
+  bankname?: string;
+  network?: string;
+  walletAddress?: string;
+  userId: string | null;
 }
 
+interface ValidationErrors {
+  currency?: string;
+  amount?: string;
+  bankname?: string;
+  walletAddress?: string;
+}
 
+const initialPayload: WithdrawPayload = {
+  currency: "",
+  amount: "",
+  bankname: "",
+  network: "trc20",
+  walletAddress: "",
+  userId: null
+};
 
 const WithdrawModal: React.FC<WithdrawModalProps> = ({
   isOpen,
@@ -72,68 +66,33 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   mainBalance,
   fetchData,
 }) => {
-  const [activeTab, setActiveTab] = useState<"crypto" | "bank">("crypto");
-  const [selectedCrypto, setSelectedCrypto] = useState<"btc" | "eth" | "usdt">("btc");
   const [selectedNetwork, setSelectedNetwork] = useState<"trc20" | "erc20">("trc20");
-  const [selectedCurrency, setSelectedCurrency] = useState("inr");
-  const [error, setError] = useState<string>("");
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
-  const userId = localStorage.getItem('userId');
-  const [rate,setRate] = useState(Number(mainBalance))
-
-  // Initial states
-  const initialCryptoPayload: cryptoPayload = {
-    walletAddress: "",
-    amount: "",
-    cryptoname: "",
-    network: "trc20",
-  };
-
-  const initialBankPayload: bankPayload = {
-    bankname: "",
-    amount: "",
-    currency: "",
-  };
-
-  const initialErrorState = {
-    crypto: { walletAddress: "", amount: "" },
-    bank: { bankname: "", amount: "", currency: "" }
-  };
-
-  const [cryptoPayload, setCryptoPayload] = useState<cryptoPayload>(initialCryptoPayload);
-  const [bankPayload, setBankPayload] = useState<bankPayload>(initialBankPayload);
-  const [errorCrypto, setErrorCrypto] = useState<errorCrypto>(initialErrorState.crypto);
-  const [errorBank, setErrorBank] = useState<errorBank>(initialErrorState.bank);
+  const [usdtBalance, setUsdtBalance] = useState(0);
+  const [payload, setPayload] = useState<WithdrawPayload>(initialPayload);
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string>("");
- 
+  const userId = localStorage.getItem('userId');
 
-  // Reset all states when modal closes
+  // Reset states when modal closes
   const handleClose = () => {
-    setCryptoPayload(initialCryptoPayload);
-    setBankPayload(initialBankPayload);
-    setErrorCrypto(initialErrorState.crypto);
-    setErrorBank(initialErrorState.bank);
+    setPayload(initialPayload);
+    setErrors({});
     setApiError("");
-    setSelectedCrypto("btc");
     setSelectedNetwork("trc20");
-    setSelectedCurrency("inr");
+    setUsdtBalance(0);
     onClose();
   };
 
   useEffect(() => {
-    // Reset states when modal opens
-   
     if (isOpen) {
-      setBankPayload(initialBankPayload);
-      setErrorCrypto(initialErrorState.crypto);
-      setErrorBank(initialErrorState.bank);
-      setApiError("");
-      // Do not reset the entire cryptoPayload, just the amount
-      setCryptoPayload(prev => ({
+      setPayload(prev => ({
         ...prev,
         amount: ""
       }));
+      setErrors({});
+      setApiError("");
     }
   }, [isOpen]);
 
@@ -143,20 +102,15 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
         try {
           const response = await fetchUserAllData(userId);
           if (response.success) {
-            console.log('data is coming',response.data)
             setBankAccounts(response.data.bankAccounts);
-            const money = response.data.wallet[0].balance;
-            setRate(Number(money))
             const usdtAccount = response.data.bankAccounts.find(
-              (account: any) => account.network === "TRC20" && account.usdt
+              (account: any) => account.usdt
             );
-            console.log('usdtAccount',usdtAccount)
             if (usdtAccount) {
-              setCryptoPayload(prev => ({
+              setPayload(prev => ({
                 ...prev,
                 walletAddress: usdtAccount.usdt,
-                network: selectedNetwork,
-                cryptoname: selectedCrypto
+                userId
               }));
             }
           }
@@ -167,211 +121,140 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
     };
 
     fetchUserData();
-  }, [userId, isOpen, selectedNetwork, selectedCrypto]);
+  }, [userId, isOpen]);
 
-  useEffect(() => {
-    if (selectedCrypto === "usdt") {
-      setCryptoPayload(prev => ({
-        ...prev,
-        network: selectedNetwork,
-        cryptoname: "usdt"
-      }));
-    }
-  }, [selectedNetwork, selectedCrypto]);
-
-  const validateCryptoFields = (payload: cryptoPayload): { isValid: boolean; errors: errorCrypto } => {
-    const errors = { ...initialErrorState.crypto };
-    const amount = Number(payload.amount);
-
-    if (!payload.walletAddress.trim()) {
-      errors.walletAddress = "Wallet address is required";
-    }
-    if (!payload.amount.trim()) {
-      errors.amount = "Amount is required";
-    } else if (isNaN(amount) || amount <= 0) {
-      errors.amount = "Please enter a valid amount";
-    } else if (amount < 10) {
-      errors.amount = "Minimum withdrawal amount is 10 USDT";
-    }
-
-    return {
-      isValid: !errors.walletAddress && !errors.amount,
-      errors
-    };
-  };
-
-  const validateBankFields = (payload: bankPayload): { isValid: boolean; errors: errorBank } => {
-    const errors = { ...initialErrorState.bank };
+  const validateFields = (): boolean => {
+    const newErrors: ValidationErrors = {};
     const amount = Number(payload.amount.replace(/,/g, ""));
 
-    if (!payload.bankname) errors.bankname = "Please select a bank account";
-    if (!payload.currency) errors.currency = "Please select a currency";
-    
+    if (!payload.currency) {
+      newErrors.currency = "Please select a currency";
+    }
+
     if (!payload.amount) {
-      errors.amount = "Amount is required";
+      newErrors.amount = "Amount is required";
     } else if (isNaN(amount) || amount <= 0) {
-      errors.amount = "Please enter a valid amount";
-    } else if (amount > mainBalance) {
-      errors.amount = "Amount cannot exceed available balance";
-    } else if (amount < 200) {
-      errors.amount = "Minimum withdrawal amount is ₹200";
+      newErrors.amount = "Please enter a valid amount";
+    } else if (payload.currency === "inr" && amount > mainBalance) {
+      newErrors.amount = "Amount cannot exceed available balance";
+    } else if (payload.currency === "usdt" && amount > usdtBalance) {
+      newErrors.amount = "Amount cannot exceed available balance";
+    } else if (payload.currency === "inr" && amount < 200) {
+      newErrors.amount = "Minimum withdrawal amount is ₹200";
+    } else if (payload.currency === "usdt" && amount < 10) {
+      newErrors.amount = "Minimum withdrawal amount is 10 USDT";
     }
 
-    return {
-      isValid: !errors.bankname && !errors.amount && !errors.currency,
-      errors
-    };
-  };
-
-  const makeWithdrawalRequest = async (payload: WithdrawPayload): Promise<{ success: boolean; message?: string }> => {
-    try {
-      console.log('payload',payload);
-      const response = await axios.post(`${baseUrl}/api/wallet/withdrawl`, payload);
-      if (response.data.success) {
-        toast.success( 'Withdrawal request successful!');
-        fetchData();
-      } else {
-        toast.error(response.data.message || 'Withdrawal request failed.');
-      }
-      return {
-        success: response.data.success,
-        message: response.data.message
-      };
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Something went wrong.";
-      toast.error(errorMessage);
-      return {
-        success: false,
-        message: errorMessage
-      };
+    if (payload.currency === "inr" && !payload.bankname) {
+      newErrors.bankname = "Please select a bank account";
     }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleChangeOfCrypto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    const newPayload = { ...cryptoPayload, [name]: value };
-    const { errors } = validateCryptoFields(newPayload);
     
-    setCryptoPayload(newPayload);
-    setErrorCrypto(errors);
-  };
-
-  const handleChangeOfBank = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    
-    const { name, value } = e.target;
-      if(name === "currency" && value === "usdt")
-      {
-        fetchRates()
+    if (name === "currency") {
+      // Reset amount and errors when currency changes
+      setPayload(prev => ({
+        ...initialPayload,
+        currency: value,
+        userId: prev.userId,
+        walletAddress: prev.walletAddress // Keep wallet address for USDT
+      }));
+      setErrors({});
+      setApiError("");
+      
+      if (value === "usdt") {
+        fetchRates();
       }
-      if(name === "currency" && value === "inr")
-        {
-          deConvert()
-        }
-
+      return;
+    }
     
     if (name === "amount" && !/^\d*\.?\d{0,2}$/.test(value.replace(/,/g, ""))) return;
     
-    const newPayload = { ...bankPayload, [name]: value };
-    const { errors } = validateBankFields(newPayload);
-    
-    setBankPayload(newPayload);
-    setErrorBank(errors);
-   
+    setPayload(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleMaxAmount = () => {
-    const maxAmount = Number(mainBalance || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
-    const newPayload = { ...bankPayload, amount: maxAmount.replace(/,/g, "") };
-    const { errors } = validateBankFields(newPayload);
-    
-    setBankPayload(newPayload);
-    setErrorBank(errors);
+    const maxAmount = Number(payload.currency === "usdt" ? usdtBalance : mainBalance)
+      .toLocaleString("en-IN", { maximumFractionDigits: 2 });
+    setPayload(prev => ({
+      ...prev,
+      amount: maxAmount.replace(/,/g, "")
+    }));
   };
 
   const handleWithdraw = async () => {
-    setApiError("");
-    let validationResult;
-    let payload: WithdrawPayload | null = null;
-
-    if (activeTab === "crypto") {
-      validationResult = validateCryptoFields(cryptoPayload);
-      setErrorCrypto(validationResult.errors);
-
-      if (validationResult.isValid) {
-        payload = {
-          type: "crypto",
-          ...cryptoPayload,
-          cryptoname: selectedCrypto,
-          network: selectedCrypto === "usdt" ? selectedNetwork : undefined,
-          userId
-        };
-      } else {
-        toast.error("Please fill all required fields correctly.");
-        return;
-      }
-    } else {
-      validationResult = validateBankFields(bankPayload);
-      setErrorBank(validationResult.errors);
-
-      if (validationResult.isValid) {
-        payload = {
-          type: "bank",
-          ...bankPayload,
-          balance: bankPayload.amount.replace(/,/g, ""),
-          userId
-        };
-      } else {
-        toast.error("Please fill all required fields correctly.");
-        return;
-      }
+    if (isLoading) return; // Prevent multiple submissions
+    
+    if (!validateFields()) {
+      toast.error("Please fill all required fields correctly.");
+      return;
     }
 
-    if (validationResult?.isValid && payload) {
-      setIsLoading(true);
-      const result = await makeWithdrawalRequest(payload);
-      setIsLoading(false);  
+    setIsLoading(true);
+    try {
+      let finalAmount = payload.amount.replace(/,/g, "");
 
-      if (result.success) {
+      // If USDT, convert to INR before sending
+      if (payload.currency === "usdt") {
+        const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
+        const newdata = await data.json();
+        const conversionrate = newdata.rate;
+        finalAmount = (Number(finalAmount) * Number(conversionrate)).toString();
+      }
+
+      // Clean up payload based on currency
+      const cleanPayload = {
+        userId: payload.userId,
+        currency: payload.currency,
+        amount: finalAmount,
+        ...(payload.currency === "inr" 
+          ? { bankname: payload.bankname }
+          : { 
+              walletAddress: payload.walletAddress,
+              network: selectedNetwork
+            }
+        )
+      };
+
+      console.log('Sending payload:', cleanPayload);
+      const response = await axios.post(`${baseUrl}/api/wallet/withdrawl`, cleanPayload);
+      if (response.data.success) {
+        toast.success('Withdrawal request successful!');
+        fetchData();
         handleClose();
       } else {
-        setApiError(result.message || "Withdrawal failed.");
+        toast.error(response.data.message || 'Withdrawal request failed.');
       }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "Something went wrong.";
+      toast.error(errorMessage);
+      setApiError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const cryptoOptions = [
-    { value: "usdt", label: "USDT", symbol: "₮", color: "green" },
-    { value: "inr", label: "INR", symbol: "₹", color: "orange" },
-  ];
-
-const fetchRates = async () => {
-  
-  
-   const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
-   const newdata = await data.json()
- 
-   const conversionrate = ((newdata.rate));
-   
-   
-   const updatedBalance = Number((rate/Number(conversionrate)));
-   console.log("updatesBalance",updatedBalance);
-   
-   setRate(updatedBalance);
-}
-
-const deConvert = async() =>{
-  const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
-  const newdata = await data.json()
-
-  const conversionrate = ((newdata.rate));
-  console.log("inr balance",(rate*conversionrate));
-  
-  setRate(rate*conversionrate)
-}
+  const fetchRates = async () => {
+    try {
+      const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
+      const newdata = await data.json();
+      const conversionrate = newdata.rate;
+      const updatedBalance = Number(mainBalance / Number(conversionrate));
+      setUsdtBalance(updatedBalance);
+    } catch (error) {
+      console.error('Error fetching rates:', error);
+    }
+  };
 
   if (!isOpen) return null;
-  
-
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -394,78 +277,81 @@ const deConvert = async() =>{
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-purple-500/10">
-          <button
-            className={`flex-1 py-3 px-4 text-center font-medium ${
-              activeTab === "crypto"
-                ? "text-white border-b-2 border-purple-500"
-                : "text-gray-400 hover:text-gray-300"
-            }`}
-            onClick={() => {
-              setApiError("");
-              setActiveTab("crypto")
-
-            }}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <DollarSign size={18} />
-              <span>Cryptocurrency</span>
-            </div>
-          </button>
-          <button
-            className={`flex-1 py-3 px-4 text-center font-medium ${
-              activeTab === "bank"
-                ? "text-white border-b-2 border-purple-500"
-                : "text-gray-400 hover:text-gray-300"
-            }`}
-            onClick={() => {
-              setActiveTab("bank")
-              setApiError("")
-            }}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <CreditCard size={18} />
-              <span>Bank Transfer</span>
-            </div>
-          </button>
-        </div>
-
         {/* Body */}
-        <div className="p-5 ">
-          {activeTab === "crypto" ? (
-            <div className="space-y-4 ">
-              <div className="flex gap-2">
-                {/* <button
-                  className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 ${
-                    selectedCrypto === "btc"
-                      ? "bg-yellow-500/20 border border-yellow-500/30 text-white"
-                      : "bg-[#1A1A2E] border border-gray-700 text-gray-400 hover:border-yellow-500/30"
-                  }`}
-                  onClick={() => setSelectedCrypto("btc")}
+        <div className="p-5">
+          <div className="space-y-3">
+            {/* Currency Selector */}
+            <div className="space-y-1 -mt-2">
+              <label className="text-xs sm:text-sm text-gray-400">
+                Select Currency
+              </label>
+              <div className="relative">
+                <select
+                  value={payload.currency}
+                  onChange={handleChange}
+                  name="currency"
+                  className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
+                    errors.currency ? 'border-red-500' : 'border-purple-500/20'
+                  } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
                 >
-                  <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold text-xs">
-                    ₿
-                  </div>
-                  <span>Bitcoin</span>
-                </button> */}
-               
-                <button
-                  className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 ${
-                    selectedCrypto === "usdt"
-                      ? "bg-green-500/20 border border-green-500/30 text-white"
-                      : "bg-[#1A1A2E] border border-gray-700 text-gray-400 hover:border-green-500/30"
-                  }`}
-                  onClick={() => setSelectedCrypto("usdt")}
-                >
-                  <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-xs">
-                    ₮
-                  </div>
-                  <span>USDT</span>
-                </button>
+                  <option value="">Select Currency</option>
+                  <option value="inr">INR</option>
+                  <option value="usdt">USDT</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </div>
               </div>
+              {errors.currency && (
+                <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{errors.currency}</span>
+                </div>
+              )}
+            </div>
 
-              {selectedCrypto === "usdt" && (
+            {/* Bank Account Selector for INR */}
+            {payload.currency === "inr" && (
+              <div className="space-y-1">
+                <label className="text-xs sm:text-sm text-gray-400">
+                  Select Bank Account
+                </label>
+                <div className="relative">
+                  <select
+                    value={payload.bankname}
+                    onChange={handleChange}
+                    name="bankname"
+                    className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
+                      errors.bankname ? 'border-red-500' : 'border-purple-500/20'
+                    } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
+                  >
+                    <option value="">Select a bank account</option>
+                    {bankAccounts.map((account) => (
+                      <option
+                        key={account.id}
+                        value={account.id}
+                        className="bg-[#1A1A2E]"
+                      >
+                        {account.accountname} - {account.accountnumber}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  </div>
+                </div>
+                {errors.bankname && (
+                  <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{errors.bankname}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Network Selection and Wallet Address for USDT */}
+            {payload.currency === "usdt" && (
+              <>
                 <div className="flex gap-2 mt-3">
                   <button
                     className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 ${
@@ -490,277 +376,114 @@ const deConvert = async() =>{
                     <span>ERC20</span>
                   </button>
                 </div>
-              )}
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-300">Wallet Address</label>
+                  <input
+                    type="text"
+                    value={payload.walletAddress}
+                    readOnly
+                    className="w-full py-3 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white opacity-70 cursor-not-allowed"
+                  />
+                </div>
+              </>
+            )}
 
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Wallet Address</label>
+            {/* Amount Field */}
+            <div className="space-y-1">
+              <label className="text-sm text-gray-300">Amount ({payload.currency === "usdt" ? "USDT" : "INR"})</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  {payload.currency === "usdt" ? (
+                    <DollarSign className="w-5 h-5 text-purple-400" />
+                  ) : (
+                    <IndianRupee className="w-5 h-5 text-purple-400" />
+                  )}
+                </div>
                 <input
                   type="text"
-                  value={cryptoPayload.walletAddress}
-                  onChange={handleChangeOfCrypto}
-                  name="walletAddress"
-                  disabled={!!cryptoPayload.walletAddress}
-                  className={`w-full py-3 px-4 bg-[#1A1A2E] border ${
-                    errorCrypto.walletAddress ? 'border-red-500' : 'border-purple-500/20'
-                  } rounded-lg text-white focus:outline-none focus:border-purple-500 ${
-                    cryptoPayload.walletAddress ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
-                  placeholder={`Enter your ${selectedCrypto.toUpperCase()} wallet address`}
+                  inputMode="decimal"
+                  className={`w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border ${
+                    errors.amount ? 'border-red-500' : 'border-purple-500/20'
+                  } rounded-lg text-white focus:outline-none focus:border-purple-500`}
+                  placeholder={payload.currency === "usdt" ? "10.00" : "200.00"}
+                  value={payload.amount}
+                  onChange={handleChange}
+                  name="amount"
                 />
-                {errorCrypto.walletAddress && (
-                  <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errorCrypto.walletAddress}</span>
-                  </div>
-                )}
               </div>
-
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Amount</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="amount"
-                    value={cryptoPayload.amount}
-                    onChange={handleChangeOfCrypto}
-                    className={`w-full py-3 px-4 bg-[#1A1A2E] border ${
-                      errorCrypto.amount ? 'border-red-500' : 'border-purple-500/20'
-                    } rounded-lg text-white focus:outline-none focus:border-purple-500`}
-                    placeholder="0.00"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <span className="text-gray-400">
-                      {selectedCrypto.toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-                {errorCrypto.amount && (
-                  <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errorCrypto.amount}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-xs mt-1">
-                  <span className="text-gray-400">
-                    Available: 0.0042 {selectedCrypto.toUpperCase()}
-                  </span>
-                  <button className="text-purple-400">MAX</button>
-                </div>
-              </div>
-
-              <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Fee:</span>
-                  <span className="text-white">
-                    0.0001 {selectedCrypto.toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm mt-1">
-                  <span className="text-gray-400">You will receive:</span>
-                  <span className="text-white">
-                    0.00 {selectedCrypto.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Add error message display */}
-              {apiError && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <div className="flex items-center gap-2 text-red-500">
-                    <AlertCircle className="w-5 h-5" />
-                    <span>{apiError}</span>
-                  </div>
+              {errors.amount && (
+                <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{errors.amount}</span>
                 </div>
               )}
-
-              <button
-                onClick={handleWithdraw}
-                disabled={isLoading}
-                type="button"
-                className={`w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium 
-                  ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'} transition-opacity`}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    <span>Processing...</span>
-                  </div>
-                ) : (
-                  "Withdraw Now"
-                )}
-              </button>
-
-              <div className="text-sm text-gray-400">
-                <p className="mb-2">Important:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>
-                    Minimum withdrawal: 10 {selectedCrypto.toUpperCase()}
-                  </li>
-                  <li>Processing time: 10-30 minutes</li>
-                  <li>Double-check your wallet address before confirming</li>
-                </ul>
+              <div className="flex justify-between text-xs mt-1">
+                <span className="text-gray-400">
+                  Available: {payload.currency === "usdt" ? `${usdtBalance.toFixed(2)} USDT` : `₹${mainBalance}`}
+                </span>
+                <button
+                  className="text-purple-400"
+                  onClick={handleMaxAmount}
+                >
+                  MAX
+                </button>
               </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Currency Selector */}
-              <div className="space-y-1 -mt-2">
-                <label className="text-xs sm:text-sm text-gray-400">
-                  Select Currency
-                </label>
-                <div className="relative">
-                  <select
-                    value={bankPayload.currency}
-                    onChange={handleChangeOfBank}
-                    name="currency"
-                    className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
-                      errorBank.currency ? 'border-red-500' : 'border-purple-500/20'
-                    } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
-                  >
-                    <option value="">Select Currency</option>
-                    {cryptoOptions.map((option) => (
-                      <option
-                        key={option.value}
-                        value={option.value}
-                        className="bg-[#1A1A2E]"
-                      
-                      >
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  </div>
-                </div>
-                {errorBank.currency && (
-                  <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errorBank.currency}</span>
-                  </div>
-                )}
-              </div>
-              {/* Bank Account Selector */}
-              <div className="space-y-1">
-                <label className="text-xs sm:text-sm text-gray-400">
-                  Select Bank Account
-                </label>
-                <div className="relative">
-                  <select
-                    value={bankPayload.bankname}
-                    onChange={handleChangeOfBank}
-                    name="bankname"
-                    className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
-                      errorBank.bankname ? 'border-red-500' : 'border-purple-500/20'
-                    } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
-                  >
-                    <option value="">Select a bank account</option>
-                    {bankAccounts.map((account) => (
-                      <option
-                        key={account.id}
-                        value={account.id}
-                        className="bg-[#1A1A2E]"
-                      >
-                        {account.accountname} - {account.accountnumber}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  </div>
-                </div>
-                {errorBank.bankname && (
-                  <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errorBank.bankname}</span>
-                  </div>
-                )}
-              </div>
 
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Amount (INR)</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <IndianRupee className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    className={`w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border ${
-                      errorBank.amount ? 'border-red-500' : 'border-purple-500/20'
-                    } rounded-lg text-white focus:outline-none focus:border-purple-500`}
-                    placeholder="100.00"
-                    value={bankPayload.amount}
-                    onChange={handleChangeOfBank}
-                    name="amount"
-                  />
-                </div>
-                {errorBank.amount && (
-                  <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{errorBank.amount}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-xs mt-1">
-                  <span className="text-gray-400">
-                    Available: ₹{rate.toLocaleString("en-IN")}
-                  </span>
-                  <button
-                    className="text-purple-400"
-                    onClick={handleMaxAmount}
-                  >
-                    MAX
-                  </button>
+            {/* Summary */}
+            <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Fee:</span>
+                <span className="text-white">₹0.00</span>
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span className="text-gray-400">You will receive:</span>
+                <span className="text-white">
+                  {payload.currency === "usdt" 
+                    ? `${usdtBalance.toFixed(2)} USDT` 
+                    : `₹${mainBalance}`}
+                </span>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {apiError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <div className="flex items-center gap-2 text-red-500">
+                  <AlertCircle className="w-5 h-5" />
+                  <span>{apiError}</span>
                 </div>
               </div>
+            )}
 
-              <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Fee:</span>
-                  <span className="text-white">₹0.00</span>
-                </div>
-                <div className="flex justify-between text-sm mt-1">
-                  <span className="text-gray-400">You will receive:</span>
-                  <span className="text-white">₹{rate.toLocaleString("en-IN")}</span>
-                </div>
-              </div>
-
-              {/* Add error message display */}
-              {apiError && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <div className="flex items-center gap-2 text-red-500">
-                    <AlertCircle className="w-5 h-5" />
-                    <span>{apiError}</span>
-                  </div>
-                </div>
-              )}
-
-              <button
+            {/* Withdraw Button */}
+            <button
               onClick={handleWithdraw}
-                type="button"
-                className={`w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium 
-                  ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'} transition-opacity`}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    <span>Processing...</span>
-                  </div>
-                ) : (
-                  "Withdraw Now"
-                )}
-              </button>
+              disabled={isLoading}
+              type="button"
+              className={`w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium 
+                ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'} transition-opacity`}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <span>Processing...</span>
+                </div>
+              ) : (
+                "Withdraw Now"
+              )}
+            </button>
 
-              <div className="text-sm text-gray-400">
-                <p className="mb-2">Important:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Minimum withdrawal: ₹200.00</li>
-                  <li>Processing time: 1-3 business days</li>
-                  <li>Bank transfer fees may apply</li>
-                </ul>
-              </div>
+            {/* Important Notes */}
+            <div className="text-sm text-gray-400">
+              <p className="mb-2">Important:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Minimum withdrawal: {payload.currency === "usdt" ? "10.00 USDT" : "₹200.00"}</li>
+                <li>Processing time: 1-3 business days</li>
+                <li>Bank transfer fees may apply</li>
+              </ul>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
