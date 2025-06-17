@@ -65,14 +65,14 @@ const ImageSlider = () => {
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block relative w-full h-[400px] rounded-2xl overflow-hidden">
+      {/* <div className="hidden md:block relative w-full h-[400px] rounded-2xl overflow-hidden">
         <div className="absolute inset-0 w-full h-full">
           <img
             src={images[currentImageIndex]}
             alt={`Slide ${currentImageIndex + 1}`}
             className="absolute inset-0 w-full h-full"
           />
-          {/* Navigation Arrows */}
+          Navigation Arrows
           <button
             onClick={prevSlide}
             className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full"
@@ -85,7 +85,7 @@ const ImageSlider = () => {
           >
             →
           </button>
-          {/* Navigation Dots */}
+          Navigation Dots
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
             {images.map((_, index) => (
               <button
@@ -98,7 +98,7 @@ const ImageSlider = () => {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 };

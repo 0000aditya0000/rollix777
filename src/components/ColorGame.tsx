@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
+import WingoRollix from "../assets/WingoRollix.png"
 
 const ColorGame = () => {
   const auth = useSelector((state: RootState) => state.auth.isAuthenticated);
@@ -23,7 +24,17 @@ const ColorGame = () => {
   };
   return (
     <>
-      <section className="py-8 px-4">
+      <section className="py-12 px-4">
+        <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-2xl border border-purple-500/20 overflow-hidden h-72 flex items-center justify-center">
+          <img
+            src={WingoRollix}
+            alt="WinGo Game"
+            onClick={handlePlayNow}
+            className="w-full h-full object-conver cursor-pointer hover:opacity-90 transition-opacity"
+          />
+        </div>
+      </section>
+      {/* <section className="py-8 px-4">
         <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-2xl p-6 border border-purple-500/20">
           <div className="flex items-center gap-4 mb-6">
             <div className="p-3 bg-purple-500/20 rounded-xl">
@@ -51,7 +62,7 @@ const ColorGame = () => {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={handleOnClose}
