@@ -681,7 +681,7 @@ const BigSmall = () => {
                             ? "🟢"
                             : "🔴"}
                         </td>
-                        <td className="py-4 px-4">{record.result_size}</td>
+                        <td className="py-4 px-4">{record.result_size.toUpperCase()}</td>
                       </tr>
                     ))
                   ) : (
