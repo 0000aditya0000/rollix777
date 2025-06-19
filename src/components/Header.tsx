@@ -73,26 +73,26 @@ const Header: React.FC = () => {
     fetchData();
   }, [user?.id]);
   const updatedCryptos = [
-    { name: "Bitcoin", symbol: "₿", color: "bg-yellow-500", cryptoname: "BTC" },
-    { name: "Litecoin", symbol: "Ł", color: "bg-gray-500", cryptoname: "LTC" },
-    { name: "Ethereum", symbol: "E", color: "bg-blue-500", cryptoname: "ETH" },
-    { name: "Tether", symbol: "₮", color: "bg-green-800", cryptoname: "USDT" },
-    { name: "Solana", symbol: "◎", color: "bg-green-300", cryptoname: "SOL" },
-    {
-      name: "Dogecoin",
-      symbol: "Ð",
-      color: "bg-yellow-800",
-      cryptoname: "DOGE",
-    },
-    {
-      name: "Bitcoin Cash",
-      symbol: "Ƀ",
-      color: "bg-green-700",
-      cryptoname: "BCH",
-    },
-    { name: "Ripple", symbol: "✕", color: "bg-gray-900", cryptoname: "XRP" },
-    { name: "Tron", symbol: "Ṯ", color: "bg-pink-700", cryptoname: "TRX" },
-    { name: "EOS", symbol: "ε", color: "bg-black", cryptoname: "EOS" },
+    // { name: "Bitcoin", symbol: "₿", color: "bg-yellow-500", cryptoname: "BTC" },
+    // { name: "Litecoin", symbol: "Ł", color: "bg-gray-500", cryptoname: "LTC" },
+    // { name: "Ethereum", symbol: "E", color: "bg-blue-500", cryptoname: "ETH" },
+    // { name: "Tether", symbol: "₮", color: "bg-green-800", cryptoname: "USDT" },
+    // { name: "Solana", symbol: "◎", color: "bg-green-300", cryptoname: "SOL" },
+    // {
+    //   name: "Dogecoin",
+    //   symbol: "Ð",
+    //   color: "bg-yellow-800",
+    //   cryptoname: "DOGE",
+    // },
+    // {
+    //   name: "Bitcoin Cash",
+    //   symbol: "Ƀ",
+    //   color: "bg-green-700",
+    //   cryptoname: "BCH",
+    // },
+    // { name: "Ripple", symbol: "✕", color: "bg-gray-900", cryptoname: "XRP" },
+    // { name: "Tron", symbol: "Ṯ", color: "bg-pink-700", cryptoname: "TRX" },
+    // { name: "EOS", symbol: "ε", color: "bg-black", cryptoname: "EOS" },
     { name: "Rupees", symbol: "₹", color: "bg-black", cryptoname: "INR" },
   ].map((crypto) => {
     const wallet = wallets.find((w) => w.cryptoname === crypto.cryptoname);
