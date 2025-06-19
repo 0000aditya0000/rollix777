@@ -133,7 +133,11 @@ const Wallet: React.FC = () => {
       try {
         const data = await fetchUserWallets(user.id);
         dispatch(setWallets(data));
-        toast.success('Wallet data refreshed successfully');
+
+        const transactionData = await getAllTransactions(user.id);
+        setTransactions(transactionData.transactions || []);
+
+        toast.success('Wallet data  & transactions refreshed successfully');
       } catch (error) {
         console.error("Error refreshing data:", error);
         toast.error('Failed to refresh wallet data');
