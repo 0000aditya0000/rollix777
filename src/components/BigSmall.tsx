@@ -1,15 +1,21 @@
-import React, { useEffect, useState,useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { X, ArrowLeft, Clock, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useDispatch } from "react-redux";
 import { deposit, withdraw } from "../slices/walletSlice";
-import { fetchResults, generateResult, getBetHistory, checkValidBet, placeBet } from "../lib/services/BigSmallServices";
+import {
+  fetchResults,
+  generateResult,
+  getBetHistory,
+  checkValidBet,
+  placeBet,
+} from "../lib/services/BigSmallServices";
 import axios from "axios";
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer } from 'react-toastify';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 type Record = {
   id: number;
@@ -34,10 +40,6 @@ type BetHistory = {
   amountReceived: number;
 };
 
-
-
-
-
 const BigSmall = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
@@ -54,35 +56,37 @@ const BigSmall = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const [winner, setWinner] = useState(false);
-  const [popup, setpopup] = useState('');
+  const [popup, setpopup] = useState("");
   const [result, setResult] = useState<Record | null>(null);
   const [betHistory, setbetHistory] = useState<BetHistory | null>(null);
   const dispatch = useDispatch();
-  const [activeTab, setActiveTab] = useState('1min');
+  const [activeTab, setActiveTab] = useState("1min");
   const intervalRefs = useRef({});
   const isFetchingRef = useRef({});
   const [error, setError] = useState<string | null>(null);
   const [timers, setTimers] = useState({
-    '1min': 0,
-    '3min': 0,
-    '5min': 0,
-    '10min': 0
+    "1min": 0,
+    "3min": 0,
+    "5min": 0,
+    "10min": 0,
   });
 
   // Add a new state to track which timers have already triggered their API calls
-  const [triggeredTimers, setTriggeredTimers] = useState<Set<string>>(new Set());
+  const [triggeredTimers, setTriggeredTimers] = useState<Set<string>>(
+    new Set()
+  );
 
   // Add state for period numbers for each timer
   const [periodNumbers, setPeriodNumbers] = useState({
-    '1min': 0,
-    '3min': 0,
-    '5min': 0,
-    '10min': 0
+    "1min": 0,
+    "3min": 0,
+    "5min": 0,
+    "10min": 0,
   });
 
   useEffect(() => {
     // Initial fetch for all timers
-    ['1min', '3min', '5min', '10min'].forEach(duration => {
+    ["1min", "3min", "5min", "10min"].forEach((duration) => {
       fetchTimerData(duration);
       fetchPeriodNumber(duration);
     });
@@ -96,23 +100,29 @@ const BigSmall = () => {
   // Modify fetchPeriodNumber to use mins in payload
   const fetchPeriodNumber = async (duration: string) => {
     try {
-      const response = await axios.post('https://api.rollix777.com/api/color/period', {
-        mins: duration // Changed back to mins for period API
-      });
-      
-      if (response.data && typeof response.data.period_number === 'number') {
-        setPeriodNumbers(prev => ({
+      const response = await axios.post(
+        "https://api.rollix777.com/api/color/period",
+        {
+          mins: duration, // Changed back to mins for period API
+        }
+      );
+
+      if (response.data && typeof response.data.period_number === "number") {
+        setPeriodNumbers((prev) => ({
           ...prev,
-          [duration]: response.data.period_number
+          [duration]: response.data.period_number,
         }));
-        
+
         if (duration === activeTab) {
           setCurrentPeriod(response.data.period_number);
         }
         return response.data.period_number;
       } else {
-        console.error('Invalid period number received from API:', response.data);
-        throw new Error('Invalid period number received from API');
+        console.error(
+          "Invalid period number received from API:",
+          response.data
+        );
+        throw new Error("Invalid period number received from API");
       }
     } catch (error) {
       console.error(`Failed to fetch period number for ${duration}:`, error);
@@ -128,40 +138,51 @@ const BigSmall = () => {
 
     try {
       isFetchingRef.current[duration] = true;
-      
+
       await fetchPeriodNumber(duration);
-      
-      const response = await axios.post('https://api.rollix777.com/api/color/timer', { 
-        duration: duration // Keep duration for timer API
-      });
+
+      const response = await axios.post(
+        "https://api.rollix777.com/api/color/timer",
+        {
+          duration: duration, // Keep duration for timer API
+        }
+      );
       const data = response.data;
-      
+
       let remainingSeconds;
-      if (duration === '1min') {
+      if (duration === "1min") {
         remainingSeconds = data.remainingTimeSeconds;
       } else {
-        remainingSeconds = (data.remainingTimeMinutes * 60) + data.remainingTimeSeconds;
+        remainingSeconds =
+          data.remainingTimeMinutes * 60 + data.remainingTimeSeconds;
       }
 
-      if (typeof remainingSeconds === 'number' && !isNaN(remainingSeconds)) {
+      if (typeof remainingSeconds === "number" && !isNaN(remainingSeconds)) {
         startLocalCountdown(duration, remainingSeconds);
       } else {
         console.error(`Invalid timer data received for ${duration}:`, data);
-        throw new Error('Invalid timer data received');
+        throw new Error("Invalid timer data received");
       }
     } catch (err) {
       console.error(`Failed to fetch ${duration} timer:`, err);
       setError(`Failed to fetch timer data: ${err.message}`);
-      startLocalCountdown(duration, duration === '1min' ? 60 : 
-        duration === '3min' ? 180 : 
-        duration === '5min' ? 300 : 600);
+      startLocalCountdown(
+        duration,
+        duration === "1min"
+          ? 60
+          : duration === "3min"
+          ? 180
+          : duration === "5min"
+          ? 300
+          : 600
+      );
     } finally {
       isFetchingRef.current[duration] = false;
     }
   };
 
   const startLocalCountdown = (duration, initialTime) => {
-    if (typeof initialTime !== 'number' || isNaN(initialTime)) {
+    if (typeof initialTime !== "number" || isNaN(initialTime)) {
       console.error(`Invalid initial time for ${duration}:`, initialTime);
       return;
     }
@@ -172,51 +193,56 @@ const BigSmall = () => {
     }
 
     // Reset the triggered state for this timer
-    setTriggeredTimers(prev => {
+    setTriggeredTimers((prev) => {
       const newSet = new Set(prev);
       newSet.delete(duration);
       return newSet;
     });
 
     // Set initial time
-    setTimers(prev => ({
+    setTimers((prev) => ({
       ...prev,
-      [duration]: Math.floor(initialTime)
+      [duration]: Math.floor(initialTime),
     }));
 
     let isProcessing = false; // Add flag to track if we're processing the timer end
 
     // Start local countdown
     intervalRefs.current[duration] = setInterval(async () => {
-      setTimers(current => {
+      setTimers((current) => {
         const currentTime = current[duration];
         if (currentTime <= 1) {
           // Only process if not already processing and not triggered
           if (!isProcessing && !triggeredTimers.has(duration)) {
             isProcessing = true; // Set processing flag
             console.log(`Timer ended for ${duration}, making API calls`);
-            
+
             // Mark this timer as triggered
-            setTriggeredTimers(prev => new Set(prev).add(duration));
-            
+            setTriggeredTimers((prev) => new Set(prev).add(duration));
+
             // Fetch new period number and process result
             fetchPeriodNumber(duration)
-              .then(newPeriodNumber => {
+              .then((newPeriodNumber) => {
                 if (newPeriodNumber && !isNaN(newPeriodNumber)) {
                   return getResult(duration, newPeriodNumber);
                 } else {
-                  throw new Error('Invalid period number received');
+                  throw new Error("Invalid period number received");
                 }
               })
               .then(() => {
-                console.log(`API calls completed for ${duration}, fetching new timer data`);
+                console.log(
+                  `API calls completed for ${duration}, fetching new timer data`
+                );
                 return fetchTimerData(duration);
               })
-              .catch(error => {
-                console.error(`Error in timer end process for ${duration}:`, error);
+              .catch((error) => {
+                console.error(
+                  `Error in timer end process for ${duration}:`,
+                  error
+                );
                 setError(`Error processing timer end: ${error.message}`);
                 // Remove from triggered timers if there was an error
-                setTriggeredTimers(prev => {
+                setTriggeredTimers((prev) => {
                   const newSet = new Set(prev);
                   newSet.delete(duration);
                   return newSet;
@@ -234,19 +260,21 @@ const BigSmall = () => {
   };
 
   const formatTime = (seconds) => {
-    if (typeof seconds !== 'number' || isNaN(seconds)) {
-      return '00:00';
+    if (typeof seconds !== "number" || isNaN(seconds)) {
+      return "00:00";
     }
-    
+
     const mins = Math.floor(Math.abs(seconds) / 60);
     const secs = Math.abs(seconds) % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   // Modify useEffect to fetch period numbers for all timers on mount
   useEffect(() => {
     // Initial fetch for all timers
-    ['1min', '3min', '5min', '10min'].forEach(duration => {
+    ["1min", "3min", "5min", "10min"].forEach((duration) => {
       fetchTimerData(duration);
       fetchPeriodNumber(duration);
     });
@@ -267,9 +295,9 @@ const BigSmall = () => {
 
   const fetchTableData = async () => {
     try {
-      console.log('Fetching results for duration:', activeTab); // Debug log
+      console.log("Fetching results for duration:", activeTab); // Debug log
       const response = await fetchResults(activeTab);
-      
+
       // Set the current period based on active timer
       setCurrentPeriod(response.results[0].period_number + 1);
       setRecords(response.results);
@@ -283,38 +311,46 @@ const BigSmall = () => {
   // Modify getResult to fetch new period number after result generation
   const getResult = async (duration: string, periodNumber: number) => {
     try {
-      console.log('getResult called with duration:', duration, 'period:', periodNumber);
-      
+      console.log(
+        "getResult called with duration:",
+        duration,
+        "period:",
+        periodNumber
+      );
+
       if (!periodNumber || isNaN(periodNumber)) {
-        console.error('Invalid period number:', periodNumber);
+        console.error("Invalid period number:", periodNumber);
         setError("Invalid period number");
         return;
       }
 
       const data = await generateResult(periodNumber, duration);
-      
+
       if (!data) {
-        console.error('No data received from generateResult');
+        console.error("No data received from generateResult");
         setError("Failed to generate result. Please try again.");
         return;
       }
 
       setResult(data);
       setRecords((prev) => [data, ...prev]);
-      
+
       // Fetch new period number after result generation
       await fetchPeriodNumber(duration);
-      
+
       if (duration === activeTab) {
         await fetchTableData();
       }
-      
+
       await checkWinLose(data);
       setBets([]);
       setError(null);
     } catch (error) {
-      console.error('Error in getResult:', error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to generate result. Please try again later.";
+      console.error("Error in getResult:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to generate result. Please try again later.";
       setError(errorMessage);
       throw error;
     }
@@ -328,7 +364,7 @@ const BigSmall = () => {
 
       // Get the current period for the active timer from periodNumbers state
       const currentPeriodForTimer = periodNumbers[activeTab];
-      
+
       if (latestBetHistory.periodNumber === result.period_number) {
         if (latestBetHistory.status === "won") {
           dispatch(
@@ -365,8 +401,8 @@ const BigSmall = () => {
           draggable: true,
           progress: undefined,
           style: {
-            background: 'red',
-            color: 'white',
+            background: "red",
+            color: "white",
           },
         });
         return;
@@ -395,13 +431,13 @@ const BigSmall = () => {
         betValue,
         amount: contractMoney,
         periodNumber: periodNumbers[activeTab], // Use period number from periodNumbers state
-        duration: activeTab
+        duration: activeTab,
       };
 
-      console.log('Placing bet with payload:', payload); // Debug log
+      console.log("Placing bet with payload:", payload); // Debug log
 
       const response = await placeBet(payload);
-      console.log('Bet placement response:', response); // Debug log
+      console.log("Bet placement response:", response); // Debug log
 
       // Check if response exists and has success message
       if (response) {
@@ -412,7 +448,7 @@ const BigSmall = () => {
           big_small: selectedSize || undefined,
           amount: contractMoney,
         };
-        
+
         // Update UI and state
         dispatch(withdraw({ cryptoname: "INR", amount: contractMoney }));
         setBets((prev) => [...prev, bet]);
@@ -421,7 +457,7 @@ const BigSmall = () => {
         setSelectedSize("");
         setContractMoney(0);
         setAgreed(true);
-        
+
         // Show success message in green toast
         toast.success(response.message, {
           position: "top-right",
@@ -432,17 +468,17 @@ const BigSmall = () => {
           draggable: true,
           progress: undefined,
           style: {
-            background: '#4CAF50',
-            color: 'white',
+            background: "#4CAF50",
+            color: "white",
           },
         });
-        
+
         // Close the bet popup if it exists
         setSelectedNumber(null);
         setSelectedColor("");
         setSelectedSize("");
       } else {
-        console.error('Invalid response from placeBet:', response);
+        console.error("Invalid response from placeBet:", response);
         toast.error(response.message, {
           position: "top-right",
           autoClose: 3000,
@@ -452,8 +488,8 @@ const BigSmall = () => {
           draggable: true,
           progress: undefined,
           style: {
-            background: '#4CAF50',
-            color: 'white',
+            background: "#4CAF50",
+            color: "white",
           },
         });
       }
@@ -462,10 +498,6 @@ const BigSmall = () => {
       setError("Failed to place bet. Please try again later.");
     }
   };
-
-  
-
-
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -492,7 +524,7 @@ const BigSmall = () => {
           <div className="lg:col-span-2 space-y-8 ">
             {/* Time Buttons */}
             <div className="grid grid-cols-4 gap-8">
-              {['1min', '3min', '5min', '10min'].map((duration) => (
+              {["1min", "3min", "5min", "10min"].map((duration) => (
                 <button
                   key={duration}
                   className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
@@ -521,7 +553,9 @@ const BigSmall = () => {
               </div>
               <div
                 className={`flex items-center justify-center gap-2 bg-[#252547] border border-purple-500/20 text-center py-3 px-4 rounded-lg ${
-                  timers[activeTab] < 10 ? "bg-red-500/20 border-red-500/30" : ""
+                  timers[activeTab] < 10
+                    ? "bg-red-500/20 border-red-500/30"
+                    : ""
                 }`}
               >
                 <Clock
@@ -651,7 +685,7 @@ const BigSmall = () => {
           <div className="  bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
             <div className="p-4 border-b border-purple-500/10">
               <h2 className="text-xl font-bold text-white">
-                {activeTab}  Record
+                {activeTab} Record
               </h2>
             </div>
 
@@ -681,12 +715,17 @@ const BigSmall = () => {
                             ? "🟢"
                             : "🔴"}
                         </td>
-                        <td className="py-4 px-4">{record.result_size.toUpperCase()}</td>
+                        <td className="py-4 px-4">
+                          {record.result_size?.toUpperCase() || ""}
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="text-center py-6 text-gray-400">
+                      <td
+                        colSpan={4}
+                        className="text-center py-6 text-gray-400"
+                      >
                         No records available
                       </td>
                     </tr>
@@ -699,14 +738,16 @@ const BigSmall = () => {
             <div className="p-4 border-t border-purple-500/10 flex justify-between items-center">
               <p className="text-gray-400 text-sm">
                 Showing {indexOfFirstRecord + 1}-
-                {Math.min(indexOfLastRecord, records.length)} of {records.length}{" "}
-                records
+                {Math.min(indexOfLastRecord, records.length)} of{" "}
+                {records.length} records
               </p>
               <div className="flex gap-2">
                 <button
                   className="bg-gradient-to-r from-purple-600 to-pink-600 py-1 px-3 border border-purple-500/20 rounded-lg text-gray-200 hover:text-gray-400 transition-colors"
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                 >
                   Previous
                 </button>
@@ -765,8 +806,8 @@ const BigSmall = () => {
                 {selectedNumber !== null
                   ? `Number ${selectedNumber} Selected`
                   : selectedColor
-                    ? `${selectedColor} Selected`
-                    : `${selectedSize} Selected`}
+                  ? `${selectedColor} Selected`
+                  : `${selectedSize} Selected`}
               </h2>
               <button
                 onClick={() => {
@@ -789,7 +830,7 @@ const BigSmall = () => {
                   step={10}
                   type="number"
                   placeholder="Enter amount (Minimum ₹10)"
-                  value={contractMoney || ''}
+                  value={contractMoney || ""}
                   onChange={(e) => {
                     const value = Number(e.target.value);
                     if (value > 100000) {
@@ -816,10 +857,11 @@ const BigSmall = () => {
               {/* Checkbox */}
               <div className="flex items-center">
                 <div
-                  className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${agreed
+                  className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
+                    agreed
                       ? "bg-purple-600"
                       : "bg-[#1A1A2E] border border-purple-500/20"
-                    }`}
+                  }`}
                   onClick={() => setAgreed(!agreed)}
                 >
                   {agreed && <Check className="w-4 h-4 text-white" />}
@@ -847,10 +889,11 @@ const BigSmall = () => {
                 Cancel
               </button>
               <button
-                className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${agreed && contractMoney >= 10 && contractMoney <= 100000
+                className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${
+                  agreed && contractMoney >= 10 && contractMoney <= 100000
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
                     : "bg-gray-600/50 cursor-not-allowed"
-                  }`}
+                }`}
                 disabled={
                   !agreed || contractMoney < 10 || contractMoney > 100000
                 }
