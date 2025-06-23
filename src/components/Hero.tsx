@@ -17,6 +17,7 @@ import {
 import WingoGame from "./WingoGame";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import AuthModal from "./AuthModal";
 
 // Import games data
 import rubyplayGames from "../gamesData/rubyplay.json";
@@ -45,6 +46,7 @@ const Hero: React.FC = () => {
   const [hoveredGame, setHoveredGame] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const gamesPerPage = 8;
   const navigate = useNavigate();
 
@@ -127,6 +129,10 @@ const openJsGame = async (id: string): Promise<void> => {
     setIsLoading(false);
   }
 };
+
+  const handleLoginSuccess = () => {
+    setIsAuthModalOpen(false);
+  };
 
   return (
     <>
@@ -221,7 +227,10 @@ const openJsGame = async (id: string): Promise<void> => {
             </div>
           </div>
 
-          <button className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium text-lg hover:opacity-90 transition-opacity relative overflow-hidden">
+          <button 
+            onClick={() => setIsAuthModalOpen(true)}
+            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity relative overflow-hidden"
+          >
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 animate-pulse" />
             <span className="relative">Start Playing Now</span>
           </button>
@@ -303,7 +312,10 @@ const openJsGame = async (id: string): Promise<void> => {
               </div>
               
               <div className="flex items-center space-x-6">
-                <button className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-medium hover:opacity-90 transition-opacity flex items-center space-x-2">
+                <button 
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-medium hover:opacity-90 transition-opacity flex items-center space-x-2"
+                >
                   <Play className="w-5 h-5" />
                   <span>Start Playing</span>
                 </button>
@@ -438,6 +450,12 @@ const openJsGame = async (id: string): Promise<void> => {
           </div>
         </div>
       </div>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
 
       <style>
         {`

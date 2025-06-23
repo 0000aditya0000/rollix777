@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import image1 from '../assets/1.png'; // Updated import
 import image2 from '../assets/2.png'; // Updated import
 import image3 from '../assets/3.png'; // Updated import
-import image4 from '../assets/4.png'; // Updated import
+import image4 from '../assets/4.png'; 
+import image5 from '../assets/5.png'; 
+import image6 from '../assets/6.png'; 
+import image7 from '../assets/7.png'; // Updated import
 // ... import other images as needed
 
 const ImageSlider = () => {
@@ -13,6 +16,9 @@ const ImageSlider = () => {
     image2,
     image3,
     image4,
+    image5,
+    image6,
+    image7
     // Add other images to the array
   ];
 
