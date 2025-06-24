@@ -123,8 +123,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     // Validate required fields
-    if (!phoneNumber.trim() || !password.trim()) {
-      setError("Please fill in all required fields (phone number and password)");
+    if (!phoneNumber.trim() || !password.trim() || !referalCode.trim()) {
+      setError("Please fill in all required fields (phone number, password, and referral code)");
       return;
     }
 
@@ -376,7 +376,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="submit"
                   className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-                  disabled={!acceptTerms || phoneNumber.length !== 10}
+                  disabled={!acceptTerms || phoneNumber.length !== 10 || !referalCode.trim()}
                 >
                   Register
                 </button>

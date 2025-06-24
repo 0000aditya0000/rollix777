@@ -84,6 +84,10 @@ const BigSmall = () => {
     "10min": 0,
   });
 
+  // Add state for quantity and multiplier at the top of the component
+  const [quantity, setQuantity] = useState(1);
+  const [multiplier, setMultiplier] = useState(1);
+
   useEffect(() => {
     // Initial fetch for all timers
     ["1min", "3min", "5min", "10min"].forEach((duration) => {
@@ -796,163 +800,350 @@ const BigSmall = () => {
 
       {/* Popup for bet confirmation */}
       {(selectedNumber !== null || selectedColor || selectedSize) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-
-            {/* Header */}
-            <div className="flex justify-between items-center p-5 border-b border-purple-500/10">
-              <h2 className="text-xl font-bold text-white">
-                {selectedNumber !== null
-                  ? `Number ${selectedNumber} Selected`
-                  : selectedColor
-                  ? `${selectedColor} Selected`
-                  : `${selectedSize} Selected`}
-              </h2>
-              <button
-                onClick={() => {
-                  setSelectedNumber(null);
-                  setSelectedColor("");
-                  setSelectedSize("");
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-5 space-y-4">
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">Contract Money</label>
-                <input
-                  min={10}
-                  step={10}
-                  type="number"
-                  placeholder="Enter amount (Minimum ₹10)"
-                  value={contractMoney || ""}
-                  onChange={(e) => {
-                    const value = Number(e.target.value);
-                    if (value > 100000) {
-                      setContractMoney(100000);
-                    } else {
-                      setContractMoney(value);
-                    }
+        <>
+          {/* Mobile Design - Bottom Sheet */}
+          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity md:hidden" onClick={() => { setSelectedNumber(null); setSelectedColor(""); setSelectedSize(""); }} />
+          <div className="fixed bottom-0 left-0 w-full z-50 flex justify-center animate-slideUp md:hidden">
+            <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-t-2xl shadow-2xl overflow-hidden border-t-4 border-purple-500/40">
+              {/* Drag handle */}
+              <div className="flex justify-center py-2">
+                <div className="w-12 h-1.5 bg-purple-500/40 rounded-full" />
+              </div>
+              {/* Header */}
+              <div className="flex flex-col items-center px-5 pt-2 pb-3 border-b border-purple-500/10">
+                <span className="text-xs text-gray-300 font-semibold mb-1">WinGo {activeTab}</span>
+                <h2
+                  className={`text-base font-bold bg-[#1A1A2E] rounded-lg px-4 py-1 mb-1 
+                    ${selectedColor === 'green' ? 'text-green-400' : ''}
+                    ${selectedColor === 'red' ? 'text-red-400' : ''}
+                    ${selectedColor === 'voilet' ? 'text-purple-400' : ''}
+                    ${selectedColor === '' ? 'text-white' : ''}
+                  `}
+                >
+                  {selectedNumber !== null
+                    ? `Select ${selectedNumber}`
+                    : selectedColor
+                    ? `Select ${selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1)}`
+                    : `Select ${selectedSize}`}
+                </h2>
+              </div>
+              {/* Body */}
+              <div className="px-5 py-4 space-y-4">
+                {/* Balance & Quick Amounts */}
+                <div>
+                  <label className="text-sm text-gray-300 font-semibold mb-1 block">Balance</label>
+                  <div className="flex gap-2 mb-2">
+                    {[10, 50, 100, 1000].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        className={`px-3 py-1 rounded-lg font-bold text-sm border transition-colors ${contractMoney === amt ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-600" : "bg-[#18182a] text-purple-300 border-purple-500/30 hover:bg-purple-500/20"}`}
+                        onClick={() => setContractMoney(amt)}
+                      >
+                        {amt}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    min={10}
+                    step={10}
+                    type="number"
+                    placeholder="Enter amount (Minimum ₹10)"
+                    value={contractMoney || ""}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      if (value > 100000) {
+                        setContractMoney(100000);
+                      } else {
+                        setContractMoney(value);
+                      }
+                    }}
+                    className="w-full py-3 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-lg font-semibold mt-1"
+                  />
+                </div>
+                {/* Total Amount Paragraph */}
+                <p className="text-base font-semibold text-purple-300 mt-2">Total amount: ₹{contractMoney || 0}</p>
+                {/* I agree and rules */}
+                <div className="flex items-center mt-2">
+                  <div
+                    className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
+                      agreed
+                        ? "bg-purple-600"
+                        : "bg-[#1A1A2E] border border-purple-500/20"
+                    }`}
+                    onClick={() => setAgreed(!agreed)}
+                  >
+                    {agreed && <Check className="w-4 h-4 text-white" />}
+                  </div>
+                  <label
+                    className="text-sm text-gray-300 cursor-pointer"
+                    onClick={() => setAgreed(!agreed)}
+                  >
+                    I agree <span className="text-purple-400">terms and conditions</span>
+                  </label>
+                </div>
+              </div>
+              {/* Buttons */}
+              <div className="px-5 pb-6 pt-2 border-t border-purple-500/10 flex gap-3 bg-[#18182a]">
+                <button
+                  onClick={() => {
+                    setSelectedNumber(null);
+                    setSelectedColor("");
+                    setSelectedSize("");
                   }}
-                  className="w-full py-3 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
-
-              {/* Error Message or Success Message */}
-              {contractMoney > 100000 ? (
-                <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 text-sm">
-                  Contract money cannot exceed ₹100,000
-                </div>
-              ) : contractMoney >= 10 ? (
-                <div className="p-3 bg-green-500/20 border border-green-500/30 rounded-lg text-green-200 text-sm">
-                  Total contract money is ₹{contractMoney}
-                </div>
-              ) : null}
-
-              {/* Checkbox */}
-              <div className="flex items-center">
-                <div
-                  className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
-                    agreed
-                      ? "bg-purple-600"
-                      : "bg-[#1A1A2E] border border-purple-500/20"
+                  className="flex-1 py-3 px-4 bg-[#1A1A2E] border border-red-500/20 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${
+                    agreed && contractMoney >= 10 && contractMoney <= 100000
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
+                      : "bg-gray-600/50 cursor-not-allowed"
                   }`}
-                  onClick={() => setAgreed(!agreed)}
+                  disabled={
+                    !agreed || contractMoney < 10 || contractMoney > 100000
+                  }
+                  onClick={handleBet}
                 >
-                  {agreed && <Check className="w-4 h-4 text-white" />}
-                </div>
-                <label
-                  className="text-sm text-gray-300 cursor-pointer"
-                  onClick={() => setAgreed(!agreed)}
-                >
-                  I agree to the{" "}
-                  <span className="text-purple-400">terms and conditions</span>
-                </label>
+                  Place Bet
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* Buttons */}
-            <div className="p-5 border-t border-purple-500/10 flex gap-3">
+          {/* Desktop Design - Centered Modal */}
+          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity hidden md:flex" onClick={() => { setSelectedNumber(null); setSelectedColor(""); setSelectedSize(""); }} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 hidden md:flex">
+            <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl shadow-2xl overflow-hidden border border-purple-500/40">
+              {/* Close button */}
               <button
                 onClick={() => {
                   setSelectedNumber(null);
                   setSelectedColor("");
                   setSelectedSize("");
                 }}
-                className="flex-1 py-3 px-4 bg-[#1A1A2E] border border-red-500/20 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors z-10"
+                aria-label="Close"
               >
-                Cancel
+                <X size={20} />
               </button>
-              <button
-                className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${
-                  agreed && contractMoney >= 10 && contractMoney <= 100000
-                    ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
-                    : "bg-gray-600/50 cursor-not-allowed"
-                }`}
-                disabled={
-                  !agreed || contractMoney < 10 || contractMoney > 100000
-                }
-                onClick={handleBet}
-              >
-                Confirm
-              </button>
+              {/* Header */}
+              <div className="flex flex-col items-center px-5 pt-6 pb-4 border-b border-purple-500/10">
+                <span className="text-sm text-gray-300 font-semibold mb-2">WinGo {activeTab}</span>
+                <h2
+                  className={`text-lg font-bold bg-[#1A1A2E] rounded-lg px-4 py-2 mb-2 
+                    ${selectedColor === 'green' ? 'text-green-400' : ''}
+                    ${selectedColor === 'red' ? 'text-red-400' : ''}
+                    ${selectedColor === 'voilet' ? 'text-purple-400' : ''}
+                    ${selectedColor === '' ? 'text-white' : ''}
+                  `}
+                >
+                  {selectedNumber !== null
+                    ? `Select ${selectedNumber}`
+                    : selectedColor
+                    ? `Select ${selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1)}`
+                    : `Select ${selectedSize}`}
+                </h2>
+              </div>
+              {/* Body */}
+              <div className="px-6 py-6 space-y-4">
+                {/* Balance & Quick Amounts */}
+                <div>
+                  <label className="text-sm text-gray-300 font-semibold mb-2 block">Balance</label>
+                  <div className="flex gap-2 mb-3">
+                    {[10, 50, 100, 1000].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        className={`px-4 py-2 rounded-lg font-bold text-sm border transition-colors ${contractMoney === amt ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-600" : "bg-[#18182a] text-purple-300 border-purple-500/30 hover:bg-purple-500/20"}`}
+                        onClick={() => setContractMoney(amt)}
+                      >
+                        {amt}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    min={10}
+                    step={10}
+                    type="number"
+                    placeholder="Enter amount (Minimum ₹10)"
+                    value={contractMoney || ""}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      if (value > 100000) {
+                        setContractMoney(100000);
+                      } else {
+                        setContractMoney(value);
+                      }
+                    }}
+                    className="w-full py-3 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-lg font-semibold"
+                  />
+                </div>
+                {/* Total Amount Paragraph */}
+                <p className="text-base font-semibold text-purple-300">Total amount: ₹{contractMoney || 0}</p>
+                {/* I agree and rules */}
+                <div className="flex items-center">
+                  <div
+                    className={`w-5 h-5 rounded flex items-center justify-center mr-3 cursor-pointer ${
+                      agreed
+                        ? "bg-purple-600"
+                        : "bg-[#1A1A2E] border border-purple-500/20"
+                    }`}
+                    onClick={() => setAgreed(!agreed)}
+                  >
+                    {agreed && <Check className="w-4 h-4 text-white" />}
+                  </div>
+                  <label
+                    className="text-sm text-gray-300 cursor-pointer"
+                    onClick={() => setAgreed(!agreed)}
+                  >
+                    I agree <span className="text-purple-400">terms and conditions</span>
+                  </label>
+                </div>
+              </div>
+              {/* Buttons */}
+              <div className="px-6 pb-6 pt-4 border-t border-purple-500/10 flex gap-3">
+                <button
+                  onClick={() => {
+                    setSelectedNumber(null);
+                    setSelectedColor("");
+                    setSelectedSize("");
+                  }}
+                  className="flex-1 py-3 px-4 bg-[#1A1A2E] border border-red-500/20 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  className={`flex-1 py-3 px-4 rounded-lg text-white font-medium ${
+                    agreed && contractMoney >= 10 && contractMoney <= 100000
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
+                      : "bg-gray-600/50 cursor-not-allowed"
+                  }`}
+                  disabled={
+                    !agreed || contractMoney < 10 || contractMoney > 100000
+                  }
+                  onClick={handleBet}
+                >
+                  Place Bet
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Popup for win/loss */}
+      {winner && betHistory && popup === "won" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm mx-auto bg-gradient-to-b from-green-800 to-green-500 rounded-3xl overflow-visible shadow-2xl animate-fadeIn border-t-8 border-green-600 pt-16">
+            {/* Close button */}
+            <button
+              onClick={() => setWinner(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-green-600 hover:text-green-800 transition-colors z-10 border border-green-200 shadow"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+            {/* Happy emoji or medal */}
+            <div className="flex justify-center absolute left-1/2 -translate-x-1/2 -top-14 z-20">
+              <div className="w-24 h-24 bg-white/30 rounded-full flex items-center justify-center shadow-lg border-4 border-green-200 backdrop-blur">
+                <span className="text-5xl">🎉</span>
+              </div>
+            </div>
+            {/* Header */}
+            <div className="flex flex-col items-center pt-14 pb-2">
+              <h2 className="text-2xl font-bold text-green-100 mb-2 drop-shadow">Congratulations!</h2>
+              {/* Lottery results tags */}
+              <div className="flex gap-2 mb-2">
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-600 text-white shadow">
+                  {result?.result?.winning_color ? result.result.winning_color.charAt(0).toUpperCase() + result.result.winning_color.slice(1) : "-"}
+                </span>
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-400 text-white shadow">
+                  {result?.result?.winning_number ?? "-"}
+                </span>
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-300 text-white shadow">
+                  {result?.result?.winning_size ? result.result.winning_size.toUpperCase() : "-"}
+                </span>
+              </div>
+              <div className="text-xs text-green-200 mb-2">
+                Period: WinGo {result?.duration ?? activeTab} · {result?.period_number ?? "-"}
+              </div>
+            </div>
+            {/* WIN ticket area */}
+            <div className="relative flex flex-col items-center bg-gradient-to-b from-white/95 to-green-100/80 mx-6 mt-2 mb-4 shadow-lg rounded-2xl" style={{ boxShadow: '0 8px 32px 0 rgba(31, 135, 31, 0.15)' }}>
+              <div className="w-full flex flex-col items-center py-8 px-2">
+                <div className="text-4xl font-extrabold text-green-700 mb-2 tracking-wider uppercase" style={{ fontFamily: 'monospace, sans-serif', letterSpacing: '0.1em' }}>WIN</div>
+                <div className="text-2xl font-bold text-green-600 mb-1">₹{betHistory.amountReceived}</div>
+                <div className="text-xs text-green-400 mt-1">
+                  Period: WinGo {result?.duration ?? activeTab} · {result?.period_number ?? "-"}
+                </div>
+              </div>
+              {/* Printout wavy SVG at the bottom */}
+              <svg viewBox="0 0 320 20" width="100%" height="20" className="block" style={{ display: 'block' }}>
+                <path d="M0 10 Q 20 20 40 10 T 80 10 T 120 10 T 160 10 T 200 10 T 240 10 T 280 10 T 320 10 V20 H0Z" fill="#fff" />
+              </svg>
+            </div>
+            {/* Auto close message */}
+            <div className="flex items-center justify-center pb-4">
+              <span className="text-xs text-green-200">3 seconds auto close</span>
             </div>
           </div>
         </div>
       )}
-
-      {/* Popup for win/loss */}
-      {winner && betHistory && (
+      {/* Loss popup */}
+      {winner && betHistory && popup === "lost" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-
-            {/* Header */}
-            <div className="flex justify-between items-center p-5 border-b border-purple-500/10">
-              <h2 className="text-xl font-bold text-white">
-                {popup === "won" ? "You Won!" : "You Lost!"}
-              </h2>
-              <button
-                onClick={() => setWinner(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-5 space-y-4">
-              <div className="space-y-1">
-                <label className="text-sm text-gray-300">
-                  {popup === "won" ? (
-                    <>
-                      Congratulations <br />
-                      BetAmount: {betHistory.amount} <br />
-                      AmountReceived: {betHistory.amountReceived}
-                    </>
-                  ) : (
-                    <>
-                      Better luck next time! <br />
-                      BetAmount: {betHistory.amount}
-                    </>
-                  )}
-                </label>
+          <div className="relative w-full max-w-sm mx-auto bg-gradient-to-b from-red-800 to-red-500 rounded-3xl overflow-visible shadow-2xl animate-fadeIn border-t-8 border-red-600 pt-16">
+            {/* Close button */}
+            <button
+              onClick={() => setWinner(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-red-600 hover:text-red-800 transition-colors z-10 border border-red-200 shadow"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+            {/* Sad emoji or medal */}
+            <div className="flex justify-center absolute left-1/2 -translate-x-1/2 -top-14 z-20">
+              <div className="w-24 h-24 bg-white/30 rounded-full flex items-center justify-center shadow-lg border-4 border-red-200 backdrop-blur">
+                <span className="text-5xl">🥲</span>
               </div>
             </div>
-
-            {/* Buttons */}
-            <div className="p-5 border-t border-purple-500/10 flex gap-3">
-              <button
-                onClick={() => setWinner(false)}
-                className="flex-1 py-3 px-4 bg-[#1A1A2E] border border-red-500/20 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
-              >
-                Close
-              </button>
+            {/* Header */}
+            <div className="flex flex-col items-center pt-14 pb-2">
+              <h2 className="text-2xl font-bold text-red-100 mb-2 drop-shadow">Sorry, you lost!</h2>
+              {/* Lottery results tags */}
+              <div className="flex gap-2 mb-2">
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-red-600 text-white shadow">
+                  {result?.result?.winning_color ? result.result.winning_color.charAt(0).toUpperCase() + result.result.winning_color.slice(1) : "-"}
+                </span>
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-red-400 text-white shadow">
+                  {result?.result?.winning_number ?? "-"}
+                </span>
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-red-300 text-white shadow">
+                  {result?.result?.winning_size ? result.result.winning_size.toUpperCase() : "-"}
+                </span>
+              </div>
+              <div className="text-xs text-red-200 mb-2">
+                Period: WinGo {result?.duration ?? activeTab} · {result?.period_number ?? "-"}
+              </div>
+            </div>
+            {/* LOSS ticket area */}
+            <div className="relative flex flex-col items-center bg-gradient-to-b from-white/95 to-red-100/80 mx-6 mt-2 mb-4 shadow-lg rounded-2xl" style={{ boxShadow: '0 8px 32px 0 rgba(135, 31, 31, 0.15)' }}>
+              <div className="w-full flex flex-col items-center py-8 px-2">
+                <div className="text-4xl font-extrabold text-red-700 mb-2 tracking-wider uppercase" style={{ fontFamily: 'monospace, sans-serif', letterSpacing: '0.1em' }}>LOSS</div>
+                <div className="text-xs text-red-400 mt-1">
+                  Period: WinGo {result?.duration ?? activeTab} · {result?.period_number ?? "-"}
+                </div>
+              </div>
+              {/* Printout wavy SVG at the bottom */}
+              <svg viewBox="0 0 320 20" width="100%" height="20" className="block" style={{ display: 'block' }}>
+                <path d="M0 10 Q 20 20 40 10 T 80 10 T 120 10 T 160 10 T 200 10 T 240 10 T 280 10 T 320 10 V20 H0Z" fill="#fff" />
+              </svg>
+            </div>
+            {/* Auto close message */}
+            <div className="flex items-center justify-center pb-4">
+              <span className="text-xs text-red-200">3 seconds auto close</span>
             </div>
           </div>
         </div>
