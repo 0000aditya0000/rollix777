@@ -156,8 +156,8 @@ const KYCVerification: React.FC = () => {
       // formData.append("kycstatus", "0");
 
       const payload = {
-        aadharFront: uploadedUrls.aadharFront,
-        aadharBack: uploadedUrls.aadharBack,
+        aadhar_front: uploadedUrls.aadharFront,
+        aadhar_back: uploadedUrls.aadharBack,
         pan: uploadedUrls.panCard,
         kycstatus: "0",
       };
