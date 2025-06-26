@@ -55,6 +55,7 @@ interface QueryComment {
 }
 
 interface QueryResponse {
+  comment_count: any;
   id: string;
   name: string;
   email: string;
@@ -373,19 +374,17 @@ export const HelpCenter: React.FC = () => {
                 </p>
                 <div className="flex justify-between items-center text-sm text-gray-400">
                   <span>Last Updated: {new Date(query.updated_at).toLocaleString()}</span>
-                  {query.comments && query.comments.length > 0 && (
                     <button
                       onClick={() => setExpandedComments(expandedComments === query.id ? null : query.id)}
                       className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
                     >
-                      <span>Comments ({query.comments.length})</span>
+                      <span>Comments ({query.comment_count})</span>
                       <ChevronRight 
                         className={`w-4 h-4 transform transition-transform ${
                           expandedComments === query.id ? 'rotate-90' : ''
                         }`} 
                       />
                     </button>
-                  )}
                 </div>
                 
                 {/* Expandable Comments Section */}
