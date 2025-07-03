@@ -9,6 +9,7 @@ import Promotions from './Promotions'
 import Features from './Features'
 import Footer from './Footer'
 import AuthModal from './AuthModal'
+import ExclusiveGames from './ExclusiveGames'
 
 const Home = () => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false)
@@ -34,11 +35,13 @@ const Home = () => {
         <div>
           <Header />
           <main>
+         
             <Hero />
             <div className='md:hidden'>
                 <ColorGame />
               </div>
             <div className="space-y-8 md:space-y-12">
+            <ExclusiveGames title="Exclusive Games" />
               <GameCarousel title="Featured Games" type="featured" />
               <TrendingGames title="Trending Games" type="trending" />
              

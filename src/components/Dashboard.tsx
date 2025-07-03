@@ -9,6 +9,7 @@ import HotGames from './HotGames';
 import DepositModal from './DepositModal';
 import WithdrawModal from './WithdrawModal';
 import LatestGames from './LatestGames';
+import ExclusiveGames from './ExclusiveGames';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { setWallets } from '../slices/walletSlice';
@@ -99,8 +100,10 @@ const Dashboard = () => {
           <ImageSlider />
           <ColorGame />
           <LatestGames title="Latest Games" type="latest" />
+          <ExclusiveGames title="Exclusive Games" />
           <GameCarousel title="Popular Games" type="popular" />
           <TrendingGames title="Trending Games" type="trending" />
+         
           <HotGames title="Hot Games" type="hot" />
         </div>
       </div>
@@ -232,8 +235,10 @@ const Dashboard = () => {
 
                 {/* Games Sections */}
                 <div className="space-y-6 w-full">
+                <ExclusiveGames title="Exclusive Games" />
                   <GameCarousel title="Popular Games" type="popular" />
                   <TrendingGames title="Trending Games" type="trending" />
+                  
                   <HotGames title="Hot Games" type="hot" />
                 </div>
               </div>
