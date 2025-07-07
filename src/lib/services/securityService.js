@@ -1,25 +1,17 @@
-import { baseUrl } from "../config/server";
+import axiosInstance from "../utils/axiosInstance";
 
 const request = async (endpoint, data) => {
   try {
     const userId = localStorage.getItem("userId");
     console.log("aasifId", userId);
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Request failed");
-    }
-
-    return await response.json();
+    const response = await axiosInstance.put(endpoint, data);
+    return response.data;
   } catch (error) {
-    console.error("Request Error:", error.message);
+    console.error(
+      "Request Error:",
+      error.response?.data?.message || error.message
+    );
     throw error;
   }
 };

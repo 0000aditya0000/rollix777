@@ -11,10 +11,9 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import axios from "axios";
-import { baseUrl } from "../../lib/config/server";
 import { toast } from "react-hot-toast";
 import debounce from "lodash/debounce";
+import axiosInstance from "../../lib/utils/axiosInstance";
 
 interface FormData {
   accountname: string;
@@ -54,108 +53,117 @@ interface USDTWalletCardProps {
   };
 }
 
-const USDTWalletCard = memo(({ wallet, onEdit, statusInfo }: USDTWalletCardProps) => {
-  const [showRejectionReason, setShowRejectionReason] = useState(false);
+const USDTWalletCard = memo(
+  ({ wallet, onEdit, statusInfo }: USDTWalletCardProps) => {
+    const [showRejectionReason, setShowRejectionReason] = useState(false);
 
-  return (
-    <>
-      <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4 hover:border-purple-500/40 transition-all duration-300 shadow-lg hover:shadow-purple-500/10">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="relative">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center shrink-0 shadow-inner">
-                <Wallet className="w-6 h-6 text-purple-400" />
+    return (
+      <>
+        <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-4 hover:border-purple-500/40 transition-all duration-300 shadow-lg hover:shadow-purple-500/10">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center shrink-0 shadow-inner">
+                  <Wallet className="w-6 h-6 text-purple-400" />
+                </div>
               </div>
-            </div>
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <h3 className="text-white font-medium text-base w-full sm:w-auto sm:truncate">
-                  USDT Wallet ({wallet.network})
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusInfo.className} uppercase tracking-wider self-start sm:self-auto`}
-                  >
-                    {statusInfo.text}
-                  </span>
-                  {wallet.status === 2 && wallet.status_note && (
-                    <button
-                      onClick={() => setShowRejectionReason(true)}
-                      className="p-1 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
-                      title="View Rejection Reason"
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <h3 className="text-white font-medium text-base w-full sm:w-auto sm:truncate">
+                    USDT Wallet ({wallet.network})
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusInfo.className} uppercase tracking-wider self-start sm:self-auto`}
                     >
-                      <Eye size={14} />
-                    </button>
-                  )}
+                      {statusInfo.text}
+                    </span>
+                    {wallet.status === 2 && wallet.status_note && (
+                      <button
+                        onClick={() => setShowRejectionReason(true)}
+                        className="p-1 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
+                        title="View Rejection Reason"
+                      >
+                        <Eye size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-gray-400 text-sm font-medium flex items-center gap-2">
+                    <span className="text-purple-400/60">Address:</span>
+                    <span className="font-mono break-all">{wallet.usdt}</span>
+                  </p>
                 </div>
               </div>
-              <div className="space-y-0.5">
-                <p className="text-gray-400 text-sm font-medium flex items-center gap-2">
-                  <span className="text-purple-400/60">Address:</span>
-                  <span className="font-mono break-all">{wallet.usdt}</span>
-                </p>
-              </div>
+            </div>
+            <div className="flex items-center sm:items-start gap-2 ml-16 sm:ml-0">
+              <button
+                onClick={() => onEdit(wallet)}
+                className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
+                title="Edit USDT Wallet"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => onRemove(wallet.id)}
+                className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                title="Remove USDT Wallet"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
-          <div className="flex items-center sm:items-start gap-2 ml-16 sm:ml-0">
-            <button
-              onClick={() => onEdit(wallet)}
-              className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
-              title="Edit USDT Wallet"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => onRemove(wallet.id)}
-              className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-              title="Remove USDT Wallet"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
         </div>
-      </div>
 
-      {/* Rejection Reason Modal */}
-      {showRejectionReason && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowRejectionReason(false)}
-          />
-          <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
-            <div className="p-4 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">Rejection Reason</h2>
-                <button
-                  onClick={() => setShowRejectionReason(false)}
-                  className="p-2 rounded-lg bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="space-y-4">
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                  <p className="text-red-400 text-sm">{wallet.status_note}</p>
+        {/* Rejection Reason Modal */}
+        {showRejectionReason && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => setShowRejectionReason(false)}
+            />
+            <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
+              <div className="p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white">
+                    Rejection Reason
+                  </h2>
+                  <button
+                    onClick={() => setShowRejectionReason(false)}
+                    className="p-2 rounded-lg bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setShowRejectionReason(false)}
-                  className="py-2 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white hover:bg-purple-500/10 transition-colors"
-                >
-                  Close
-                </button>
+                <div className="space-y-4">
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                    <p className="text-red-400 text-sm">{wallet.status_note}</p>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowRejectionReason(false)}
+                    className="py-2 px-4 bg-[#1A1A2E] border border-purple-500/20 rounded-lg text-white hover:bg-purple-500/10 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </>
-  );
-});
+        )}
+      </>
+    );
+  }
+);
 
 // Separate components for better code splitting and performance
 const LoadingSpinner = memo(() => (
@@ -176,7 +184,6 @@ interface BankAccountCardProps {
     text: string;
     className: string;
   };
-
 }
 
 const BankAccountCard = memo(
@@ -226,7 +233,9 @@ const BankAccountCard = memo(
                     </span>
                   </p>
                   <p className="text-gray-400 text-xs flex items-center gap-2">
-                    <span className="text-purple-400/60 min-w-[40px]">IFSC :</span>
+                    <span className="text-purple-400/60 min-w-[40px]">
+                      IFSC :
+                    </span>
                     <span className="font-mono">{account.ifsccode}</span>
                   </p>
                   <p className="text-gray-400 text-xs flex items-center gap-2">
@@ -260,7 +269,9 @@ const BankAccountCard = memo(
             <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl overflow-hidden animate-fadeIn">
               <div className="p-4 sm:p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">Rejection Reason</h2>
+                  <h2 className="text-xl font-bold text-white">
+                    Rejection Reason
+                  </h2>
                   <button
                     onClick={() => setShowRejectionReason(false)}
                     className="p-2 rounded-lg bg-[#1A1A2E] text-gray-400 hover:text-white transition-colors"
@@ -270,7 +281,9 @@ const BankAccountCard = memo(
                 </div>
                 <div className="space-y-4">
                   <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                    <p className="text-red-400 text-sm">{account.status_note}</p>
+                    <p className="text-red-400 text-sm">
+                      {account.status_note}
+                    </p>
                   </div>
                 </div>
                 <div className="flex justify-end">
@@ -294,20 +307,21 @@ const PaymentMethods: React.FC = () => {
   const [showAddCard, setShowAddCard] = useState<boolean>(false);
   const [showAddUSDT, setShowAddUSDT] = useState<boolean>(false);
   const [showEditUSDT, setShowEditUSDT] = useState<boolean>(false);
-  const [selectedWalletForEdit, setSelectedWalletForEdit] = useState<BankAccount | null>(null);
+  const [selectedWalletForEdit, setSelectedWalletForEdit] =
+    useState<BankAccount | null>(null);
   const [formData, setFormData] = useState<FormData>({
     accountname: "",
     accountnumber: "",
     ifsccode: "",
     branch: "",
-    type: "bank"
+    type: "bank",
   });
   const [errors, setErrors] = useState<FormErrors>({
     accountname: "",
     accountnumber: "",
     ifsccode: "",
     branch: "",
-    type: ""
+    type: "",
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
@@ -320,8 +334,14 @@ const PaymentMethods: React.FC = () => {
   const userId = localStorage.getItem("userId");
 
   // Filter accounts based on type
-  const bankAccounts = useMemo(() => accounts.filter(acc => !acc.network), [accounts]);
-  const usdtWallets = useMemo(() => accounts.filter(acc => acc.network), [accounts]);
+  const bankAccounts = useMemo(
+    () => accounts.filter((acc) => !acc.network),
+    [accounts]
+  );
+  const usdtWallets = useMemo(
+    () => accounts.filter((acc) => acc.network),
+    [accounts]
+  );
 
   // Fetch all accounts (both bank and USDT)
   const fetchAccounts = useCallback(async () => {
@@ -333,8 +353,8 @@ const PaymentMethods: React.FC = () => {
         return;
       }
 
-      const response = await axios.get(
-        `${baseUrl}/api/bankaccount/getone/user/${userId}`
+      const response = await axiosInstance.get(
+        `/api/bankaccount/getone/user/${userId}`
       );
 
       if (Array.isArray(response.data)) {
@@ -363,7 +383,7 @@ const PaymentMethods: React.FC = () => {
   }, []);
 
   const handleUpdateUSDT = useCallback(async () => {
-    return
+    return;
     if (!usdtAddress.trim()) {
       setUsdtError("Wallet address is required");
       return;
@@ -391,11 +411,11 @@ const PaymentMethods: React.FC = () => {
         type: "usdt",
         usdt: usdtAddress.trim(),
         network: selectedNetwork,
-        status: 0
+        status: 0,
       };
 
-      const response = await axios.put(
-        `${baseUrl}/api/bankaccount/update/${selectedWalletForEdit.id}`,
+      const response = await axiosInstance.put(
+        `/api/bankaccount/update/${selectedWalletForEdit.id}`,
         payload
       );
 
@@ -413,7 +433,13 @@ const PaymentMethods: React.FC = () => {
       console.error("Error updating USDT wallet:", error);
       toast.error("An error occurred while updating USDT wallet");
     }
-  }, [usdtAddress, selectedNetwork, userId, selectedWalletForEdit, fetchAccounts]);
+  }, [
+    usdtAddress,
+    selectedNetwork,
+    userId,
+    selectedWalletForEdit,
+    fetchAccounts,
+  ]);
 
   const handleAddUSDT = useCallback(async () => {
     if (!usdtAddress.trim()) {
@@ -441,11 +467,11 @@ const PaymentMethods: React.FC = () => {
         userId,
         type: "usdt",
         usdt: usdtAddress.trim(),
-        network: selectedNetwork
+        network: selectedNetwork,
       };
 
-      const response = await axios.post(
-        `${baseUrl}/api/bankaccount/addnew`,
+      const response = await axiosInstance.post(
+        `/api/bankaccount/addnew`,
         payload
       );
 
@@ -491,7 +517,7 @@ const PaymentMethods: React.FC = () => {
       accountnumber: "",
       ifsccode: "",
       branch: "",
-      type: "bank"
+      type: "bank",
     });
     setErrors({
       accountname: "",
@@ -592,11 +618,11 @@ const PaymentMethods: React.FC = () => {
         ...formData,
         userId,
         status: 0,
-        type: "bank"
+        type: "bank",
       };
 
-      const response = await axios.post(
-        `${baseUrl}/api/bankaccount/addnew`,
+      const response = await axiosInstance.post(
+        `/api/bankaccount/addnew`,
         payload
       );
 
@@ -847,7 +873,7 @@ const PaymentMethods: React.FC = () => {
                   No USDT wallets added yet
                 </div>
               ) : (
-                usdtWallets.map(wallet => (
+                usdtWallets.map((wallet) => (
                   <USDTWalletCard
                     key={wallet.id}
                     wallet={wallet}

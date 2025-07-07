@@ -1,7 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Copy, Gift, Users, DollarSign, Share2, IndianRupee } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { baseUrl } from '../../lib/config/server';
+import React, { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  Copy,
+  Gift,
+  Users,
+  DollarSign,
+  Share2,
+  IndianRupee,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import axiosInstance from "../../lib/utils/axiosInstance";
+
 interface PendingCommission {
   cryptoname: string;
   pending_amount: number;
@@ -35,49 +44,49 @@ interface ReferralData {
 const Referrals = () => {
   const [copied, setCopied] = React.useState(false);
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
-  const [pendingCommissions, setPendingCommissions] = useState<PendingCommission[]>([]);
+  const [pendingCommissions, setPendingCommissions] = useState<
+    PendingCommission[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string>("");
-  
+
   const referralCode = localStorage.getItem("referralCode") || "";
-  
+
   const referralLink = `https://rollix777.com/refer/${referralCode}`;
 
   // Combine all referrals from different levels for the table
   const getAllReferrals = () => {
     if (!referralData) return [];
-    
+
     const allReferrals: Referral[] = [];
-    Object.entries(referralData.referralsByLevel).forEach(([level, referrals]) => {
-      referrals.forEach((referral: Referral) => {
-        allReferrals.push(referral);
-      });
-    });
+    Object.entries(referralData.referralsByLevel).forEach(
+      ([level, referrals]) => {
+        referrals.forEach((referral: Referral) => {
+          allReferrals.push(referral);
+        });
+      }
+    );
     return allReferrals;
   };
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem('userId'));
+    const userId = Number(localStorage.getItem("userId"));
     const fetchData = async () => {
       try {
         // Fetch referral data
-        const referralResponse = await fetch(`${baseUrl}/api/user/referrals/${userId}`);
-        if (!referralResponse.ok) {
-          throw new Error('Failed to fetch referral data');
-        }
-        const referralData = await referralResponse.json();
-        setReferralData(referralData);
+        const referralResponse = await axiosInstance.get(
+          `/api/user/referrals/${userId}`
+        );
+        setReferralData(referralResponse.data);
 
         // Fetch pending commissions
-        const pendingResponse = await fetch(`${baseUrl}/api/user/pending-commissions/${userId}`);
-        if (!pendingResponse.ok) {
-          throw new Error('Failed to fetch pending commissions');
-        }
-        const pendingData = await pendingResponse.json();
-        setPendingCommissions(pendingData.pendingCommissions || []);
-        setPendingMessage(pendingData.message || "");
+        const pendingResponse = await axiosInstance.get(
+          `/api/user/pending-commissions/${userId}`
+        );
+        setPendingCommissions(pendingResponse.data.pendingCommissions || []);
+        setPendingMessage(pendingResponse.data.message || "");
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch data');
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
       }
     };
 
@@ -95,9 +104,12 @@ const Referrals = () => {
 
   // Calculate total earnings - including pending commissions
   const perReferralAmount = 75;
-  const totalReferralEarnings = (referralData?.totalReferrals ?? 0) * perReferralAmount;
-  const totalPendingAmount = getAllReferrals().reduce((sum, referral) => 
-    sum + parseFloat(referral.pending_commission || '0'), 0);
+  const totalReferralEarnings =
+    (referralData?.totalReferrals ?? 0) * perReferralAmount;
+  const totalPendingAmount = getAllReferrals().reduce(
+    (sum, referral) => sum + parseFloat(referral.pending_commission || "0"),
+    0
+  );
   const totalEarnings = totalReferralEarnings + totalPendingAmount;
 
   if (error) {
@@ -113,8 +125,8 @@ const Referrals = () => {
       <div className="px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="p-2 rounded-lg bg-[#252547] text-purple-400 hover:bg-[#2f2f5a] transition-colors"
           >
             <ArrowLeft size={20} />
@@ -143,12 +155,12 @@ const Referrals = () => {
             <p className="text-2xl font-bold text-white"></p>
             {totalPendingAmount > 0 ? (
               <p className="text-sm text-yellow-400 mt-1">
-                 ₹{totalPendingAmount?.toFixed(2)}
+                ₹{totalPendingAmount?.toFixed(2)}
               </p>
-            ) : pendingMessage && (
-              <p className="text-sm text-gray-400 mt-1">
-                {pendingMessage}
-              </p>
+            ) : (
+              pendingMessage && (
+                <p className="text-sm text-gray-400 mt-1">{pendingMessage}</p>
+              )
             )}
           </div>
         </div>
@@ -156,7 +168,9 @@ const Referrals = () => {
         {/* Referral Code Section */}
         <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
           <div className="p-4 border-b border-purple-500/10">
-            <h2 className="text-lg font-semibold text-white">Your Referral Code</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Your Referral Code
+            </h2>
           </div>
           <div className="p-4 space-y-4">
             <div className="flex gap-2">
@@ -193,7 +207,9 @@ const Referrals = () => {
         {/* Referrals Table */}
         <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
           <div className="p-4 border-b border-purple-500/10">
-            <h2 className="text-lg font-semibold text-white">Recent Referrals</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Recent Referrals
+            </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -209,19 +225,25 @@ const Referrals = () => {
               <tbody>
                 {getAllReferrals().length > 0 ? (
                   getAllReferrals().map((referral, index) => (
-                    <tr key={index} className="border-b border-purple-500/10 text-white">
+                    <tr
+                      key={index}
+                      className="border-b border-purple-500/10 text-white"
+                    >
                       <td className="py-4 px-6">Level {referral.level}</td>
-                      <td className="py-4 px-6">{referral.id || 'N/A'}</td>
-                      <td className="py-4 px-6">{referral.username || 'N/A'}</td>
+                      <td className="py-4 px-6">{referral.id || "N/A"}</td>
+                      <td className="py-4 px-6">
+                        {referral.username || "N/A"}
+                      </td>
                       <td className="py-4 px-6">
                         <span className="px-2 py-1 rounded-full text-xs bg-green-500/200">
-                          {referral.email || 'N/A'}
+                          {referral.email || "N/A"}
                         </span>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex flex-col">
                           <span className="text-xs text-yellow-400">
-                             ₹{parseFloat(referral.pending_commission).toFixed(2)}
+                            ₹
+                            {parseFloat(referral.pending_commission).toFixed(2)}
                           </span>
                         </div>
                       </td>
@@ -229,7 +251,10 @@ const Referrals = () => {
                   ))
                 ) : (
                   <tr className="border-b border-purple-500/10 text-white">
-                    <td colSpan={5} className="py-4 px-6 text-center text-gray-400">
+                    <td
+                      colSpan={5}
+                      className="py-4 px-6 text-center text-gray-400"
+                    >
                       No referrals found
                     </td>
                   </tr>

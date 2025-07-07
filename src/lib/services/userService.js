@@ -1,20 +1,10 @@
-import { baseUrl } from "../config/server";
+import axiosInstance from "../utils/axiosInstance";
 
 // Fetch user data
-const fetchUser = async userId => {
+const fetchUsers = async (userId) => {
   try {
-    const response = await fetch(`${baseUrl}/api/user/user/${userId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    return await response.json();
+    const response = await axiosInstance.get(`/api/user/user/${userId}`);
+    return response.data;
   } catch (error) {
     console.error("Error fetching user data:", error.message);
     throw error;
@@ -22,21 +12,12 @@ const fetchUser = async userId => {
 };
 
 // Fetch all user data including wallet, referrals, etc.
-const fetchAllUserData = async userId => {
+const fetchAllUserData = async (userId) => {
   try {
-    const response = await fetch(`${baseUrl}/api/user/user-all-data/${userId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
-    }
-
-    return await response.json();
+    const response = await axiosInstance.get(
+      `/api/user/user-all-data/${userId}`
+    );
+    return response.data;
   } catch (error) {
     console.error("Error fetching user all data:", error.message);
     throw error;
@@ -47,51 +28,31 @@ const fetchAllUserData = async userId => {
 const updateUser = async (userId, formData) => {
   console.log(formData);
   try {
-    const response = await fetch(`${baseUrl}/api/user/user/${userId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("Server Error Details:", errorData);
-      throw new Error(
-        errorData.message || `HTTP error! Status: ${response.status}`
-      );
-    }
-
-    return await response.json();
+    const response = await axiosInstance.patch(
+      `/api/user/user/${userId}`,
+      formData
+    );
+    return response.data;
   } catch (error) {
-    console.error("Error updating profile:", error);
+    console.error(
+      "Error updating profile:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
 export const userCouponHistory = async (userId) => {
   try {
-    const response = await fetch(`${baseUrl}/api/user/coupons/${userId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    return await response.json();
+    const response = await axiosInstance.get(`/api/user/coupons/${userId}`);
+    return response.data;
   } catch (error) {
-    console.error("Error fetching coupon history:", error);
+    console.error("Error fetching coupon history:", error.message);
     throw error;
   }
 };
 
-export const fetchUserData = async userId => fetchUser(userId);
-export const fetchUserAllData = async userId => fetchAllUserData(userId);
+export const fetchUserData = async (userId) => fetchUsers(userId);
+export const fetchUserAllData = async (userId) => fetchAllUserData(userId);
 export const updateUserData = async (userId, formData) =>
   updateUser(userId, formData);

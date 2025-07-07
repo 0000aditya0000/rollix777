@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from "../utils/axiosInstance";
 
 interface UserAllDataResponse {
   success: boolean;
@@ -35,11 +35,15 @@ interface UserAllDataResponse {
   };
 }
 
-export const fetchUserAllData = async (userId: string | number): Promise<UserAllDataResponse> => {
+export const fetchUserAllData = async (
+  userId: string | number
+): Promise<UserAllDataResponse> => {
   try {
-    const response = await axios.get(`https://api.rollix777.com/api/user/user-all-data/${userId}`);
+    const response = await axiosInstance.get(
+      `/api/user/user-all-data/${userId}`
+    );
     return response.data;
   } catch (error) {
     throw error;
   }
-}; 
+};

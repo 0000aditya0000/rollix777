@@ -1,10 +1,9 @@
-import axios from "axios";
-import { baseUrl } from "../config/server.js";
+import axiosInstance from "../utils/axiosInstance";
 
 export const fetchResults = async (duration) => {
   try {
-    const response = await axios.post(`${baseUrl}/api/color/results`, {
-      duration
+    const response = await axiosInstance.post("/api/color/results", {
+      duration,
     });
     return response.data;
   } catch (error) {
@@ -12,15 +11,15 @@ export const fetchResults = async (duration) => {
   }
 };
 
-export const generateResult = async(periodNumber, duration)  => {
+export const generateResult = async (periodNumber, duration) => {
   try {
     if (!periodNumber || isNaN(periodNumber)) {
       throw new Error("Invalid period number");
     }
 
-    const response = await axios.post(`${baseUrl}/api/color/generate-result`, {
+    const response = await axiosInstance.post("/api/color/generate-result", {
       periodNumber: Number(periodNumber),
-      duration
+      duration,
     });
 
     if (!response.data) {
@@ -41,27 +40,10 @@ export const generateResult = async(periodNumber, duration)  => {
   }
 };
 
-export const getBetHistory = async userId => {
+export const getBetHistory = async (userId) => {
   try {
-    const response = await axios.post(
-      `${baseUrl}/api/color/bet-history`,
-      { userId },
-      {
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const checkValidBet = async (userId,duration) => {
-  try {
-    const response = await axios.post(`${baseUrl}/api/color/checkValidBet`, {
-      userId,duration
+    const response = await axiosInstance.post("/api/color/bet-history", {
+      userId,
     });
     return response.data;
   } catch (error) {
@@ -69,12 +51,21 @@ export const checkValidBet = async (userId,duration) => {
   }
 };
 
-export const placeBet = async betData => {
+export const checkValidBet = async (userId, duration) => {
   try {
-    const response = await axios.post(
-      `${baseUrl}/api/color/place-bet`,
-      betData
-    );
+    const response = await axiosInstance.post("/api/color/checkValidBet", {
+      userId,
+      duration,
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const placeBet = async (betData) => {
+  try {
+    const response = await axiosInstance.post("/api/color/place-bet", betData);
     return response.data;
   } catch (error) {
     throw error;

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, Upload } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { baseUrl } from "../lib/config/server";
-import axios from "axios";
 import toast from "react-hot-toast";
+import axiosInstance from "../lib/utils/axiosInstance";
 
 const KYCVerification: React.FC = () => {
   const navigate = useNavigate();
@@ -36,9 +35,10 @@ const KYCVerification: React.FC = () => {
           return;
         }
 
-        const response = await axios.get(
-          `${baseUrl}/api/user/kyc-details/${userId}`
+        const response = await axiosInstance.get(
+          `/api/user/kyc-details/${userId}`
         );
+
         setKycDetails(response.data.data);
       } catch (error: any) {
         console.error("Error fetching KYC details:", error);
@@ -162,8 +162,8 @@ const KYCVerification: React.FC = () => {
         kycstatus: "0",
       };
 
-      const response = await axios.put(
-        `${baseUrl}/api/user/${userId}/kyc`,
+      const response = await axiosInstance.put(
+        `/api/user/${userId}/kyc`,
         payload
       );
 
