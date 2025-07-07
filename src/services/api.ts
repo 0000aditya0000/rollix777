@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'https://api.rollix777.com/api';
+import axiosInstance from "../lib/utils/axiosInstance";
 
 interface DepositRequest {
   userId: number;
@@ -20,10 +18,13 @@ interface DepositResponse {
 export const depositService = {
   deposit: async (data: DepositRequest): Promise<DepositResponse> => {
     try {
-      const response = await axios.post<DepositResponse>(`${API_BASE_URL}/user/deposit`, data);
+      const response = await axiosInstance.post<DepositResponse>(
+        `/user/deposit`,
+        data
+      );
       return response.data;
     } catch (error) {
       throw error;
     }
-  }
-}; 
+  },
+};

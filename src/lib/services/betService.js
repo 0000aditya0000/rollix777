@@ -1,60 +1,45 @@
-import { baseUrl } from "../config/server";
+import axiosInstance from "../utils/axiosInstance";
 
+// POST request utility
 const request = async (endpoint, data) => {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Request failed");
-    }
-
-    return await response.json();
+    const response = await axiosInstance.post(endpoint, data);
+    return response.data;
   } catch (error) {
-    console.error("Auth Request Error:", error.message);
+    console.error(
+      "Auth Request Error:",
+      error.response?.data?.message || error.message
+    );
     throw error;
   }
 };
 
-// Separate GET request function
+// GET request utility
 const getRequest = async (endpoint) => {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Request failed");
-    }
-
-    return await response.json();
+    const response = await axiosInstance.get(endpoint);
+    return response.data;
   } catch (error) {
-    console.error("GET Request Error:", error.message);
+    console.error(
+      "GET Request Error:",
+      error.response?.data?.message || error.message
+    );
     throw error;
   }
 };
 
-export const betHistory = async data => request("/api/color/bet-history", data);
+// Game-related API calls
+export const betHistory = async (data) =>
+  request("/api/color/bet-history", data);
 
 export const getGameTransactions = async (userId) => {
   return getRequest(`/api/user/game-transactions/${userId}`);
 };
 
-// Combined function to get history based on game type
 export const getBetHistoryByGameType = async (gameType, userId) => {
-  if (gameType === 'wingo') {
-    return betHistory({ userId: userId });
-  } else if (gameType === 'other') {
+  if (gameType === "wingo") {
+    return betHistory({ userId });
+  } else if (gameType === "other") {
     return getGameTransactions(userId);
   } else {
     throw new Error("Invalid game type");

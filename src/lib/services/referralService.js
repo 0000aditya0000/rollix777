@@ -1,31 +1,20 @@
-import { baseUrl } from '../config/server';
+import axiosInstance from "../utils/axiosInstance";
 
 const getReferrals = async (userId) => {
- 
-    try {
-        const response = await fetch(`${baseUrl}/api/user/referrals/${userId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch referrals');
-        }
-
-        const data = await response.json();
-       
-        return data;
-    } catch (error) {
-        console.error('Error fetching referrals:', error);
-        throw error;
-    }
+  try {
+    const response = await axiosInstance.get(`/api/user/referrals/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching referrals:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
 };
 
 export const referralService = {
-    getReferrals,
+  getReferrals,
 };
 
-export default referralService; 
+export default referralService;

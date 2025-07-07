@@ -13,10 +13,9 @@ import {
   Gem,
   CodeSquare,
 } from "lucide-react";
-import { fetchUserAllData } from '../lib/services/userService';
-import {baseUrl} from '../lib/config/server'
-import axios from "axios";
-import toast from 'react-hot-toast';
+import { fetchUserAllData } from "../lib/services/userService";
+import toast from "react-hot-toast";
+import axiosInstance from "../lib/utils/axiosInstance";
 
 interface BankAccount {
   id: number;
@@ -57,7 +56,7 @@ const initialPayload: WithdrawPayload = {
   bankname: "",
   network: "trc20",
   walletAddress: "",
-  userId: null
+  userId: null,
 };
 
 const WithdrawModal: React.FC<WithdrawModalProps> = ({
@@ -66,18 +65,23 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   mainBalance,
   fetchData,
 }) => {
-  const [selectedNetwork, setSelectedNetwork] = useState<"trc20" | "erc20">("trc20");
+  const [selectedNetwork, setSelectedNetwork] = useState<"trc20" | "erc20">(
+    "trc20"
+  );
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [usdtBalance, setUsdtBalance] = useState(0);
   const [payload, setPayload] = useState<WithdrawPayload>(initialPayload);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string>("");
-  const userId = localStorage.getItem('userId');
+  const userId = localStorage.getItem("userId");
 
   // Reset states when modal closes
   const handleClose = () => {
-    setPayload(initialPayload);
+    setPayload({
+      ...initialPayload,
+      userId: localStorage.getItem("userId"),
+    });
     setErrors({});
     setApiError("");
     setSelectedNetwork("trc20");
@@ -87,9 +91,9 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setPayload(prev => ({
+      setPayload((prev) => ({
         ...prev,
-        amount: ""
+        amount: "",
       }));
       setErrors({});
       setApiError("");
@@ -107,15 +111,15 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
               (account: any) => account.usdt
             );
             if (usdtAccount) {
-              setPayload(prev => ({
+              setPayload((prev) => ({
                 ...prev,
                 walletAddress: usdtAccount.usdt,
-                userId
+                userId,
               }));
             }
           }
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          console.error("Error fetching user data:", error);
         }
       }
     };
@@ -153,46 +157,50 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    
+
     if (name === "currency") {
       // Reset amount and errors when currency changes
-      setPayload(prev => ({
+      setPayload((prev) => ({
         ...initialPayload,
         currency: value,
-        userId: prev.userId,
-        walletAddress: prev.walletAddress // Keep wallet address for USDT
+        userId: localStorage.getItem("userId"),
+        walletAddress: prev.walletAddress, // Keep wallet address for USDT
       }));
       setErrors({});
       setApiError("");
-      
+
       if (value === "usdt") {
         fetchRates();
       }
       return;
     }
-    
-    if (name === "amount" && !/^\d*\.?\d{0,2}$/.test(value.replace(/,/g, ""))) return;
-    
-    setPayload(prev => ({
+
+    if (name === "amount" && !/^\d*\.?\d{0,2}$/.test(value.replace(/,/g, "")))
+      return;
+
+    setPayload((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleMaxAmount = () => {
-    const maxAmount = Number(payload.currency === "usdt" ? usdtBalance : mainBalance)
-      .toLocaleString("en-IN", { maximumFractionDigits: 2 });
-    setPayload(prev => ({
+    const maxAmount = Number(
+      payload.currency === "usdt" ? usdtBalance : mainBalance
+    ).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+    setPayload((prev) => ({
       ...prev,
-      amount: maxAmount.replace(/,/g, "")
+      amount: maxAmount.replace(/,/g, ""),
     }));
   };
 
   const handleWithdraw = async () => {
     if (isLoading) return; // Prevent multiple submissions
-    
+
     if (!validateFields()) {
       toast.error("Please fill all required fields correctly.");
       return;
@@ -204,7 +212,9 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
       // If USDT, convert to INR before sending
       if (payload.currency === "usdt") {
-        const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
+        const data = await fetch(
+          "https://api.rollix777.com/api/rates/conversion-rate/INR_USDT"
+        );
         const newdata = await data.json();
         const conversionrate = newdata.rate;
         finalAmount = (Number(finalAmount) * Number(conversionrate)).toString();
@@ -212,29 +222,32 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
       // Clean up payload based on currency
       const cleanPayload = {
-        userId: payload.userId,
+        userId: localStorage.getItem("userId"),
         currency: payload.currency,
         amount: finalAmount,
-        ...(payload.currency === "inr" 
+        ...(payload.currency === "inr"
           ? { bankname: payload.bankname }
-          : { 
+          : {
               walletAddress: payload.walletAddress,
-              network: selectedNetwork
-            }
-        )
+              network: selectedNetwork,
+            }),
       };
 
-      console.log('Sending payload:', cleanPayload);
-      const response = await axios.post(`${baseUrl}/api/wallet/withdrawl`, cleanPayload);
+      console.log("Sending payload:", cleanPayload);
+      const response = await axiosInstance.post(
+        "/api/wallet/withdrawl",
+        cleanPayload
+      );
       if (response.data.success) {
-        toast.success('Withdrawal request successful!');
+        toast.success("Withdrawal request successful!");
         fetchData();
         handleClose();
       } else {
-        toast.error(response.data.message || 'Withdrawal request failed.');
+        toast.error(response.data.message || "Withdrawal request failed.");
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Something went wrong.";
+      const errorMessage =
+        error.response?.data?.message || "Something went wrong.";
       toast.error(errorMessage);
       setApiError(errorMessage);
     } finally {
@@ -244,13 +257,15 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
   const fetchRates = async () => {
     try {
-      const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
+      const data = await fetch(
+        "https://api.rollix777.com/api/rates/conversion-rate/INR_USDT"
+      );
       const newdata = await data.json();
       const conversionrate = newdata.rate;
       const updatedBalance = Number(mainBalance / Number(conversionrate));
       setUsdtBalance(updatedBalance);
     } catch (error) {
-      console.error('Error fetching rates:', error);
+      console.error("Error fetching rates:", error);
     }
   };
 
@@ -291,7 +306,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                   onChange={handleChange}
                   name="currency"
                   className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
-                    errors.currency ? 'border-red-500' : 'border-purple-500/20'
+                    errors.currency ? "border-red-500" : "border-purple-500/20"
                   } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
                 >
                   <option value="">Select Currency</option>
@@ -322,7 +337,9 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                     onChange={handleChange}
                     name="bankname"
                     className={`w-full py-3 sm:py-4 px-4 sm:px-6 bg-[#1A1A2E] border ${
-                      errors.bankname ? 'border-red-500' : 'border-purple-500/20'
+                      errors.bankname
+                        ? "border-red-500"
+                        : "border-purple-500/20"
                     } rounded-lg sm:rounded-xl text-base sm:text-lg text-white focus:outline-none focus:border-purple-500 appearance-none`}
                   >
                     <option value="">Select a bank account</option>
@@ -377,7 +394,9 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                   </button>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-300">Wallet Address</label>
+                  <label className="text-sm text-gray-300">
+                    Wallet Address
+                  </label>
                   <input
                     type="text"
                     value={payload.walletAddress}
@@ -390,7 +409,9 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
             {/* Amount Field */}
             <div className="space-y-1">
-              <label className="text-sm text-gray-300">Amount ({payload.currency === "usdt" ? "USDT" : "INR"})</label>
+              <label className="text-sm text-gray-300">
+                Amount ({payload.currency === "usdt" ? "USDT" : "INR"})
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   {payload.currency === "usdt" ? (
@@ -403,7 +424,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                   type="text"
                   inputMode="decimal"
                   className={`w-full py-3 pl-10 pr-4 bg-[#1A1A2E] border ${
-                    errors.amount ? 'border-red-500' : 'border-purple-500/20'
+                    errors.amount ? "border-red-500" : "border-purple-500/20"
                   } rounded-lg text-white focus:outline-none focus:border-purple-500`}
                   placeholder={payload.currency === "usdt" ? "10.00" : "200.00"}
                   value={payload.amount}
@@ -419,12 +440,12 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
               )}
               <div className="flex justify-between text-xs mt-1">
                 <span className="text-gray-400">
-                  Available: {payload.currency === "usdt" ? `${usdtBalance.toFixed(2)} USDT` : `₹${mainBalance}`}
+                  Available:{" "}
+                  {payload.currency === "usdt"
+                    ? `${usdtBalance.toFixed(2)} USDT`
+                    : `₹${mainBalance}`}
                 </span>
-                <button
-                  className="text-purple-400"
-                  onClick={handleMaxAmount}
-                >
+                <button className="text-purple-400" onClick={handleMaxAmount}>
                   MAX
                 </button>
               </div>
@@ -439,8 +460,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
               <div className="flex justify-between text-sm mt-1">
                 <span className="text-gray-400">You will receive:</span>
                 <span className="text-white">
-                  {payload.currency === "usdt" 
-                    ? `${usdtBalance.toFixed(2)} USDT` 
+                  {payload.currency === "usdt"
+                    ? `${usdtBalance.toFixed(2)} USDT`
                     : `₹${mainBalance}`}
                 </span>
               </div>
@@ -462,7 +483,11 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
               disabled={isLoading}
               type="button"
               className={`w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium 
-                ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'} transition-opacity`}
+                ${
+                  isLoading
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:opacity-90"
+                } transition-opacity`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -478,7 +503,10 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
             <div className="text-sm text-gray-400">
               <p className="mb-2">Important:</p>
               <ul className="list-disc pl-5 space-y-1">
-                <li>Minimum withdrawal: {payload.currency === "usdt" ? "10.00 USDT" : "₹200.00"}</li>
+                <li>
+                  Minimum withdrawal:{" "}
+                  {payload.currency === "usdt" ? "10.00 USDT" : "₹200.00"}
+                </li>
                 <li>Processing time: 1-3 business days</li>
                 <li>Bank transfer fees may apply</li>
               </ul>

@@ -1,15 +1,9 @@
-import axios from 'axios';
-import { baseUrl } from '../config/server';
+import axiosInstance from "../utils/axiosInstance";
 
 // Get all recharges
 export const getAllRecharges = async () => {
   try {
-    const response = await axios.get(`${baseUrl}/api/recharge/get-all-recharges`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    const response = await axiosInstance.get("/api/recharge/get-all-recharges");
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;
@@ -19,14 +13,11 @@ export const getAllRecharges = async () => {
 // Get recharge details by order ID
 export const getRechargeByOrderId = async (orderId) => {
   try {
-    const response = await axios.get(`${baseUrl}/api/recharge/recharge-detail/${orderId}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    const response = await axiosInstance.get(
+      `/api/recharge/recharge-detail/${orderId}`
+    );
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;
   }
-}; 
+};

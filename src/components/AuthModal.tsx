@@ -97,14 +97,16 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       const data = await signin({ email, password });
-      localStorage.setItem("userToken", data.token);
+      console.log(data, "data");
+      localStorage.setItem("userToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("userId", data.user.id);
       localStorage.setItem("userName", data.user.username);
       localStorage.setItem("referralCode", data.user.referalCode);
       dispatch(
         login({
           user: { id: data.user.id, name: data.user.username },
-          token: data.token,
+          token: data.accessToken,
         })
       );
       onLoginSuccess();
