@@ -13,8 +13,40 @@ const getReferrals = async (userId) => {
   }
 };
 
+const getTodaySummary = async (userId) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/user/referrals/today-summary/${userId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching today's summary:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+const getReferralsByDate = async (userId, dateType) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/user/referralsbydate/${userId}?dateType=${dateType}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching referrals by date:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
 export const referralService = {
   getReferrals,
+  getReferralsByDate,
+  getTodaySummary,
 };
 
 export default referralService;
