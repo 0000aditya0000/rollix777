@@ -62,7 +62,7 @@ const AgentProgram: React.FC = () => {
         }
 
         // Fetch referrals data
-        const data = await referralService.getReferrals(userId);
+        const data = await referralService.getTodaySummary(userId);
         setReferralsData(data);
 
         // Fetch pending commissions
