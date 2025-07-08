@@ -212,9 +212,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
       // If USDT, convert to INR before sending
       if (payload.currency === "usdt") {
-        const data = await fetch(
-          "https://api.rollix777.com/api/rates/conversion-rate/INR_USDT"
-        );
+        const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
         const newdata = await data.json();
         const conversionrate = newdata.rate;
         finalAmount = (Number(finalAmount) * Number(conversionrate)).toString();
@@ -257,9 +255,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
   const fetchRates = async () => {
     try {
-      const data = await fetch(
-        "https://api.rollix777.com/api/rates/conversion-rate/INR_USDT"
-      );
+      const data = await fetch('https://api.rollix777.com/api/rates/conversion-rate/INR_USDT');
       const newdata = await data.json();
       const conversionrate = newdata.rate;
       const updatedBalance = Number(mainBalance / Number(conversionrate));

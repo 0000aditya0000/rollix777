@@ -25,7 +25,7 @@ const Dashboard = () => {
 
     try {
       isFetchingRef.current[duration] = true;
-      const response = await axios.post('https://api.rollix777.com/api/color/timer', { duration });
+      const response = await axios.post('http://localhost:5000/api/color/timer', { duration });
       const data = response.data;
       
       // Handle different response formats

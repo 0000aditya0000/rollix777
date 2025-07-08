@@ -11,7 +11,7 @@ const Games = () => {
   useEffect(() => {
     const fetchGames = async () => {
       try {
-        const response = await axios.get('https://api.rollix777.com/api/games/allgames');
+        const response = await axios.get('http://localhost:5000/api/games/allgames');
         setGames(response.data); // Assuming the API returns an array of games
         setLoading(false);
       } catch (err) {

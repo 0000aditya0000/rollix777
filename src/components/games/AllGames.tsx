@@ -178,7 +178,7 @@ const AllGames: React.FC = () => {
       }
 
       // Original game launch logic for other providers
-      const response = await axios.post("https://api.rollix777.com/api/color/launchGame", {
+      const response = await axios.post("http://localhost:5000/api/color/launchGame", {
         userId,
         id,
       });

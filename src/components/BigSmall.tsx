@@ -105,7 +105,7 @@ const BigSmall = () => {
   const fetchPeriodNumber = async (duration: string) => {
     try {
       const response = await axios.post(
-        "https://api.rollix777.com/api/color/period",
+        "http://localhost:5000/api/color/period",
         {
           mins: duration, // Changed back to mins for period API
         }
@@ -146,7 +146,7 @@ const BigSmall = () => {
       await fetchPeriodNumber(duration);
 
       const response = await axios.post(
-        "https://api.rollix777.com/api/color/timer",
+        "http://localhost:5000/api/color/timer",
         {
           duration: duration, // Keep duration for timer API
         }

@@ -38,7 +38,7 @@ const openJsGame = async (id: string): Promise<void> => {
       return;
     }
 
-    const response = await axios.post("https://api.rollix777.com/api/color/launchGame", {
+    const response = await axios.post("http://localhost:5000/api/color/launchGame", {
       userId,
       id,
     });
