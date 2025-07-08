@@ -609,54 +609,59 @@ const AgentProgram: React.FC = () => {
               </div>
             ))}
 
-            {/* Stats Grid */}
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {[
-                {
-                  title: "Total Referrals",
-                  value:
-                    (referrals?.referralsByLevel.level1.length || 0) +
-                    (referrals?.referralsByLevel.level2.length || 0) +
-                    (referrals?.referralsByLevel.level3.length || 0) +
-                    (referrals?.referralsByLevel.level4.length || 0) +
-                    (referrals?.referralsByLevel.level5.length || 0),
-                },
-                {
-                  title: "Total Commission",
-                  value: `₹ ${
-                    pendingCommissions
-                      .find((p) => p.cryptoname === "INR")
-                      ?.pending_amount?.toLocaleString() || "0"
-                  }`,
-                },
-                {
-                  title: "Team Subordinates",
-                  value:
-                    (referrals?.referralsByLevel.level2.length || 0) +
-                    (referrals?.referralsByLevel.level3.length || 0) +
-                    (referrals?.referralsByLevel.level4.length || 0) +
-                    (referrals?.referralsByLevel.level5.length || 0),
-                },
-              ]
-                .filter(Boolean)
-                .map((stat, index) => (
-                  <div
-                    key={index}
-                    className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-6 hover:border-purple-500/40 transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1">
-                          {stat.title}
-                        </p>
-                        <p className="text-white font-bold text-2xl">
-                          {stat.value}
-                        </p>
-                      </div>
+            {/* Promotion Data Card (2x2 grid, matching width with above tabs) */}
+            <div className="max-w-[430px] md:max-w-none mx-auto mt-10">
+              <div className="bg-gradient-to-br from-purple-500/10 via-[#252547] to-[#1A1A2E] rounded-2xl border border-purple-500/20 p-6 md:p-10 shadow-xl">
+                <div className="mb-6">
+                  <span className="text-lg md:text-2xl font-semibold text-[#22223b] dark:text-white flex items-center gap-2">
+                    <span className="inline-block bg-pink-100 rounded-full p-1">
+                      <svg width="24" height="24" fill="none"><rect width="24" height="24" rx="6" fill="#F472B6"/><text x="12" y="18" textAnchor="middle" fontSize="15" fill="#fff">🎁</text></svg>
+                    </span>
+                    promotion data
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-2 md:gap-y-0 md:gap-x-8 text-center">
+                  {/* Total Referrals */}
+                  <div>
+                    <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
+                      {(referrals?.referralsByLevel.level1.length || 0) +
+                        (referrals?.referralsByLevel.level2.length || 0) +
+                        (referrals?.referralsByLevel.level3.length || 0) +
+                        (referrals?.referralsByLevel.level4.length || 0) +
+                        (referrals?.referralsByLevel.level5.length || 0)}
+                    </div>
+                    <div className="text-sm md:text-lg text-white/70">Total Referrals</div>
+                  </div>
+                  {/* Total Commission */}
+                  <div>
+                    <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
+                      ₹{pendingCommissions
+                        .find((p) => p.cryptoname === "INR")
+                        ?.pending_amount?.toLocaleString() || "0"}
+                    </div>
+                    <div className="text-sm md:text-lg text-white/70">Total Commission</div>
+                  </div>
+                  {/* Direct Subordinates */}
+                  <div>
+                    <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
+                      {referrals?.referralsByLevel.level1.length || 0}
+                    </div>
+                    <div className="text-sm md:text-lg text-white/70">Direct Subordinates</div>
+                  </div>
+                  {/* Team Subordinates */}
+                  <div>
+                    <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
+                      {(referrals?.referralsByLevel.level2.length || 0) +
+                        (referrals?.referralsByLevel.level3.length || 0) +
+                        (referrals?.referralsByLevel.level4.length || 0) +
+                        (referrals?.referralsByLevel.level5.length || 0)}
+                    </div>
+                    <div className="text-sm md:text-lg text-white/70">
+                      Team Subordinates
                     </div>
                   </div>
-                ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
