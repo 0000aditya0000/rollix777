@@ -5,6 +5,7 @@ import CryptoJS from 'crypto-js';
 import axios from 'axios';
 // Import all game data files
 import apexGames from '../../gamesData/apex.json';
+import exclusiveGames from '../../gamesData/exclusive.json';
 import amaticGames from '../../gamesData/amatic.json';
 import ainsworthGames from '../../gamesData/ainsworth.json';
 import apolloGames from '../../gamesData/apollo.json';
@@ -76,7 +77,18 @@ interface JiliGameData {
 const AllGames: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const gameProviders: GameProvider[] = [
-   
+    // Add exclusive games first (before Pragmatic) with correct format mapping
+    { 
+      id: 'exclusive', 
+      name: 'EXCLUSIVE', 
+      games: exclusiveGames.map(game => ({
+        id: game.id,
+        name: game.name,
+        img: game.image, // Note: exclusive uses 'image' instead of 'img'
+        vendor: 'EXCLUSIVE'
+      }))
+    },
+    
     { id: 'pragmatic', name: 'PRAGMATIC', games: pragmaticGames },
     { 
       id: 'pgsoft', 

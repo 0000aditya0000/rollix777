@@ -178,11 +178,5 @@
         "name": "Crash",
         "status": "active",
         "image": "https://cdn.prod.website-files.com/65e508fe833fc8d3e049ee44/6615831683b309824f302d62_crash.png"
-    },
-    {
-        "id": "2bd203129afe1059923b45d7bd5de143",
-        "name": "Squid Game",
-        "status": "active",
-        "image": "https://via.placeholder.com/150"
     }
 ]
