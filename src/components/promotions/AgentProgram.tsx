@@ -6,6 +6,7 @@ import { RootState } from "../../store";
 import InvitationRulesModal from "./InvitationRulesModal";
 import { referralService } from "../../lib/services/referralService";
 import axiosInstance from "../../lib/utils/axiosInstance";
+import { values } from "lodash";
 
 interface Referral {
   id: number;
@@ -45,6 +46,9 @@ const AgentProgram: React.FC = () => {
   const [pendingCommissions, setPendingCommissions] = React.useState<
     PendingCommission[]
   >([]);
+  const [referrals, setReferrals] = React.useState<ReferralsResponse | null>(
+    null
+  );
   const navigate = useNavigate();
 
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -77,6 +81,20 @@ const AgentProgram: React.FC = () => {
     };
 
     fetchData();
+  }, [userId]);
+
+  const fetchReferrals = async () => {
+    try {
+      const data = await referralService.getReferrals(userId);
+      setReferrals(data);
+    } catch (err) {
+      console.error("Error fetching referrals:", err);
+      setReferrals([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchReferrals();
   }, [userId]);
 
   // Calculate direct subordinates stats (level 1)
@@ -154,6 +172,8 @@ const AgentProgram: React.FC = () => {
   const handleNavigateToCommissionDetails = () => {
     navigate("/promotions/commission-details", { state: { userId } });
   };
+
+  // console.log(referrals, "data");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0F19] via-[#1A1A2E] to-[#252547]">
@@ -588,6 +608,56 @@ const AgentProgram: React.FC = () => {
                 </div>
               </div>
             ))}
+
+            {/* Stats Grid */}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {[
+                {
+                  title: "Total Referrals",
+                  value:
+                    (referrals?.referralsByLevel.level1.length || 0) +
+                    (referrals?.referralsByLevel.level2.length || 0) +
+                    (referrals?.referralsByLevel.level3.length || 0) +
+                    (referrals?.referralsByLevel.level4.length || 0) +
+                    (referrals?.referralsByLevel.level5.length || 0),
+                },
+                {
+                  title: "Total Commission",
+                  value: `₹ ${
+                    pendingCommissions
+                      .find((p) => p.cryptoname === "INR")
+                      ?.pending_amount?.toLocaleString() || "0"
+                  }`,
+                },
+                {
+                  title: "Team Subordinates",
+                  value:
+                    (referrals?.referralsByLevel.level2.length || 0) +
+                    (referrals?.referralsByLevel.level3.length || 0) +
+                    (referrals?.referralsByLevel.level4.length || 0) +
+                    (referrals?.referralsByLevel.level5.length || 0),
+                },
+              ]
+                .filter(Boolean)
+                .map((stat, index) => (
+                  <div
+                    key={index}
+                    className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-6 hover:border-purple-500/40 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-gray-400 text-sm mb-1">
+                          {stat.title}
+                        </p>
+                        <p className="text-white font-bold text-2xl">
+                          {stat.value}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
       </div>

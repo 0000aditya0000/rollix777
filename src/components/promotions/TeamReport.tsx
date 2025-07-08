@@ -36,6 +36,7 @@ const TeamReport: React.FC = () => {
     null
   );
   const [loading, setLoading] = useState(true);
+  const [referralView, setReferralView] = useState("direct");
 
   const formatDate = (dateString?: string): string => {
     if (!dateString) return "N/A";
@@ -239,6 +240,27 @@ const TeamReport: React.FC = () => {
                   value: `₹${formatCurrency(totals.firstDeposit)}`,
                   trend: "down",
                 },
+                {
+                  title: "Total Referrals",
+                  value:
+                    (referralData?.referralsByLevel.level1.length || 0) +
+                    (referralData?.referralsByLevel.level2.length || 0) +
+                    (referralData?.referralsByLevel.level3.length || 0) +
+                    (referralData?.referralsByLevel.level4.length || 0) +
+                    (referralData?.referralsByLevel.level5.length || 0),
+                },
+                {
+                  title: "Direct Subordinates",
+                  value: referralData?.referralsByLevel.level1.length || 0,
+                },
+                {
+                  title: "Team Subordinates",
+                  value:
+                    (referralData?.referralsByLevel.level2.length || 0) +
+                    (referralData?.referralsByLevel.level3.length || 0) +
+                    (referralData?.referralsByLevel.level4.length || 0) +
+                    (referralData?.referralsByLevel.level5.length || 0),
+                },
               ].map((stat, index) => (
                 <div
                   key={index}
@@ -251,15 +273,17 @@ const TeamReport: React.FC = () => {
                         {stat.value}
                       </p>
                     </div>
-                    <div
-                      className={`px-2 py-1 rounded-md text-xs ${
-                        stat.trend === "up"
-                          ? "bg-green-900/30 text-green-400"
-                          : "bg-red-900/30 text-red-400"
-                      }`}
-                    >
-                      {stat.trend === "up" ? "↑ 12%" : "↓ 5%"}
-                    </div>
+                    {stat.trend && (
+                      <div
+                        className={`px-2 py-1 rounded-md text-xs ${
+                          stat.trend === "up"
+                            ? "bg-green-900/30 text-green-400"
+                            : "bg-red-900/30 text-red-400"
+                        }`}
+                      >
+                        {stat.trend === "up" ? "↑ 12%" : "↓ 5%"}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
