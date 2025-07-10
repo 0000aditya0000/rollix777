@@ -1,31 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import image1 from '../assets/1.png'; // Updated import
-import image2 from '../assets/2.png'; // Updated import
-import image3 from '../assets/3.png'; // Updated import
-import image4 from '../assets/4.png'; 
-import image5 from '../assets/5.png'; 
-import image6 from '../assets/6.png'; 
-import image7 from '../assets/7.png'; // Updated import
+import React, { useState, useEffect } from "react";
+// import image1 from "../assets/1.png"; // Updated import
+// import image2 from "../assets/2.png"; // Updated import
+// import image3 from "../assets/3.png"; // Updated import
+// import image4 from "../assets/4.png";
+// import image5 from "../assets/5.png";
+// import image6 from "../assets/6.png";
+// import image7 from "../assets/7.png"; // Updated import
 // ... import other images as needed
+
+import slider1 from "../assets/slider/slider1.jpg";
+import slider2 from "../assets/slider/slider2.jpg";
+import slider3 from "../assets/slider/slider3.jpg";
+import slider4 from "../assets/slider/slider4.jpg";
 
 const ImageSlider = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+
   const images = [
-    image1,
-    image2,
-    image3,
-    image4,
-    image5,
-    image6,
-    image7
+    slider1,
+    slider2,
+    slider3,
+    slider4,
     // Add other images to the array
   ];
 
   // Auto-advance slides every 5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => 
+      setCurrentImageIndex((prevIndex) =>
         prevIndex === images.length - 1 ? 0 : prevIndex + 1
       );
     }, 5000);
@@ -34,13 +36,13 @@ const ImageSlider = () => {
   }, []);
 
   const nextSlide = () => {
-    setCurrentImageIndex((prevIndex) => 
+    setCurrentImageIndex((prevIndex) =>
       prevIndex === images.length - 1 ? 0 : prevIndex + 1
     );
   };
 
   const prevSlide = () => {
-    setCurrentImageIndex((prevIndex) => 
+    setCurrentImageIndex((prevIndex) =>
       prevIndex === 0 ? images.length - 1 : prevIndex - 1
     );
   };
@@ -48,7 +50,7 @@ const ImageSlider = () => {
   return (
     <>
       {/* Mobile View */}
-      <div className="md:hidden relative w-full h-48 px-4 mb-6">
+      <div className="md:hidden relative w-full h-48 px-4 mt-4">
         <div className="h-full w-full relative overflow-hidden rounded-2xl">
           <img
             src={images[currentImageIndex]}
@@ -61,7 +63,7 @@ const ImageSlider = () => {
               <button
                 key={index}
                 className={`w-2 h-2 rounded-full ${
-                  currentImageIndex === index ? 'bg-white' : 'bg-white/50'
+                  currentImageIndex === index ? "bg-white" : "bg-white/50"
                 }`}
                 onClick={() => setCurrentImageIndex(index)}
               />

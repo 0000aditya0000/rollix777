@@ -10,14 +10,20 @@ import {
   IndianRupee,
   AlertCircle,
   ArrowLeft,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Eye,
+  Clock,
 } from "lucide-react";
 import { depositService } from "../services/api";
 import { toast } from "react-hot-toast";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setWallets } from "../slices/walletSlice";
 import { fetchUserWallets } from "../lib/services/WalletServices";
 import { button } from "framer-motion/client";
+import { getAllTransactions } from "../lib/services/transactionService";
 import { useNavigate } from "react-router-dom";
+import { RootState } from "../store";
 
 interface DepositRequest {
   userId: number;
@@ -27,6 +33,7 @@ interface DepositRequest {
 
 const DepositPage: React.FC = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState<"crypto" | "usdt">("crypto");
   const [selectedCrypto, setSelectedCrypto] = useState<
     "btc" | "eth" | "usdt" | "inr"
@@ -40,6 +47,11 @@ const DepositPage: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [cardAmount, setCardAmount] = useState<string>("");
   const [cardError, setCardError] = useState<string>("");
+  const [transactionFilter, setTransactionFilter] = useState<
+    "all" | "approved" | "pending" | "rejected"
+  >("all");
+  const [transactions, setTransactions] = useState<any[]>([]);
+
   const navigate = useNavigate();
 
   // Clear states when modal opens/closes
@@ -178,7 +190,7 @@ const DepositPage: React.FC = () => {
 
       console.log("Deposit response:", response);
       toast.success(response.message || "Deposit processed successfully");
-      onClose();
+      // onClose();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error
@@ -251,9 +263,41 @@ const DepositPage: React.FC = () => {
     window.location.href = `https://cryptousdt.rollix777.com/?uid=${uid}&amount=${amount}&tyid=${tyid}`;
   };
 
+  useEffect(() => {
+    const uid = localStorage.getItem("userId");
+    const fetchTransactions = async () => {
+      try {
+        const data = await getAllTransactions(uid);
+        setTransactions(data.transactions || []);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    };
+    fetchTransactions();
+  }, [user?.id]);
+
+  const getFilteredTransactions = () => {
+    if (transactionFilter === "all") {
+      return transactions;
+    }
+    return transactions.filter((txn) => {
+      switch (transactionFilter) {
+        case "approved":
+          return txn.status.toLowerCase() === "approved";
+        case "pending":
+          return txn.status.toLowerCase() === "pending";
+        case "rejected":
+          return txn.status.toLowerCase() === "rejected";
+        default:
+          return true;
+      }
+    });
+  };
+
   return (
-    <div className="min-h-screen overflow-y-auto bg-gradient-to-b from-[#252547] to-[#1A1A2E] px-4 py-8 pt-16 sm:pt-20">
-      <div className="w-[80%] min-h-screen mx-auto bg-[#1A1A2E]">
+    <div className="flex flex-col gap-4 mt-6 lg:flex-row w-full max-w-7xl mx-auto min-h-screen overflow-y-auto bg-gradient-to-b from-[#252547] to-[#1A1A2E] px-4 py-8 pt-16 sm:pt-20">
+      {/* Left: Deposit Section */}
+      <div className="w-full lg:w-1/2 bg-[#1A1A2E] relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-500"></div>
 
         {/* Header */}
@@ -515,6 +559,165 @@ const DepositPage: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Right: Transaction Section */}
+      <div className="w-full lg:w-1/2">
+        <div className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl sm:rounded-2xl border border-purple-500/20">
+          <div className="p-4 sm:p-6 border-b border-purple-500/10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+                <h3 className="text-lg sm:text-xl font-semibold text-white">
+                  Recent Transactions
+                </h3>
+              </div>
+
+              {/* Filter Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setTransactionFilter("all")}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    transactionFilter === "all"
+                      ? "bg-purple-600 text-white"
+                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setTransactionFilter("approved")}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    transactionFilter === "approved"
+                      ? "bg-green-600 text-white"
+                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
+                  }`}
+                >
+                  Approved
+                </button>
+                <button
+                  onClick={() => setTransactionFilter("pending")}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    transactionFilter === "pending"
+                      ? "bg-yellow-600 text-white"
+                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
+                  }`}
+                >
+                  Pending
+                </button>
+                <button
+                  onClick={() => setTransactionFilter("rejected")}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    transactionFilter === "rejected"
+                      ? "bg-red-600 text-white"
+                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
+                  }`}
+                >
+                  Rejected
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Transaction List */}
+          <div className="p-4 sm:p-6">
+            <div className="max-h-screen lg:max-h-[600px] overflow-y-auto">
+              <div className="space-y-3 sm:space-y-4">
+                {getFilteredTransactions().length > 0 ? (
+                  getFilteredTransactions().map((txn) => {
+                    const isDeposit = txn.transaction_type === "recharge";
+                    const isWithdrawal = txn.transaction_type === "withdraw";
+                    const typeLabel = isDeposit
+                      ? "Deposit"
+                      : isWithdrawal
+                      ? "Withdrawal"
+                      : txn.transaction_type;
+                    const iconBg = isDeposit
+                      ? "bg-green-500/10"
+                      : "bg-red-500/10";
+                    const icon = isDeposit ? (
+                      <ArrowDownCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
+                    ) : (
+                      <ArrowUpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
+                    );
+                    const amountSign = isDeposit
+                      ? "+"
+                      : isWithdrawal
+                      ? "-"
+                      : "";
+
+                    const amountColor =
+                      txn.status.toLowerCase() === "approved"
+                        ? "text-green-500"
+                        : txn.status.toLowerCase() === "rejected"
+                        ? "text-red-500"
+                        : "text-yellow-500";
+
+                    const statusColor =
+                      txn.status.toLowerCase() === "approved"
+                        ? "text-green-500"
+                        : txn.status.toLowerCase() === "rejected"
+                        ? "text-red-500"
+                        : "text-yellow-500";
+
+                    return (
+                      <div
+                        key={txn.id}
+                        className="flex items-center justify-between p-3 sm:p-4 bg-[#1A1A2E] rounded-lg sm:rounded-xl hover:bg-[#252547] transition-colors"
+                      >
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center ${iconBg}`}
+                          >
+                            {icon}
+                          </div>
+                          <div>
+                            <p className="text-white font-medium text-base sm:text-lg">
+                              {typeLabel}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-400">
+                              {txn.transaction_date}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <p
+                                className={`text-xs sm:text-sm ${statusColor}`}
+                              >
+                                {txn.status}
+                              </p>
+                              {txn.status.toLowerCase() === "rejected" && (
+                                <button
+                                  // onClick={() => handleViewRejection(txn)}
+                                  className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                                  title="View rejection details"
+                                >
+                                  <Eye size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span
+                            className={`text-base sm:text-lg font-semibold ${amountColor}`}
+                          >
+                            {amountSign}₹{txn.amount}
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-400">
+                            {txn.order_id}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-gray-400 text-center py-6">
+                    No transactions found.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

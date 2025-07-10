@@ -59,7 +59,7 @@ const Dashboard = () => {
       <div className="md:hidden w-full mx-auto px-0">
         <div className="pt-16 pb-20">
           {/* User Stats - Mobile */}
-          <div className="px-4 py-4 bg-[#151525]">
+          {/* <div className="px-4 py-4 bg-[#151525]">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-white">Welcome Back!</h2>
@@ -86,12 +86,13 @@ const Dashboard = () => {
                 <span>Withdraw</span>
               </button>
             </div>
-          </div>
+          </div> */}
 
           <ImageSlider />
           <ColorGame />
-          <LatestGames title="Latest Games" type="latest" />
           <ExclusiveGames title="Exclusive Games" />
+          <LatestGames title="Latest Games" type="latest" />
+
           <GameCarousel title="Popular Games" type="popular" />
           <TrendingGames title="Trending Games" type="trending" />
 
@@ -104,7 +105,7 @@ const Dashboard = () => {
         <div className="w-full lg:px-2">
           {/* Top Bar */}
 
-          <div className="w-full bg-[#151525] border-b border-gray-800/50 ">
+          {/* <div className="w-full bg-[#151525] border-b border-gray-800/50 ">
             <div className="w-full max-w-[1920px] mx-auto px-6 lg:px-8">
               <div className="flex items-center justify-between py-6">
                 <div className="flex items-center gap-8">
@@ -122,7 +123,7 @@ const Dashboard = () => {
                     </p>
                   </div>
                   {/* <button onClick={launchGame}>JILI GAME Launch</button> */}
-                </div>
+          {/* </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => navigate("/deposit")}
@@ -141,8 +142,8 @@ const Dashboard = () => {
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
+            </div> */}
+          {/* // </div> */}
 
           {/* Main Content */}
           <div className="w-full max-w-[1920px] mx-auto px-6 lg:px-8 py-6">

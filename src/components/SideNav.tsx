@@ -12,9 +12,10 @@ import {
   Star,
   UserCog,
   Ticket,
+  Wallet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 interface SideNavProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,29 +24,45 @@ interface SideNavProps {
 
 const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
   // console.log(onLogout);
- const navigate = useNavigate()
+  const navigate = useNavigate();
   if (!isOpen) return null;
-const name = localStorage.getItem("userName") || "User";
+  const name = localStorage.getItem("userName") || "User";
 
   const menuItems = [
-    { icon: <User size={20} />, label: 'My Profile', path: '/profile' },
-    { icon: <UserCog size={20} />, label: 'Account', path: '/account' },
-    { icon: <History size={20} />, label: 'Transaction History', path: '/bet-history' },
-    { icon: <CreditCard size={20} />, label: 'Payment Methods', path: '/payment-methods' },
-    { icon: <Ticket size={20} />, label: 'Promotions', path: '/promotions' },
-    { icon: <Gift size={20} />, label: 'Referrals & Rewards', path: '/referrals' },
-    { icon: <Settings size={20} />, label: 'Settings', path: '/settings' },
-    { icon: <Shield size={20} />, label: 'Security', path: '/security' },
-    { icon: <HelpCircle size={20} />, label: 'Help & Support', path: '/support' },
+    { icon: <User size={20} />, label: "My Profile", path: "/profile" },
+    { icon: <UserCog size={20} />, label: "Account", path: "/account" },
+    { icon: <Wallet size={20} />, label: "Wallet", path: "/wallet" },
+    {
+      icon: <History size={20} />,
+      label: "Transaction History",
+      path: "/bet-history",
+    },
+    {
+      icon: <CreditCard size={20} />,
+      label: "Payment Methods",
+      path: "/payment-methods",
+    },
+    { icon: <Ticket size={20} />, label: "Promotions", path: "/promotions" },
+    {
+      icon: <Gift size={20} />,
+      label: "Referrals & Rewards",
+      path: "/referrals",
+    },
+    { icon: <Settings size={20} />, label: "Settings", path: "/settings" },
+    { icon: <Shield size={20} />, label: "Security", path: "/security" },
+    {
+      icon: <HelpCircle size={20} />,
+      label: "Help & Support",
+      path: "/support",
+    },
   ];
 
   const handleLogOut = () => {
-    localStorage.removeItem("userId")
-    localStorage.removeItem("userToken")
-    navigate("/")
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userToken");
+    navigate("/");
     onLogout();
     onClose();
-  
   };
   return (
     <>
@@ -83,7 +100,7 @@ const name = localStorage.getItem("userName") || "User";
               <ul className="space-y-1">
                 {menuItems.map((item, index) => (
                   <li key={index}>
-                     <Link 
+                    <Link
                       to={item.path}
                       className="w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-purple-500/10 hover:text-white transition-colors"
                       onClick={onClose}

@@ -187,7 +187,7 @@ const Header: React.FC = () => {
               </Link>
 
               {/* Center Section - Wallet */}
-              {isAuthenticated && (
+              {/* {isAuthenticated && (
                 <div className="absolute left-1/2 transform -translate-x-1/2">
                   <div className="relative" ref={walletRef}>
                     <button
@@ -251,7 +251,7 @@ const Header: React.FC = () => {
                     )}
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Right Section */}
               {isAuthenticated ? (
@@ -307,7 +307,7 @@ const Header: React.FC = () => {
                 </div>
 
                 {/* Wallet in center */}
-                <div className="relative" ref={walletRef}>
+                {/* <div className="relative" ref={walletRef}>
                   <button
                     onClick={toggleWallet}
                     className="py-2 px-4 rounded-lg bg-[#252547] text-white font-medium hover:bg-[#2f2f5a] transition-colors flex items-center gap-2 border border-purple-500/20"
@@ -316,7 +316,7 @@ const Header: React.FC = () => {
                     <span>
                       {selectedCurrency.symbol} {selectedCurrency.balance}
                     </span>{" "}
-                    {/* Show selected currency balance */}
+                 
                     <ChevronDown
                       className={`w-4 h-4 text-gray-400 transition-transform ${
                         isWalletOpen ? "rotate-180" : ""
@@ -361,7 +361,7 @@ const Header: React.FC = () => {
                       </Link>
                     </div>
                   )}
-                </div>
+                </div> */}
 
                 {/* Right side icons */}
                 <div className="flex items-center gap-3">
