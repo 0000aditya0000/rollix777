@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Flame, ChevronRight } from "lucide-react";
 // @ts-expect-error: No type definitions for 'crypto-js'.
-declare module 'crypto-js';
+declare module "crypto-js";
 import CryptoJS from "crypto-js";
 import { useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
@@ -63,7 +63,7 @@ const ExclusiveGames: React.FC<ExclusiveGamesProps> = ({ title }) => {
             <Flame className="w-5 h-5 text-orange-500" />
             <h2 className="text-xl font-bold text-white">{title}</h2>
             <button
-              onClick={() => navigate('/games')}
+              onClick={() => navigate("/games")}
               className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1 ml-2"
             >
               View All
@@ -72,11 +72,8 @@ const ExclusiveGames: React.FC<ExclusiveGamesProps> = ({ title }) => {
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          {filteredGames.map((game) => (
-            <div
-              key={game.id}
-              className="flex flex-col items-center"
-            >
+          {filteredGames.slice(0, 9).map((game) => (
+            <div key={game.id} className="flex flex-col items-center">
               <div
                 onClick={() => launchGame(game.id)}
                 className="relative w-full h-[100px] bg-[#252547] rounded-xl border border-purple-500/10 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] mb-2 group"
@@ -107,7 +104,7 @@ const ExclusiveGames: React.FC<ExclusiveGamesProps> = ({ title }) => {
             <Flame className="w-5 h-5 text-orange-500" />
             <h2 className="text-xl font-bold text-white">{title}</h2>
             <button
-              onClick={() => navigate('/games')}
+              onClick={() => navigate("/games")}
               className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1 ml-2"
             >
               View All
@@ -148,7 +145,7 @@ const ExclusiveGames: React.FC<ExclusiveGamesProps> = ({ title }) => {
                   src={game.image}
                   alt={game.name}
                   className="w-full h-52 object-fill"
-                  style={{ objectPosition: 'center' }}
+                  style={{ objectPosition: "center" }}
                 />
                 {/* Play Button Overlay */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -173,4 +170,4 @@ const ExclusiveGames: React.FC<ExclusiveGamesProps> = ({ title }) => {
   );
 };
 
-export default ExclusiveGames; 
+export default ExclusiveGames;

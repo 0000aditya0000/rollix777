@@ -12,8 +12,9 @@ import {
   ChevronDown,
   Eye,
   X,
+  ArrowDown,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store";
 import { setWallets } from "../../slices/walletSlice";
@@ -23,6 +24,7 @@ import { toast } from "react-hot-toast";
 import { fetchUserAllData } from "../../lib/services/userService";
 import { getAllTransactions } from "../../lib/services/transactionService";
 import axiosInstance from "../../lib/utils/axiosInstance";
+import WithdrawModal from "../WithdrawModal.js";
 
 interface BankAccount {
   id: number;
@@ -38,6 +40,8 @@ interface BankAccount {
 
 const Wallet: React.FC = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const userId = Number(localStorage.getItem("userId")) || 0;
   const { wallets } = useSelector((state: RootState) => state.wallet);
   const { user } = useSelector((state: RootState) => state.auth);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -57,6 +61,23 @@ const Wallet: React.FC = () => {
   >("all");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+
+  async function fetchData() {
+    if (userId) {
+      try {
+        const data = await fetchUserWallets(userId);
+        if (data) {
+          dispatch(setWallets(data));
+        }
+      } catch (error) {
+        console.error("Error fetching wallet data:", error);
+      }
+    }
+  }
+  useEffect(() => {
+    fetchData();
+  }, [userId, dispatch]);
 
   const cryptoOptions = [
     { value: "btc", label: "Bitcoin (BTC)", symbol: "₿", color: "yellow" },
@@ -423,6 +444,22 @@ const Wallet: React.FC = () => {
           </button>
         </div>
 
+        <div className="flex justify-center gap-4 mb-10">
+          <button
+            onClick={() => navigate("/deposit")}
+            className="w-36 sm:w-44 py-3 px-6 bg-green-600 text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 rounded-md"
+          >
+            <span>Deposit</span>
+          </button>
+
+          <button
+            onClick={() => setIsWithdrawModalOpen(true)}
+            className="w-36 sm:w-44 py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 rounded-md"
+          >
+            <span>Withdraw</span>
+          </button>
+        </div>
+
         <div className="space-y-3 sm:space-y-4">
           {/* Balance Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -618,6 +655,19 @@ const Wallet: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {userId > 0 && (
+        <>
+          {/* <DepositModal /> */}
+          <WithdrawModal
+            isOpen={isWithdrawModalOpen}
+            onClose={() => setIsWithdrawModalOpen(false)}
+            mainBalance={Number(mainBalance)}
+            fetchData={fetchData}
+          />
+        </>
+      )}
 
       {/* Add the rejection modal */}
       {renderRejectionModal()}

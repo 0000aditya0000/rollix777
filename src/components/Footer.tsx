@@ -1,9 +1,9 @@
 import React from "react";
-import { 
-  Home, 
-  Gamepad2, 
-  Gift, 
-  User, 
+import {
+  Home,
+  Gamepad2,
+  Gift,
+  User,
   ExternalLink,
   Linkedin,
   MessageSquare,
@@ -16,14 +16,17 @@ import {
   Shield,
   HelpCircle,
   Phone,
-  Mail
+  Mail,
+  Wallet,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 
 const Footer: React.FC = () => {
-  const isLoggedIn = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const isLoggedIn = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
   const location = useLocation();
 
   // Define footer menu items by category
@@ -37,8 +40,8 @@ const Footer: React.FC = () => {
         { label: "Roulette", url: "/games" },
         { label: "Blackjack", url: "/games" },
         { label: "Poker", url: "/games" },
-        { label: "Promos & Competitions", url: "/promotions" }
-      ]
+        { label: "Promos & Competitions", url: "/promotions" },
+      ],
     },
     {
       title: "Sports",
@@ -50,8 +53,8 @@ const Footer: React.FC = () => {
         { label: "Tennis", url: "/games" },
         { label: "eSports", url: "/games" },
         { label: "Bet Bonuses", url: "/games" },
-        { label: "Sports Rules", url: "/games" }
-      ]
+        { label: "Sports Rules", url: "/games" },
+      ],
     },
     {
       title: "Support",
@@ -59,16 +62,28 @@ const Footer: React.FC = () => {
         { label: "Help Center", url: "/support", external: true },
         { label: "Gambling Helpline", url: "/support", external: true },
         { label: "Live Support", url: "/support" },
-      ]
+      ],
     },
     {
       title: "Contact",
       links: [
-        { label: "Email Support", url: "mailto:support@rollix777.com", icon: <Mail className="w-4 h-4" /> },
-        { label: "24/7 Support", url: "tel:+1234567890", icon: <Phone className="w-4 h-4" /> },
-        { label: "FAQ", url: "/support", icon: <HelpCircle className="w-4 h-4" /> },
-      ]
-    }
+        {
+          label: "Email Support",
+          url: "mailto:support@rollix777.com",
+          icon: <Mail className="w-4 h-4" />,
+        },
+        {
+          label: "24/7 Support",
+          url: "tel:+1234567890",
+          icon: <Phone className="w-4 h-4" />,
+        },
+        {
+          label: "FAQ",
+          url: "/support",
+          icon: <HelpCircle className="w-4 h-4" />,
+        },
+      ],
+    },
   ];
 
   return (
@@ -77,20 +92,88 @@ const Footer: React.FC = () => {
       <footer className="md:hidden fixed bottom-0 w-full max-w-[430px] bg-[#0F0F19]/90 backdrop-blur-lg border-t border-gray-800 z-30">
         <nav className="flex justify-around py-3 px-4">
           <Link to="/" className="flex flex-col items-center gap-1">
-            <Home className={`w-6 h-6 ${location.pathname === "/" ? "text-purple-500" : "text-gray-400"}`} />
-            <span className={`text-xs ${location.pathname === "/" ? "text-purple-500" : "text-gray-400"}`}>Home</span>
+            <Home
+              className={`w-6 h-6 ${
+                location.pathname === "/" ? "text-purple-500" : "text-gray-400"
+              }`}
+            />
+            <span
+              className={`text-xs ${
+                location.pathname === "/" ? "text-purple-500" : "text-gray-400"
+              }`}
+            >
+              Home
+            </span>
           </Link>
           <Link to="/games" className="flex flex-col items-center gap-1">
-            <Gamepad2 className={`w-6 h-6 ${location.pathname === "/games" ? "text-purple-500" : "text-gray-400"}`} />
-            <span className={`text-xs ${location.pathname === "/games" ? "text-purple-500" : "text-gray-400"}`}>Games</span>
+            <Gamepad2
+              className={`w-6 h-6 ${
+                location.pathname === "/games"
+                  ? "text-purple-500"
+                  : "text-gray-400"
+              }`}
+            />
+            <span
+              className={`text-xs ${
+                location.pathname === "/games"
+                  ? "text-purple-500"
+                  : "text-gray-400"
+              }`}
+            >
+              Games
+            </span>
+          </Link>
+          <Link to="/wallet" className="flex flex-col items-center gap-1">
+            <Wallet
+              className={`w-6 h-6 ${
+                location.pathname === "/wallet"
+                  ? "text-purple-500"
+                  : "text-gray-400"
+              }`}
+            />
+            <span
+              className={`text-xs ${
+                location.pathname === "/games"
+                  ? "text-purple-500"
+                  : "text-gray-400"
+              }`}
+            >
+              Wallet
+            </span>
           </Link>
           <Link to="/promotions" className="flex flex-col items-center gap-1">
-            <Gift className={`w-6 h-6 ${location.pathname === "/promotions" ? "text-purple-500" : "text-gray-400"}`} />
-            <span className={`text-xs ${location.pathname === "/promotions" ? "text-purple-500" : "text-gray-400"}`}>Promotions</span>
+            <Gift
+              className={`w-6 h-6 ${
+                location.pathname === "/promotions"
+                  ? "text-purple-500"
+                  : "text-gray-400"
+              }`}
+            />
+            <span
+              className={`text-xs ${
+                location.pathname === "/promotions"
+                  ? "text-purple-500"
+                  : "text-gray-400"
+              }`}
+            >
+              Promotions
+            </span>
           </Link>
           <Link to="/account" className="flex flex-col items-center gap-1">
-            <User className={`w-6 h-6 ${location.pathname === "/account" ? "text-purple-500" : "text-gray-400"}`} />
-            <span className={`text-xs ${location.pathname === "/account" ? "text-purple-500" : "text-gray-400"}`}>
+            <User
+              className={`w-6 h-6 ${
+                location.pathname === "/account"
+                  ? "text-purple-500"
+                  : "text-gray-400"
+              }`}
+            />
+            <span
+              className={`text-xs ${
+                location.pathname === "/account"
+                  ? "text-purple-500"
+                  : "text-gray-400"
+              }`}
+            >
               {isLoggedIn ? "Account" : "Login"}
             </span>
           </Link>
@@ -107,16 +190,28 @@ const Footer: React.FC = () => {
                 Rollix777
               </div>
               <div className="flex items-center gap-4">
-                <a href="#" className="p-2 rounded-lg bg-[#1A1A2E] hover:bg-purple-500/20 transition-colors">
+                <a
+                  href="#"
+                  className="p-2 rounded-lg bg-[#1A1A2E] hover:bg-purple-500/20 transition-colors"
+                >
                   <Facebook className="w-5 h-5 text-gray-400 hover:text-purple-400" />
                 </a>
-                <a href="#" className="p-2 rounded-lg bg-[#1A1A2E] hover:bg-purple-500/20 transition-colors">
+                <a
+                  href="#"
+                  className="p-2 rounded-lg bg-[#1A1A2E] hover:bg-purple-500/20 transition-colors"
+                >
                   <Twitter className="w-5 h-5 text-gray-400 hover:text-purple-400" />
                 </a>
-                <a href="#" className="p-2 rounded-lg bg-[#1A1A2E] hover:bg-purple-500/20 transition-colors">
+                <a
+                  href="#"
+                  className="p-2 rounded-lg bg-[#1A1A2E] hover:bg-purple-500/20 transition-colors"
+                >
                   <Instagram className="w-5 h-5 text-gray-400 hover:text-purple-400" />
                 </a>
-                <a href="#" className="p-2 rounded-lg bg-[#1A1A2E] hover:bg-purple-500/20 transition-colors">
+                <a
+                  href="#"
+                  className="p-2 rounded-lg bg-[#1A1A2E] hover:bg-purple-500/20 transition-colors"
+                >
                   <Youtube className="w-5 h-5 text-gray-400 hover:text-purple-400" />
                 </a>
               </div>
@@ -139,14 +234,16 @@ const Footer: React.FC = () => {
           <div className="grid grid-cols-4 gap-8">
             {footerCategories.map((category, index) => (
               <div key={index}>
-                <h3 className="text-white font-semibold mb-4 text-lg">{category.title}</h3>
+                <h3 className="text-white font-semibold mb-4 text-lg">
+                  {category.title}
+                </h3>
                 <ul className="space-y-3">
                   {category.links.map((link, linkIndex) => (
                     <li key={linkIndex}>
                       {link.external ? (
-                        <a 
-                          href={link.url} 
-                          target="_blank" 
+                        <a
+                          href={link.url}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-gray-400 hover:text-purple-400 text-sm flex items-center gap-2 transition-colors"
                         >
@@ -155,8 +252,8 @@ const Footer: React.FC = () => {
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       ) : (
-                        <Link 
-                          to={link.url} 
+                        <Link
+                          to={link.url}
                           className="text-gray-400 hover:text-purple-400 text-sm flex items-center gap-2 transition-colors"
                         >
                           {link.icon}
