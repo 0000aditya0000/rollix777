@@ -23,6 +23,9 @@ import { RootState } from "../store";
 import { setWallets } from "../slices/walletSlice";
 import { fetchUserWallets } from "../lib/services/WalletServices.js";
 import ActivityTracker from "./ActivityTracker.js";
+import TodaysEarningChart from "./TodaysEarningChart.js";
+import DisclaimerPage from "./Disclaimer.js";
+import Disclaimer from "./Disclaimer.js";
 
 const Dashboard = () => {
   // const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -99,6 +102,8 @@ const Dashboard = () => {
 
           <HotGames title="Hot Games" type="hot" />
           <ActivityTracker />
+          <TodaysEarningChart />
+          <Disclaimer />
         </div>
       </div>
 
@@ -213,6 +218,8 @@ const Dashboard = () => {
 
                   <HotGames title="Hot Games" type="hot" />
                   <ActivityTracker />
+                  <TodaysEarningChart />
+                  <Disclaimer />
                 </div>
               </div>
             </div>
