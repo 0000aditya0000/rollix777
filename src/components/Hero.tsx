@@ -47,8 +47,21 @@ const Hero: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<"login" | "register">(
+    "login"
+  ); // Add this state
   const gamesPerPage = 8;
   const navigate = useNavigate();
+
+  const handleLoginClick = () => {
+    setAuthModalMode("login");
+    setIsAuthModalOpen(true);
+  };
+
+  const handleRegisterClick = () => {
+    setAuthModalMode("register");
+    setIsAuthModalOpen(true);
+  };
 
   useEffect(() => {
     // Get 3 random games from each provider
@@ -187,8 +200,25 @@ const Hero: React.FC = () => {
         </div>
       )}
 
+      {/* Mobile Hero - login register buttons*/}
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={handleLoginClick}
+          className="w-36 sm:w-44 py-3 px-6 bg-green-600 text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 rounded-md"
+        >
+          <span>Login</span>
+        </button>
+
+        <button
+          onClick={handleRegisterClick}
+          className="w-36 sm:w-44 py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 rounded-md"
+        >
+          <span>Register</span>
+        </button>
+      </div>
+
       {/* Mobile Hero - Old Design */}
-      <section className="md:hidden pt-20 px-4 pb-12 bg-[#1A1A2E] relative overflow-hidden">
+      {/* <section className="md:hidden pt-20 px-4 pb-12 bg-[#1A1A2E] relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-purple-600/10 to-pink-600/10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl" />
@@ -238,7 +268,7 @@ const Hero: React.FC = () => {
             <span className="relative">Start Playing Now</span>
           </button>
         </div>
-      </section>
+      </section> */}
 
       {/* Desktop Hero - New Design */}
       <div className="hidden md:block min-h-screen bg-[#0F0F1E] ">
@@ -456,6 +486,7 @@ const Hero: React.FC = () => {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onLoginSuccess={handleLoginSuccess}
+        initialMode={authModalMode}
       />
 
       <style>

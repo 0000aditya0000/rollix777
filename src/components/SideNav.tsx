@@ -27,6 +27,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
   const navigate = useNavigate();
   if (!isOpen) return null;
   const name = localStorage.getItem("userName") || "User";
+  const userId = localStorage.getItem("userId");
 
   const menuItems = [
     { icon: <User size={20} />, label: "My Profile", path: "/profile" },
@@ -89,7 +90,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
               </div>
               <div>
                 <h3 className="text-white font-semibold">{name}</h3>
-                <p className="text-gray-400 text-sm">VIP Level 2</p>
+                <p className="text-gray-400 text-sm">{userId}</p>
               </div>
             </div>
           </div>
