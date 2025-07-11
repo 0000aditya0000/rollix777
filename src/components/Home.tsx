@@ -13,6 +13,8 @@ import ExclusiveGames from "./ExclusiveGames";
 import { Activity } from "lucide-react";
 import ActivityTracker from "./ActivityTracker";
 import ImageSlider from "./ImageSlider";
+import TodaysEarningChart from "./TodaysEarningChart";
+import Disclaimer from "./Disclaimer";
 
 const Home = () => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
@@ -59,6 +61,8 @@ const Home = () => {
             <Promotions />
             <Features />
             <ActivityTracker />
+            <TodaysEarningChart />
+            <Disclaimer />
           </main>
           <Footer />
 
