@@ -7,16 +7,16 @@ const Disclaimer: React.FC = () => {
       {/* Header with logos */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
         {/* Row 1 - Keep in one row on all screen sizes */}
-        <div className="flex items-center justify-start">
+        {/* <div className="flex items-center justify-start">
           <div className="text-red-400 font-bold text-xl">
             <img
-              src="https://ossimg.envyenvelope.com/daman/other/h5setting_20240423194834yt8f.png"
+              src="https://ossimg.envyenvelope.com/Rollix777/other/h5setting_20240423194834yt8f.png"
               alt="damn"
               className="h-8 w-auto sm:h-12 md:h-16 max-w-full"
             />
           </div>
-        </div>
-        <div className="flex justify-center">
+        </div> */}
+        {/* <div className="flex justify-center">
           <img
             className="h-12 w-12 sm:h-16 sm:w-16 md:h-24 md:w-24 object-contain"
             src="https://previews.123rf.com/images/grebeshkovmaxim/grebeshkovmaxim1906/grebeshkovmaxim190602077/125912569-adults-18-content-rating-symbol-sign-on-transparent-background.jpg"
@@ -26,12 +26,12 @@ const Disclaimer: React.FC = () => {
         <div className="flex justify-end">
           <div className="p-4">
             <img
-              src="https://damanlottery.net/assets/png/CStype3-7588d980.png"
+              src="https://Rollix777lottery.net/assets/png/CStype3-7588d980.png"
               alt="phone"
               className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 object-contain"
             />
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Row 2 */}
@@ -86,7 +86,7 @@ const Disclaimer: React.FC = () => {
         <div className="flex items-start gap-2">
           <span className="text-red-500 text-lg flex-shrink-0">♦</span>
           <p className="text-gray-300 leading-relaxed">
-            Welcome to Daman Games works with more than 10,000{" "}
+            Welcome to Rollix777 Games works with more than 10,000{" "}
             <span className="text-blue-400 underline">
               online live game dealers
             </span>{" "}
@@ -99,17 +99,17 @@ const Disclaimer: React.FC = () => {
         <div className="flex items-start gap-2">
           <span className="text-red-500 text-lg flex-shrink-0">♦</span>
           <p className="text-gray-300 leading-relaxed">
-            Welcome to Daman Games supports fast deposit and withdrawal, and
+            Welcome to Rollix777 Games supports fast deposit and withdrawal, and
             looks forward to your visit.
           </p>
         </div>
 
-        <div className="mt-6 space-y-2">
+        <div className="mt-6 space-y-12">
           <p className="text-red-500 text-sm font-medium">
             Gambling can be addictive, please play rationally.
           </p>
           <p className="text-red-500 text-sm font-medium">
-            Welcome to Daman Games only accepts customers above the age of 18.
+            Welcome to Rollix777 Games only accepts customers above the age of 18.
           </p>
         </div>
       </div>
