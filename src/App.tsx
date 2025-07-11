@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { useState } from "react";
 import Home from "./components/Home";
 import BigSmall from "./components/BigSmall";
 import Header from "./components/Header";
@@ -39,6 +40,8 @@ import Coupon from "./components/coupon/Coupon";
 import KYCVerification from "./pages/KYCVerification";
 import ErrorPage from "./components/ErrorPage";
 import DepositPage from "./components/DepositModal";
+import AuthModal from "./components/AuthModal"; // Add this import
+
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
   const location = useLocation();
@@ -57,10 +60,46 @@ const ConditionalHome: React.FC = () => {
   return userId ? <Dashboard /> : <Home />;
 };
 
+// Create a ProtectedRoute component that opens login modal
+const ProtectedRoute: React.FC<{
+  children: React.ReactNode;
+  onLoginRequired: () => void;
+}> = ({ children, onLoginRequired }) => {
+  const authenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
+
+  if (!authenticated) {
+    // Trigger login modal instead of showing error page
+    onLoginRequired();
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 function App() {
   const authenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
+
+  // Add state for controlling AuthModal
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<"login" | "register">(
+    "login"
+  );
+
+  // Function to handle login requirement
+  const handleLoginRequired = () => {
+    setAuthModalMode("login");
+    setIsAuthModalOpen(true);
+  };
+
+  // Function to handle successful login
+  const handleLoginSuccess = () => {
+    setIsAuthModalOpen(false);
+  };
+
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
@@ -84,95 +123,212 @@ function App() {
                       {/* Public Routes - Always accessible */}
                       <Route path="/" element={<ConditionalHome />} />
                       <Route path="/games" element={<AllGames />} />
-                      {/* <Route path="/featured=games" element={< />} /> */}
+                      <Route path="/hero" element={<Hero />} />
+                      <Route path="/features" element={<Features />} />
 
-                      {/* Protected Routes - Only accessible when authenticated */}
-                      {authenticated ? (
-                        <>
-                          <Route path="/deposit" element={<DepositPage />} />
-                          <Route
-                            path="/featured-games"
-                            element={
-                              <GameCarousel
-                                title="Featured Games"
-                                type="featured"
-                              />
-                            }
-                          />
-                          <Route
-                            path="/trending-games"
-                            element={
-                              <TrendingGames
-                                title="Trending Games"
-                                type="trending"
-                              />
-                            }
-                          />
-                          <Route
-                            path="/hot-games"
-                            element={<HotGames title="Hot Games" type="hot" />}
-                          />
-                          <Route path="/color-game" element={<ColorGame />} />
-                          <Route path="/bigsmall" element={<BigSmall />} />
-                          <Route path="/support" element={<HelpCenter />} />
-                          <Route path="/rewards" element={<Promotions />} />
-                          <Route path="/coupon" element={<Coupon />} />
-                          <Route
-                            path="/kyc-verification"
-                            element={<KYCVerification />}
-                          />
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route path="/account" element={<MyAccount />} />
-                          <Route path="/wallet" element={<Wallet />} />
-                          <Route path="/bet-history" element={<BetHistory />} />
+                      {/* Protected Routes - Wrapped with ProtectedRoute */}
+                      <Route
+                        path="/deposit"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <DepositPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/featured-games"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <GameCarousel
+                              title="Featured Games"
+                              type="featured"
+                            />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/trending-games"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <TrendingGames
+                              title="Trending Games"
+                              type="trending"
+                            />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/hot-games"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <HotGames title="Hot Games" type="hot" />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/color-game"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <ColorGame />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/bigsmall"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <BigSmall />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/support"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <HelpCenter />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/rewards"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Promotions />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/coupon"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Coupon />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/kyc-verification"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <KYCVerification />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/dashboard"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Dashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/account"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <MyAccount />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/wallet"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Wallet />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/bet-history"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <BetHistory />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                          {/* Profile Related Routes */}
-                          <Route path="/profile" element={<Profile />} />
-                          <Route
-                            path="/payment-methods"
-                            element={<PaymentMethods />}
-                          />
-                          <Route path="/settings" element={<Settings />} />
-                          <Route path="/security" element={<Security />} />
+                      {/* Profile Related Routes */}
+                      <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Profile />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/payment-methods"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <PaymentMethods />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Settings />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/security"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Security />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                          {/* Promotion & Referral Routes */}
-                          <Route path="/referrals" element={<Referrals />} />
-                          <Route
-                            path="/agent-program"
-                            element={<AgentProgram />}
-                          />
-                          <Route path="/team-report" element={<TeamReport />} />
-                          <Route
-                            path="/promotions"
-                            element={<AgentProgram />}
-                          />
-                          <Route
-                            path="/promotions/team-report"
-                            element={<TeamReport />}
-                          />
-                          <Route
-                            path="/promotions/commission-details"
-                            element={<CommissionDetails />}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          {/* Landing Page Components - Only shown when not authenticated */}
-                          <Route path="/hero" element={<Hero />} />
-                          <Route path="/features" element={<Features />} />
-                          {/* Show error page for protected routes when not authenticated */}
-                          <Route
-                            path="/*"
-                            element={
-                              <ErrorPage
-                                title="Authentication Required"
-                                message="Please login to access this page."
-                                showLoginButton={true}
-                              />
-                            }
-                          />
-                        </>
-                      )}
+                      {/* Promotion & Referral Routes */}
+                      <Route
+                        path="/referrals"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Referrals />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/agent-program"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <AgentProgram />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/team-report"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <TeamReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/promotions"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <AgentProgram />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/promotions/team-report"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <TeamReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/promotions/commission-details"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <CommissionDetails />
+                          </ProtectedRoute>
+                        }
+                      />
 
                       {/* Catch all route for undefined routes */}
                       <Route
@@ -189,6 +345,14 @@ function App() {
                   <Footer />
                 </div>
               </div>
+
+              {/* Auth Modal */}
+              <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                initialMode={authModalMode}
+                onLoginSuccess={handleLoginSuccess}
+              />
             </div>
           }
         />

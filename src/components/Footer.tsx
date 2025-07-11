@@ -133,7 +133,7 @@ const Footer: React.FC = () => {
             />
             <span
               className={`text-xs ${
-                location.pathname === "/games"
+                location.pathname === "/wallet"
                   ? "text-purple-500"
                   : "text-gray-400"
               }`}
