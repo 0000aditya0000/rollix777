@@ -89,94 +89,105 @@ const Footer: React.FC = () => {
   return (
     <>
       {/* Mobile Footer */}
-      <footer className="md:hidden fixed bottom-0 w-full max-w-[430px] bg-[#0F0F19]/90 backdrop-blur-lg border-t border-gray-800 z-30">
-        <nav className="flex justify-around py-3 px-4">
-          <Link to="/" className="flex flex-col items-center gap-1">
-            <Home
-              className={`w-6 h-6 ${
-                location.pathname === "/" ? "text-purple-500" : "text-gray-400"
-              }`}
-            />
-            <span
-              className={`text-xs ${
-                location.pathname === "/" ? "text-purple-500" : "text-gray-400"
-              }`}
-            >
-              Home
-            </span>
-          </Link>
-          <Link to="/games" className="flex flex-col items-center gap-1">
-            <Gamepad2
-              className={`w-6 h-6 ${
-                location.pathname === "/games"
-                  ? "text-purple-500"
-                  : "text-gray-400"
-              }`}
-            />
-            <span
-              className={`text-xs ${
-                location.pathname === "/games"
-                  ? "text-purple-500"
-                  : "text-gray-400"
-              }`}
-            >
-              Games
-            </span>
-          </Link>
-          <Link to="/wallet" className="flex flex-col items-center gap-1">
-            <Wallet
-              className={`w-6 h-6 ${
-                location.pathname === "/wallet"
-                  ? "text-purple-500"
-                  : "text-gray-400"
-              }`}
-            />
-            <span
-              className={`text-xs ${
-                location.pathname === "/wallet"
-                  ? "text-purple-500"
-                  : "text-gray-400"
-              }`}
-            >
-              Wallet
-            </span>
-          </Link>
-          <Link to="/promotions" className="flex flex-col items-center gap-1">
-            <Gift
-              className={`w-6 h-6 ${
-                location.pathname === "/promotions"
-                  ? "text-purple-500"
-                  : "text-gray-400"
-              }`}
-            />
-            <span
-              className={`text-xs ${
-                location.pathname === "/promotions"
-                  ? "text-purple-500"
-                  : "text-gray-400"
-              }`}
-            >
-              Promotions
-            </span>
-          </Link>
-          <Link to="/account" className="flex flex-col items-center gap-1">
-            <User
-              className={`w-6 h-6 ${
-                location.pathname === "/account"
-                  ? "text-purple-500"
-                  : "text-gray-400"
-              }`}
-            />
-            <span
-              className={`text-xs ${
-                location.pathname === "/account"
-                  ? "text-purple-500"
-                  : "text-gray-400"
-              }`}
-            >
-              {isLoggedIn ? "Account" : "Login"}
-            </span>
-          </Link>
+      <footer className="md:hidden fixed bottom-0 w-full max-w-[430px] bg-[#0F0F19]/90 backdrop-blur-lg border-t border-gray-800 z-30 rounded-t-2xl">
+        <nav className="relative flex justify-between items-end py-3 px-4">
+          {/* Left Items */}
+          <div className="flex w-2/5 justify-evenly">
+            <Link to="/" className="flex flex-col items-center gap-1">
+              <Home
+                className={`w-6 h-6 ${
+                  location.pathname === "/"
+                    ? "text-purple-500"
+                    : "text-gray-400"
+                }`}
+              />
+              <span
+                className={`text-xs ${
+                  location.pathname === "/"
+                    ? "text-purple-500"
+                    : "text-gray-400"
+                }`}
+              >
+                Home
+              </span>
+            </Link>
+            <Link to="/games" className="flex flex-col items-center gap-1">
+              <Gamepad2
+                className={`w-6 h-6 ${
+                  location.pathname === "/games"
+                    ? "text-purple-500"
+                    : "text-gray-400"
+                }`}
+              />
+              <span
+                className={`text-xs ${
+                  location.pathname === "/games"
+                    ? "text-purple-500"
+                    : "text-gray-400"
+                }`}
+              >
+                Games
+              </span>
+            </Link>
+          </div>
+
+          {/* Floating Wallet (no width set) */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-6 z-40 flex flex-col items-center">
+            <Link to="/wallet" className="flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center shadow-lg border-4 border-[#0F0F19] transition-transform duration-300 hover:scale-105">
+                <Wallet className="w-6 h-6 text-white" />
+              </div>
+              <span
+                className={`text-xs ${
+                  location.pathname === "/wallet"
+                    ? "text-purple-500 mb-2"
+                    : "text-gray-300 mb-2"
+                }`}
+              >
+                Wallet
+              </span>
+            </Link>
+          </div>
+
+          {/* Right Items */}
+          <div className="flex w-2/5 justify-evenly">
+            <Link to="/promotions" className="flex flex-col items-center gap-1">
+              <Gift
+                className={`w-6 h-6 ${
+                  location.pathname === "/promotions"
+                    ? "text-purple-500"
+                    : "text-gray-400"
+                }`}
+              />
+              <span
+                className={`text-xs ${
+                  location.pathname === "/promotions"
+                    ? "text-purple-500"
+                    : "text-gray-400"
+                }`}
+              >
+                Promotions
+              </span>
+            </Link>
+            <Link to="/account" className="flex flex-col items-center gap-1">
+              <User
+                className={`w-6 h-6 ${
+                  location.pathname === "/account"
+                    ? "text-purple-500"
+                    : "text-gray-400"
+                }`}
+              />
+              <span
+                className={`text-xs ${
+                  location.pathname === "/account"
+                    ? "text-purple-500"
+                    : "text-gray-400"
+                }`}
+              >
+                {isLoggedIn ? "Account" : "Login"}
+              </span>
+            </Link>
+          </div>
         </nav>
       </footer>
 

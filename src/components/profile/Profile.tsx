@@ -138,6 +138,86 @@ const Profile = () => {
     });
   };
 
+  const uploadToCloudinary = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "kyc-presets");
+    try {
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dwytm0sdm/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (data.secure_url) {
+        return data.secure_url;
+      } else {
+        console.error("Cloudinary upload failed:", data);
+        return null;
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      return null;
+    }
+  };
+
+  // const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   // Validate file type
+  //   if (!file.type.startsWith("image/")) {
+  //     setToast({
+  //       message: "Please select a valid image file",
+  //       type: "error",
+  //     });
+  //     return;
+  //   }
+
+  //   // Validate file size (max 5MB)
+  //   if (file.size > 5 * 1024 * 1024) {
+  //     setToast({
+  //       message: "Image size should be less than 5MB",
+  //       type: "error",
+  //     });
+  //     return;
+  //   }
+
+  //   setIsUploading(true);
+  //   try {
+  //     // Compress image first
+  //     const compressedBlob = await compressImage(file);
+
+  //     // Convert compressed image to base64
+  //     const base64Image = await convertToBase64(compressedBlob);
+
+  //     // Update formData with base64 image
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       image: base64Image,
+  //     }));
+
+  //     // Update profile image display
+  //     setProfileImage(base64Image);
+
+  //     setIsUploading(false);
+  //     setToast({
+  //       message: "Profile picture updated successfully",
+  //       type: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error uploading image:", error);
+  //     setIsUploading(false);
+  //     setToast({
+  //       message: "Failed to upload profile picture",
+  //       type: "error",
+  //     });
+  //   }
+  // };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -162,33 +242,40 @@ const Profile = () => {
 
     setIsUploading(true);
     try {
-      // Compress image first
+      // Compress the image
       const compressedBlob = await compressImage(file);
 
-      // Convert compressed image to base64
-      const base64Image = await convertToBase64(compressedBlob);
+      // Convert the blob to File so it can be sent to Cloudinary
+      const compressedFile = new File([compressedBlob], file.name, {
+        type: "image/jpeg",
+      });
 
-      // Update formData with base64 image
+      // Upload to Cloudinary
+      const cloudinaryUrl = await uploadToCloudinary(compressedFile);
+
+      if (!cloudinaryUrl) {
+        throw new Error("Image upload to Cloudinary failed");
+      }
+
+      // Save Cloudinary image URL to formData and preview
       setFormData((prev) => ({
         ...prev,
-        image: base64Image,
+        image: cloudinaryUrl,
       }));
+      setProfileImage(cloudinaryUrl);
 
-      // Update profile image display
-      setProfileImage(base64Image);
-
-      setIsUploading(false);
       setToast({
         message: "Profile picture updated successfully",
         type: "success",
       });
     } catch (error) {
       console.error("Error uploading image:", error);
-      setIsUploading(false);
       setToast({
         message: "Failed to upload profile picture",
         type: "error",
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
