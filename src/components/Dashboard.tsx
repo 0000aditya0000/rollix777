@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setWallets } from "../slices/walletSlice";
 import { fetchUserWallets } from "../lib/services/WalletServices.js";
+import ActivityTracker from "./ActivityTracker.js";
 
 const Dashboard = () => {
   // const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -97,6 +98,7 @@ const Dashboard = () => {
           <TrendingGames title="Trending Games" type="trending" />
 
           <HotGames title="Hot Games" type="hot" />
+          <ActivityTracker />
         </div>
       </div>
 
@@ -210,6 +212,7 @@ const Dashboard = () => {
                   <TrendingGames title="Trending Games" type="trending" />
 
                   <HotGames title="Hot Games" type="hot" />
+                  <ActivityTracker />
                 </div>
               </div>
             </div>
