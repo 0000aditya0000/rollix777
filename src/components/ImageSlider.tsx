@@ -57,8 +57,20 @@ const ImageSlider = () => {
             alt={`Slide ${currentImageIndex + 1}`}
             className="w-full h-full object-cover"
           />
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full"
+          >
+            ←
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full"
+          >
+            →
+          </button>
           {/* Navigation Dots */}
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
+          {/* <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
             {images.map((_, index) => (
               <button
                 key={index}
@@ -68,7 +80,7 @@ const ImageSlider = () => {
                 onClick={() => setCurrentImageIndex(index)}
               />
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
 

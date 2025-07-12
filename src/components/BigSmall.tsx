@@ -540,9 +540,11 @@ const BigSmall = () => {
                     setActiveTab(duration);
                   }}
                 >
-                  {duration}
-                  <div className="text-sm mt-1">
-                    {formatTime(timers[duration])}
+                  <div className="flex flex-col items-center justify-center">
+                    <span>{duration}</span>
+                    <span className="text-sm mt-1">
+                      {formatTime(timers[duration])}
+                    </span>
                   </div>
                 </button>
               ))}
@@ -693,14 +695,14 @@ const BigSmall = () => {
               </h2>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto max-w-full">
+              <table className="w-full table-fixed text-sm sm:text-base">
                 <thead>
                   <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
-                    <th className="py-4 px-6 font-medium">Period</th>
-                    <th className="py-4 px-6 font-medium">Number</th>
-                    <th className="py-4 px-6 font-medium">Result</th>
-                    <th className="py-4 px-6 font-medium">Size</th>
+                    <th className="py-4 px-6 sm:py-4 sm:px-6">Period</th>
+                    <th className="py-4 px-6 sm:py-4 sm:px-6">Number</th>
+                    <th className="py-4 px-6 sm:py-4 sm:px-6">Result</th>
+                    <th className="py-4 px-6 sm:py-4 sm:px-6">Size</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -710,16 +712,20 @@ const BigSmall = () => {
                         key={index}
                         className="border-b border-purple-500/10 text-white hover:bg-purple-500/5"
                       >
-                        <td className="py-4 px-4">{record.period_number}</td>
-                        <td className="py-4 px-4">{record.result_number}</td>
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-4 sm:py-4 sm:px-4">
+                          {record.period_number}
+                        </td>
+                        <td className="py-4 px-4 sm:py-4 sm:px-4">
+                          {record.result_number}
+                        </td>
+                        <td className="py-4 px-4 sm:py-4 sm:px-4">
                           {record.result_color === "voilet"
                             ? "🟣"
                             : record.result_color === "green"
                             ? "🟢"
                             : "🔴"}
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-4 sm:py-4 sm:px-4">
                           {record.result_size?.toUpperCase() || ""}
                         </td>
                       </tr>
@@ -739,13 +745,13 @@ const BigSmall = () => {
             </div>
 
             {/* Pagination */}
-            <div className="p-4 border-t border-purple-500/10 flex justify-between items-center">
+            <div className="p-4 border-t border-purple-500/10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <p className="text-gray-400 text-sm">
                 Showing {indexOfFirstRecord + 1}-
                 {Math.min(indexOfLastRecord, records.length)} of{" "}
                 {records.length} records
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2">
                 <button
                   className="bg-gradient-to-r from-purple-600 to-pink-600 py-1 px-3 border border-purple-500/20 rounded-lg text-gray-200 hover:text-gray-400 transition-colors"
                   disabled={currentPage === 1}
@@ -802,7 +808,14 @@ const BigSmall = () => {
       {(selectedNumber !== null || selectedColor || selectedSize) && (
         <>
           {/* Mobile Design - Bottom Sheet */}
-          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity md:hidden" onClick={() => { setSelectedNumber(null); setSelectedColor(""); setSelectedSize(""); }} />
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity md:hidden"
+            onClick={() => {
+              setSelectedNumber(null);
+              setSelectedColor("");
+              setSelectedSize("");
+            }}
+          />
           <div className="fixed bottom-0 left-0 w-full z-50 flex justify-center animate-slideUp md:hidden">
             <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-t-2xl shadow-2xl overflow-hidden border-t-4 border-purple-500/40">
               {/* Drag handle */}
@@ -811,19 +824,24 @@ const BigSmall = () => {
               </div>
               {/* Header */}
               <div className="flex flex-col items-center px-5 pt-2 pb-3 border-b border-purple-500/10">
-                <span className="text-xs text-gray-300 font-semibold mb-1">WinGo {activeTab}</span>
+                <span className="text-xs text-gray-300 font-semibold mb-1">
+                  WinGo {activeTab}
+                </span>
                 <h2
                   className={`text-base font-bold bg-[#1A1A2E] rounded-lg px-4 py-1 mb-1 
-                    ${selectedColor === 'green' ? 'text-green-400' : ''}
-                    ${selectedColor === 'red' ? 'text-red-400' : ''}
-                    ${selectedColor === 'voilet' ? 'text-purple-400' : ''}
-                    ${selectedColor === '' ? 'text-white' : ''}
+                    ${selectedColor === "green" ? "text-green-400" : ""}
+                    ${selectedColor === "red" ? "text-red-400" : ""}
+                    ${selectedColor === "voilet" ? "text-purple-400" : ""}
+                    ${selectedColor === "" ? "text-white" : ""}
                   `}
                 >
                   {selectedNumber !== null
                     ? `Select ${selectedNumber}`
                     : selectedColor
-                    ? `Select ${selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1)}`
+                    ? `Select ${
+                        selectedColor.charAt(0).toUpperCase() +
+                        selectedColor.slice(1)
+                      }`
                     : `Select ${selectedSize}`}
                 </h2>
               </div>
@@ -831,13 +849,19 @@ const BigSmall = () => {
               <div className="px-5 py-4 space-y-4">
                 {/* Balance & Quick Amounts */}
                 <div>
-                  <label className="text-sm text-gray-300 font-semibold mb-1 block">Balance</label>
+                  <label className="text-sm text-gray-300 font-semibold mb-1 block">
+                    Balance
+                  </label>
                   <div className="flex gap-2 mb-2">
                     {[10, 50, 100, 1000].map((amt) => (
                       <button
                         key={amt}
                         type="button"
-                        className={`px-3 py-1 rounded-lg font-bold text-sm border transition-colors ${contractMoney === amt ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-600" : "bg-[#18182a] text-purple-300 border-purple-500/30 hover:bg-purple-500/20"}`}
+                        className={`px-3 py-1 rounded-lg font-bold text-sm border transition-colors ${
+                          contractMoney === amt
+                            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-600"
+                            : "bg-[#18182a] text-purple-300 border-purple-500/30 hover:bg-purple-500/20"
+                        }`}
                         onClick={() => setContractMoney(amt)}
                       >
                         {amt}
@@ -862,7 +886,9 @@ const BigSmall = () => {
                   />
                 </div>
                 {/* Total Amount Paragraph */}
-                <p className="text-base font-semibold text-purple-300 mt-2">Total amount: ₹{contractMoney || 0}</p>
+                <p className="text-base font-semibold text-purple-300 mt-2">
+                  Total amount: ₹{contractMoney || 0}
+                </p>
                 {/* I agree and rules */}
                 <div className="flex items-center mt-2">
                   <div
@@ -879,7 +905,10 @@ const BigSmall = () => {
                     className="text-sm text-gray-300 cursor-pointer"
                     onClick={() => setAgreed(!agreed)}
                   >
-                    I agree <span className="text-purple-400">terms and conditions</span>
+                    I agree{" "}
+                    <span className="text-purple-400">
+                      terms and conditions
+                    </span>
                   </label>
                 </div>
               </div>
@@ -913,7 +942,14 @@ const BigSmall = () => {
           </div>
 
           {/* Desktop Design - Centered Modal */}
-          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity hidden md:flex" onClick={() => { setSelectedNumber(null); setSelectedColor(""); setSelectedSize(""); }} />
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity hidden md:flex"
+            onClick={() => {
+              setSelectedNumber(null);
+              setSelectedColor("");
+              setSelectedSize("");
+            }}
+          />
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 hidden md:flex">
             <div className="relative w-full max-w-md bg-gradient-to-b from-[#252547] to-[#1A1A2E] rounded-2xl shadow-2xl overflow-hidden border border-purple-500/40">
               {/* Close button */}
@@ -930,19 +966,24 @@ const BigSmall = () => {
               </button>
               {/* Header */}
               <div className="flex flex-col items-center px-5 pt-6 pb-4 border-b border-purple-500/10">
-                <span className="text-sm text-gray-300 font-semibold mb-2">WinGo {activeTab}</span>
+                <span className="text-sm text-gray-300 font-semibold mb-2">
+                  WinGo {activeTab}
+                </span>
                 <h2
                   className={`text-lg font-bold bg-[#1A1A2E] rounded-lg px-4 py-2 mb-2 
-                    ${selectedColor === 'green' ? 'text-green-400' : ''}
-                    ${selectedColor === 'red' ? 'text-red-400' : ''}
-                    ${selectedColor === 'voilet' ? 'text-purple-400' : ''}
-                    ${selectedColor === '' ? 'text-white' : ''}
+                    ${selectedColor === "green" ? "text-green-400" : ""}
+                    ${selectedColor === "red" ? "text-red-400" : ""}
+                    ${selectedColor === "voilet" ? "text-purple-400" : ""}
+                    ${selectedColor === "" ? "text-white" : ""}
                   `}
                 >
                   {selectedNumber !== null
                     ? `Select ${selectedNumber}`
                     : selectedColor
-                    ? `Select ${selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1)}`
+                    ? `Select ${
+                        selectedColor.charAt(0).toUpperCase() +
+                        selectedColor.slice(1)
+                      }`
                     : `Select ${selectedSize}`}
                 </h2>
               </div>
@@ -950,13 +991,19 @@ const BigSmall = () => {
               <div className="px-6 py-6 space-y-4">
                 {/* Balance & Quick Amounts */}
                 <div>
-                  <label className="text-sm text-gray-300 font-semibold mb-2 block">Balance</label>
+                  <label className="text-sm text-gray-300 font-semibold mb-2 block">
+                    Balance
+                  </label>
                   <div className="flex gap-2 mb-3">
                     {[10, 50, 100, 1000].map((amt) => (
                       <button
                         key={amt}
                         type="button"
-                        className={`px-4 py-2 rounded-lg font-bold text-sm border transition-colors ${contractMoney === amt ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-600" : "bg-[#18182a] text-purple-300 border-purple-500/30 hover:bg-purple-500/20"}`}
+                        className={`px-4 py-2 rounded-lg font-bold text-sm border transition-colors ${
+                          contractMoney === amt
+                            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-600"
+                            : "bg-[#18182a] text-purple-300 border-purple-500/30 hover:bg-purple-500/20"
+                        }`}
                         onClick={() => setContractMoney(amt)}
                       >
                         {amt}
@@ -981,7 +1028,9 @@ const BigSmall = () => {
                   />
                 </div>
                 {/* Total Amount Paragraph */}
-                <p className="text-base font-semibold text-purple-300">Total amount: ₹{contractMoney || 0}</p>
+                <p className="text-base font-semibold text-purple-300">
+                  Total amount: ₹{contractMoney || 0}
+                </p>
                 {/* I agree and rules */}
                 <div className="flex items-center">
                   <div
@@ -998,7 +1047,10 @@ const BigSmall = () => {
                     className="text-sm text-gray-300 cursor-pointer"
                     onClick={() => setAgreed(!agreed)}
                   >
-                    I agree <span className="text-purple-400">terms and conditions</span>
+                    I agree{" "}
+                    <span className="text-purple-400">
+                      terms and conditions
+                    </span>
                   </label>
                 </div>
               </div>
@@ -1053,40 +1105,73 @@ const BigSmall = () => {
             </div>
             {/* Header */}
             <div className="flex flex-col items-center pt-14 pb-2">
-              <h2 className="text-2xl font-bold text-green-100 mb-2 drop-shadow">Congratulations!</h2>
+              <h2 className="text-2xl font-bold text-green-100 mb-2 drop-shadow">
+                Congratulations!
+              </h2>
               {/* Lottery results tags */}
               <div className="flex gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-600 text-white shadow">
-                  {result?.result?.winning_color ? result.result.winning_color.charAt(0).toUpperCase() + result.result.winning_color.slice(1) : "-"}
+                  {result?.result?.winning_color
+                    ? result.result.winning_color.charAt(0).toUpperCase() +
+                      result.result.winning_color.slice(1)
+                    : "-"}
                 </span>
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-400 text-white shadow">
                   {result?.result?.winning_number ?? "-"}
                 </span>
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-300 text-white shadow">
-                  {result?.result?.winning_size ? result.result.winning_size.toUpperCase() : "-"}
+                  {result?.result?.winning_size
+                    ? result.result.winning_size.toUpperCase()
+                    : "-"}
                 </span>
               </div>
               <div className="text-xs text-green-200 mb-2">
-                Period: WinGo {result?.duration ?? activeTab} · {result?.period_number ?? "-"}
+                Period: WinGo {result?.duration ?? activeTab} ·{" "}
+                {result?.period_number ?? "-"}
               </div>
             </div>
             {/* WIN ticket area */}
-            <div className="relative flex flex-col items-center bg-gradient-to-b from-white/95 to-green-100/80 mx-6 mt-2 mb-4 shadow-lg rounded-2xl" style={{ boxShadow: '0 8px 32px 0 rgba(31, 135, 31, 0.15)' }}>
+            <div
+              className="relative flex flex-col items-center bg-gradient-to-b from-white/95 to-green-100/80 mx-6 mt-2 mb-4 shadow-lg rounded-2xl"
+              style={{ boxShadow: "0 8px 32px 0 rgba(31, 135, 31, 0.15)" }}
+            >
               <div className="w-full flex flex-col items-center py-8 px-2">
-                <div className="text-4xl font-extrabold text-green-700 mb-2 tracking-wider uppercase" style={{ fontFamily: 'monospace, sans-serif', letterSpacing: '0.1em' }}>WIN</div>
-                <div className="text-2xl font-bold text-green-600 mb-1">₹{betHistory.amountReceived}</div>
+                <div
+                  className="text-4xl font-extrabold text-green-700 mb-2 tracking-wider uppercase"
+                  style={{
+                    fontFamily: "monospace, sans-serif",
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  WIN
+                </div>
+                <div className="text-2xl font-bold text-green-600 mb-1">
+                  ₹{betHistory.amountReceived}
+                </div>
                 <div className="text-xs text-green-400 mt-1">
-                  Period: WinGo {result?.duration ?? activeTab} · {result?.period_number ?? "-"}
+                  Period: WinGo {result?.duration ?? activeTab} ·{" "}
+                  {result?.period_number ?? "-"}
                 </div>
               </div>
               {/* Printout wavy SVG at the bottom */}
-              <svg viewBox="0 0 320 20" width="100%" height="20" className="block" style={{ display: 'block' }}>
-                <path d="M0 10 Q 20 20 40 10 T 80 10 T 120 10 T 160 10 T 200 10 T 240 10 T 280 10 T 320 10 V20 H0Z" fill="#fff" />
+              <svg
+                viewBox="0 0 320 20"
+                width="100%"
+                height="20"
+                className="block"
+                style={{ display: "block" }}
+              >
+                <path
+                  d="M0 10 Q 20 20 40 10 T 80 10 T 120 10 T 160 10 T 200 10 T 240 10 T 280 10 T 320 10 V20 H0Z"
+                  fill="#fff"
+                />
               </svg>
             </div>
             {/* Auto close message */}
             <div className="flex items-center justify-center pb-4">
-              <span className="text-xs text-green-200">3 seconds auto close</span>
+              <span className="text-xs text-green-200">
+                3 seconds auto close
+              </span>
             </div>
           </div>
         </div>
@@ -1111,34 +1196,63 @@ const BigSmall = () => {
             </div>
             {/* Header */}
             <div className="flex flex-col items-center pt-14 pb-2">
-              <h2 className="text-2xl font-bold text-red-100 mb-2 drop-shadow">Sorry, you lost!</h2>
+              <h2 className="text-2xl font-bold text-red-100 mb-2 drop-shadow">
+                Sorry, you lost!
+              </h2>
               {/* Lottery results tags */}
               <div className="flex gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-red-600 text-white shadow">
-                  {result?.result?.winning_color ? result.result.winning_color.charAt(0).toUpperCase() + result.result.winning_color.slice(1) : "-"}
+                  {result?.result?.winning_color
+                    ? result.result.winning_color.charAt(0).toUpperCase() +
+                      result.result.winning_color.slice(1)
+                    : "-"}
                 </span>
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-red-400 text-white shadow">
                   {result?.result?.winning_number ?? "-"}
                 </span>
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-red-300 text-white shadow">
-                  {result?.result?.winning_size ? result.result.winning_size.toUpperCase() : "-"}
+                  {result?.result?.winning_size
+                    ? result.result.winning_size.toUpperCase()
+                    : "-"}
                 </span>
               </div>
               <div className="text-xs text-red-200 mb-2">
-                Period: WinGo {result?.duration ?? activeTab} · {result?.period_number ?? "-"}
+                Period: WinGo {result?.duration ?? activeTab} ·{" "}
+                {result?.period_number ?? "-"}
               </div>
             </div>
             {/* LOSS ticket area */}
-            <div className="relative flex flex-col items-center bg-gradient-to-b from-white/95 to-red-100/80 mx-6 mt-2 mb-4 shadow-lg rounded-2xl" style={{ boxShadow: '0 8px 32px 0 rgba(135, 31, 31, 0.15)' }}>
+            <div
+              className="relative flex flex-col items-center bg-gradient-to-b from-white/95 to-red-100/80 mx-6 mt-2 mb-4 shadow-lg rounded-2xl"
+              style={{ boxShadow: "0 8px 32px 0 rgba(135, 31, 31, 0.15)" }}
+            >
               <div className="w-full flex flex-col items-center py-8 px-2">
-                <div className="text-4xl font-extrabold text-red-700 mb-2 tracking-wider uppercase" style={{ fontFamily: 'monospace, sans-serif', letterSpacing: '0.1em' }}>LOSS</div>
+                <div
+                  className="text-4xl font-extrabold text-red-700 mb-2 tracking-wider uppercase"
+                  style={{
+                    fontFamily: "monospace, sans-serif",
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  LOSS
+                </div>
                 <div className="text-xs text-red-400 mt-1">
-                  Period: WinGo {result?.duration ?? activeTab} · {result?.period_number ?? "-"}
+                  Period: WinGo {result?.duration ?? activeTab} ·{" "}
+                  {result?.period_number ?? "-"}
                 </div>
               </div>
               {/* Printout wavy SVG at the bottom */}
-              <svg viewBox="0 0 320 20" width="100%" height="20" className="block" style={{ display: 'block' }}>
-                <path d="M0 10 Q 20 20 40 10 T 80 10 T 120 10 T 160 10 T 200 10 T 240 10 T 280 10 T 320 10 V20 H0Z" fill="#fff" />
+              <svg
+                viewBox="0 0 320 20"
+                width="100%"
+                height="20"
+                className="block"
+                style={{ display: "block" }}
+              >
+                <path
+                  d="M0 10 Q 20 20 40 10 T 80 10 T 120 10 T 160 10 T 200 10 T 240 10 T 280 10 T 320 10 V20 H0Z"
+                  fill="#fff"
+                />
               </svg>
             </div>
             {/* Auto close message */}
