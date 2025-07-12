@@ -14,81 +14,106 @@ const dummyEarners: EarnerInfo[] = [
     id: 1,
     name: "Jai***ram",
     amount: "₹10,854,811.70",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7MMIrBlBJttU3237QobKx5By7QgIfFgI2OQ&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Max",
     position: 1,
   },
   {
     id: 2,
     name: "Mem***MDG",
     amount: "₹5,225,360.00",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8sy7JvYpoKIwKis7zk8Huz1bDxtGpTncW8w&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Anna",
     position: 2,
   },
   {
     id: 3,
     name: "Mem***PX0",
     amount: "₹6,754,080.00",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQSxRDvb_G515i5hCZaaoSViRoOuLiWIk1qQ&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Leo",
     position: 3,
   },
   {
     id: 4,
     name: "Muk***a g",
     amount: "₹4,666,480.00",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-neIT6-7zedVUulMbP40efpaGFTPMMvBJkA&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Zara",
     position: 4,
   },
   {
     id: 5,
     name: "Mem***MF0",
     amount: "₹4,312,668.70",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHAN3CZJT_FlacY3P9aGZzotykJM5Le1obvQ&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Raj",
     position: 5,
   },
   {
     id: 6,
     name: "Mem***B4A",
     amount: "₹4,078,857.15",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQN4Pj-AOK8UK5ohl0ioLzF9E_3Ws0INieRVA&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Eva",
     position: 6,
   },
   {
     id: 7,
     name: "Mem***FTW",
     amount: "₹3,671,707.23",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7MMIrBlBJttU3237QobKx5By7QgIfFgI2OQ&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Tom",
     position: 7,
   },
   {
     id: 8,
     name: "Mem***MYV",
     amount: "₹3,507,787.65",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8sy7JvYpoKIwKis7zk8Huz1bDxtGpTncW8w&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Ivy",
     position: 8,
   },
   {
     id: 9,
     name: "Mem***HRM",
     amount: "₹3,267,439.80",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQSxRDvb_G515i5hCZaaoSViRoOuLiWIk1qQ&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Rocky",
     position: 9,
   },
   {
     id: 10,
     name: "Mem***NG",
     amount: "₹3,096,002.28",
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-neIT6-7zedVUulMbP40efpaGFTPMMvBJkA&s",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Nina",
     position: 10,
+  },
+  {
+    id: 11,
+    name: "Aka***sha",
+    amount: "₹2,874,910.45",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Omar",
+    position: 11,
+  },
+  {
+    id: 12,
+    name: "Roh***hit",
+    amount: "₹2,556,208.90",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Gina",
+    position: 12,
+  },
+  {
+    id: 13,
+    name: "San***jana",
+    amount: "₹2,147,604.30",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Sam",
+    position: 13,
+  },
+  {
+    id: 14,
+    name: "Ady***tan",
+    amount: "₹1,965,340.10",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Vik",
+    position: 14,
+  },
+  {
+    id: 15,
+    name: "Ree***sha",
+    amount: "₹1,852,109.85",
+    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Ria",
+    position: 15,
   },
 ];
 

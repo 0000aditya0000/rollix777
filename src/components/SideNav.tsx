@@ -89,7 +89,9 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
                 {name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h3 className="text-white font-semibold">{name}</h3>
+                <h3 className="text-white font-semibold">
+                  {name ? name : "Welcome Player"}
+                </h3>
                 <p className="text-gray-400 text-sm">{userId}</p>
               </div>
             </div>

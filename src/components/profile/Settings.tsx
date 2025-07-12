@@ -1,6 +1,18 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Bell, Lock, Moon, Globe, Shield, X, EyeOff, Eye, Phone, Mail } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import {
+  ArrowLeft,
+  Bell,
+  Lock,
+  Moon,
+  Globe,
+  Shield,
+  X,
+  EyeOff,
+  Eye,
+  Phone,
+  Mail,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import { updatePassword } from "../../lib/services/securityService.js";
 
 const Settings = () => {
@@ -8,25 +20,25 @@ const Settings = () => {
     email: true,
     push: true,
     promotions: false,
-    security: true
+    security: true,
   });
 
   const [darkMode, setDarkMode] = useState(true);
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState("en");
   const [PasswordPopup, setPasswordPopup] = useState(false);
   const [TwoFactorPopup, setTwoFactorPopup] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
-  const [currentPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [currentPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       const userId = localStorage.getItem("userId");
@@ -34,19 +46,22 @@ const Settings = () => {
         throw new Error("User ID not found. Please log in again.");
       }
 
-      const response = await updatePassword(userId, { currentPassword, newPassword });
+      const response = await updatePassword(userId, {
+        currentPassword,
+        newPassword,
+      });
       console.log("Password updated successfully:", response);
-      setSuccess('Password updated successfully!');
+      setSuccess("Password updated successfully!");
 
-      setOldPassword('');
-      setNewPassword('');
+      setOldPassword("");
+      setNewPassword("");
       setTimeout(() => {
         setPasswordPopup(false);
-        setSuccess('');
+        setSuccess("");
       }, 1500);
     } catch (error: any) {
       console.error("Error updating password:", error);
-      setError(error.message || 'Failed to update password. Please try again.');
+      setError(error.message || "Failed to update password. Please try again.");
     }
   };
 
@@ -64,8 +79,12 @@ const Settings = () => {
                 <ArrowLeft size={22} />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Settings</h1>
-                <p className="text-gray-400 text-sm mt-0.5">Manage your preferences</p>
+                <h1 className="text-2xl font-bold text-white tracking-tight">
+                  Settings
+                </h1>
+                <p className="text-gray-400 text-sm mt-0.5">
+                  Manage your preferences
+                </p>
               </div>
             </div>
           </div>
@@ -76,7 +95,7 @@ const Settings = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <div className="space-y-4 sm:space-y-6">
           {/* Notifications Card */}
-          <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
+          {/* <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
             <div className="p-4 sm:p-6 border-b border-purple-500/10">
               <div className="flex items-center gap-3 sm:gap-4">
                 <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg sm:rounded-xl">
@@ -112,12 +131,12 @@ const Settings = () => {
                 ))}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Settings Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Appearance Card */}
-            <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
+            {/* <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
               <div className="p-4 sm:p-6 border-b border-purple-500/10">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg sm:rounded-xl">
@@ -148,18 +167,22 @@ const Settings = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Language Card */}
-            <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
+            {/* <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
               <div className="p-4 sm:p-6 border-b border-purple-500/10">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg sm:rounded-xl">
                     <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-white">Language</h2>
-                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Select your language</p>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">
+                      Language
+                    </h2>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">
+                      Select your language
+                    </p>
                   </div>
                 </div>
               </div>
@@ -177,7 +200,7 @@ const Settings = () => {
                   </select>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Security Card */}
             <div className="bg-[#1f1f3a] rounded-xl sm:rounded-2xl overflow-hidden">
@@ -187,8 +210,12 @@ const Settings = () => {
                     <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-white">Security</h2>
-                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Manage security</p>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">
+                      Security
+                    </h2>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">
+                      Manage security
+                    </p>
                   </div>
                 </div>
               </div>
@@ -203,8 +230,12 @@ const Settings = () => {
                         <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                       </div>
                       <div>
-                        <h3 className="text-white text-sm sm:text-base font-medium">Password</h3>
-                        <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Change password</p>
+                        <h3 className="text-white text-sm sm:text-base font-medium">
+                          Password
+                        </h3>
+                        <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">
+                          Change password
+                        </p>
                       </div>
                     </div>
                   </button>
@@ -217,8 +248,12 @@ const Settings = () => {
                         <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                       </div>
                       <div>
-                        <h3 className="text-white text-sm sm:text-base font-medium">Two-Factor</h3>
-                        <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Enable 2FA</p>
+                        <h3 className="text-white text-sm sm:text-base font-medium">
+                          Two-Factor
+                        </h3>
+                        <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">
+                          Enable 2FA
+                        </p>
                       </div>
                     </div>
                   </button>
@@ -228,9 +263,11 @@ const Settings = () => {
           </div>
 
           {/* Version Info */}
-          <div className="text-center">
-            <span className="text-gray-500 text-xs sm:text-sm bg-[#252547] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">Version 1.0.0</span>
-          </div>
+          {/* <div className="text-center">
+            <span className="text-gray-500 text-xs sm:text-sm bg-[#252547] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
+              Version 1.0.0
+            </span>
+          </div> */}
         </div>
       </div>
 
@@ -246,8 +283,8 @@ const Settings = () => {
               <button
                 onClick={() => {
                   setPasswordPopup(false);
-                  setError('');
-                  setSuccess('');
+                  setError("");
+                  setSuccess("");
                 }}
                 className="p-2 rounded-xl hover:bg-[#252547] text-gray-400 hover:text-white transition-colors"
               >
@@ -326,8 +363,8 @@ const Settings = () => {
               <button
                 onClick={() => {
                   setTwoFactorPopup(false);
-                  setError('');
-                  setSuccess('');
+                  setError("");
+                  setSuccess("");
                 }}
                 className="p-2 rounded-xl hover:bg-[#252547] text-gray-400 hover:text-white transition-colors"
               >
