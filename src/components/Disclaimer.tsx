@@ -3,9 +3,10 @@ import { Phone } from "lucide-react";
 
 const Disclaimer: React.FC = () => {
   return (
-    <div className="w-full bg-[#1A1A2E] text-white rounded-xl border border-purple-500/10 p-4 sm:p-6 shadow-md">
+    <div className="w-full bg-[#1A1A2E] text-white rounded-xl border border-purple-500/10 p-4 sm:p-6 shadow-md mt-8">
       {/* Header with logos */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
+        <h2>Disclaimer</h2>
         {/* Row 1 - Keep in one row on all screen sizes */}
         {/* <div className="flex items-center justify-start">
           <div className="text-red-400 font-bold text-xl">
@@ -109,7 +110,8 @@ const Disclaimer: React.FC = () => {
             Gambling can be addictive, please play rationally.
           </p>
           <p className="text-red-500 text-sm font-medium">
-            Welcome to Rollix777 Games only accepts customers above the age of 18.
+            Welcome to Rollix777 Games only accepts customers above the age of
+            18.
           </p>
         </div>
       </div>

@@ -53,16 +53,6 @@ const Hero: React.FC = () => {
   const gamesPerPage = 8;
   const navigate = useNavigate();
 
-  const handleLoginClick = () => {
-    setAuthModalMode("login");
-    setIsAuthModalOpen(true);
-  };
-
-  const handleRegisterClick = () => {
-    setAuthModalMode("register");
-    setIsAuthModalOpen(true);
-  };
-
   useEffect(() => {
     // Get 3 random games from each provider
     const getRandomGames = (games: any[], count: number) => {
@@ -201,21 +191,6 @@ const Hero: React.FC = () => {
       )}
 
       {/* Mobile Hero - login register buttons*/}
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={handleLoginClick}
-          className="w-36 sm:w-44 py-3 px-6 bg-green-600 text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 rounded-md"
-        >
-          <span>Login</span>
-        </button>
-
-        <button
-          onClick={handleRegisterClick}
-          className="w-36 sm:w-44 py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 rounded-md"
-        >
-          <span>Register</span>
-        </button>
-      </div>
 
       {/* Mobile Hero - Old Design */}
       {/* <section className="md:hidden pt-20 px-4 pb-12 bg-[#1A1A2E] relative overflow-hidden">

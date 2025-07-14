@@ -17,7 +17,7 @@ export const generateResult = async (periodNumber, duration) => {
       throw new Error("Invalid period number");
     }
 
-    const response = await axiosInstance.post("/api/color/generate-result", {
+    const response = await axiosInstance.post("/api/color/latest-result", {
       periodNumber: Number(periodNumber),
       duration,
     });
@@ -68,6 +68,32 @@ export const placeBet = async (betData) => {
     const response = await axiosInstance.post("/api/color/place-bet", betData);
     return response.data;
   } catch (error) {
+    throw error;
+  }
+};
+
+export const getPeriodNumber = async (duration) => {
+  try {
+    const response = await axiosInstance.post("/api/color/period", {
+      mins: duration,
+    });
+
+    return response.data; // Return full data to let component decide what to do
+  } catch (error) {
+    console.error(`Error fetching period number for ${duration}:`, error);
+    throw error;
+  }
+};
+
+export const getTimerData = async (duration) => {
+  try {
+    const response = await axiosInstance.post("/api/color/timer", {
+      duration,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching timer data for ${duration}:`, error);
     throw error;
   }
 };
