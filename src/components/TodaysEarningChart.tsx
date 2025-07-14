@@ -146,7 +146,7 @@ const TodaysEarningChart: React.FC = () => {
   };
 
   return (
-    <section className="py-4 px-4 sm:py-6 sm:px-6 bg-[#1A1A2E] relative rounded-xl border border-purple-500/10 max-w-screen mx-auto">
+    <section className="py-4 px-4 sm:py-6 sm:px-6 bg-[#1A1A2E] relative rounded-xl border border-purple-500/10 max-w-screen mx-auto mt-8">
       <div className="flex items-center gap-2 mb-4 sm:mb-6">
         <TrendingUp className="w-5 h-5 text-green-500" />
         <h2 className="text-lg sm:text-xl font-bold text-white">
@@ -260,7 +260,7 @@ const TodaysEarningChart: React.FC = () => {
       </div>
 
       {/* Ranking List */}
-      <div className="flex flex-col gap-2 sm:gap-3">
+      <div className="max-h-[590px] overflow-y-auto scrollbar-hide flex flex-col gap-2 sm:gap-3 pr-1">
         {earners.slice(3).map((earner, index) => (
           <div
             key={earner.id}

@@ -11,6 +11,8 @@ import {
   getBetHistory,
   checkValidBet,
   placeBet,
+  getPeriodNumber,
+  getTimerData,
 } from "../lib/services/BigSmallServices";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -104,28 +106,20 @@ const BigSmall = () => {
   // Modify fetchPeriodNumber to use mins in payload
   const fetchPeriodNumber = async (duration: string) => {
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/color/period",
-        {
-          mins: duration, // Changed back to mins for period API
-        }
-      );
+      const data = await getPeriodNumber(duration);
 
-      if (response.data && typeof response.data.period_number === "number") {
+      if (data && typeof data.period_number === "number") {
         setPeriodNumbers((prev) => ({
           ...prev,
-          [duration]: response.data.period_number,
+          [duration]: data.period_number,
         }));
 
         if (duration === activeTab) {
-          setCurrentPeriod(response.data.period_number);
+          setCurrentPeriod(data.period_number);
         }
-        return response.data.period_number;
+        return data.period_number;
       } else {
-        console.error(
-          "Invalid period number received from API:",
-          response.data
-        );
+        console.error("Invalid period number received from API:", data);
         throw new Error("Invalid period number received from API");
       }
     } catch (error) {
@@ -145,13 +139,7 @@ const BigSmall = () => {
 
       await fetchPeriodNumber(duration);
 
-      const response = await axios.post(
-        "http://localhost:5000/api/color/timer",
-        {
-          duration: duration, // Keep duration for timer API
-        }
-      );
-      const data = response.data;
+      const data = await getTimerData(duration);
 
       let remainingSeconds;
       if (duration === "1min") {
