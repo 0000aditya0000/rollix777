@@ -14,7 +14,7 @@ interface Referral {
   username: string | null;
   email: string | null;
   level: number;
-  first_deposit: number | null;
+  first_deposit: string;
   total_deposit: number | null;
   total_bets: number | null;
 }
@@ -149,7 +149,7 @@ const AgentProgram: React.FC = () => {
         0
       ),
       firstDepositUsers: allReferrals.filter(
-        (ref) => ref.first_deposit !== null
+        (ref) => ref.first_deposit !== "0.00"
       ).length,
       totalFirstDepositAmount: allReferrals.reduce(
         (sum, ref) => sum + parseFloat(ref.first_deposit?.toString() || "0"),
@@ -172,8 +172,6 @@ const AgentProgram: React.FC = () => {
   const handleNavigateToCommissionDetails = () => {
     navigate("/promotions/commission-details", { state: { userId } });
   };
-
-  // console.log(referrals, "data");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0F19] via-[#1A1A2E] to-[#252547]">
@@ -615,7 +613,18 @@ const AgentProgram: React.FC = () => {
                 <div className="mb-6">
                   <span className="text-lg md:text-2xl font-semibold text-[#22223b] dark:text-white flex items-center gap-2">
                     <span className="inline-block bg-pink-100 rounded-full p-1">
-                      <svg width="24" height="24" fill="none"><rect width="24" height="24" rx="6" fill="#F472B6"/><text x="12" y="18" textAnchor="middle" fontSize="15" fill="#fff">🎁</text></svg>
+                      <svg width="24" height="24" fill="none">
+                        <rect width="24" height="24" rx="6" fill="#F472B6" />
+                        <text
+                          x="12"
+                          y="18"
+                          textAnchor="middle"
+                          fontSize="15"
+                          fill="#fff"
+                        >
+                          🎁
+                        </text>
+                      </svg>
                     </span>
                     promotion data
                   </span>
@@ -630,23 +639,30 @@ const AgentProgram: React.FC = () => {
                         (referrals?.referralsByLevel.level4.length || 0) +
                         (referrals?.referralsByLevel.level5.length || 0)}
                     </div>
-                    <div className="text-sm md:text-lg text-white/70">Total Referrals</div>
+                    <div className="text-sm md:text-lg text-white/70">
+                      Total Referrals
+                    </div>
                   </div>
                   {/* Total Commission */}
                   <div>
                     <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
-                      ₹{pendingCommissions
+                      ₹
+                      {pendingCommissions
                         .find((p) => p.cryptoname === "INR")
                         ?.pending_amount?.toLocaleString() || "0"}
                     </div>
-                    <div className="text-sm md:text-lg text-white/70">Total Commission</div>
+                    <div className="text-sm md:text-lg text-white/70">
+                      Total Commission
+                    </div>
                   </div>
                   {/* Direct Subordinates */}
                   <div>
                     <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
                       {referrals?.referralsByLevel.level1.length || 0}
                     </div>
-                    <div className="text-sm md:text-lg text-white/70">Direct Subordinates</div>
+                    <div className="text-sm md:text-lg text-white/70">
+                      Direct Subordinates
+                    </div>
                   </div>
                   {/* Team Subordinates */}
                   <div>
