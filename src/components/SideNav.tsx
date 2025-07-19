@@ -86,11 +86,11 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
           <div className="p-5 border-b border-purple-500/10">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-xl">
-                {name.charAt(0).toUpperCase()}
+                {name && name !== "null" ? name.charAt(0).toUpperCase() : "W"}
               </div>
               <div>
                 <h3 className="text-white font-semibold">
-                  {name ? name : "Welcome Player"}
+                  {name && name !== "null" ? name : "Welcome Player"}
                 </h3>
                 <p className="text-gray-400 text-sm">{userId}</p>
               </div>
