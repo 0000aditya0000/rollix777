@@ -115,7 +115,7 @@ const AgentProgram: React.FC = () => {
         0
       ),
       firstDepositUsers: level1Referrals.filter(
-        (ref) => ref.first_deposit !== null
+        (ref) => parseFloat(ref.first_deposit) > 0
       ).length,
       totalFirstDepositAmount: level1Referrals.reduce(
         (sum, ref) => sum + parseFloat(ref.first_deposit?.toString() || "0"),
@@ -135,7 +135,7 @@ const AgentProgram: React.FC = () => {
       };
 
     const allReferrals = [
-      ...referralsData.referralsByLevel.level1,
+      // ...referralsData.referralsByLevel.level1,
       ...referralsData.referralsByLevel.level2,
       ...referralsData.referralsByLevel.level3,
       ...referralsData.referralsByLevel.level4,
@@ -149,7 +149,7 @@ const AgentProgram: React.FC = () => {
         0
       ),
       firstDepositUsers: allReferrals.filter(
-        (ref) => ref.first_deposit !== "0.00"
+        (ref) => parseFloat(ref.first_deposit) > 0
       ).length,
       totalFirstDepositAmount: allReferrals.reduce(
         (sum, ref) => sum + parseFloat(ref.first_deposit?.toString() || "0"),
