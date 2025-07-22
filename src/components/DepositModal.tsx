@@ -16,6 +16,7 @@ import {
   Clock,
 } from "lucide-react";
 import { depositService } from "../services/api";
+import qs from 'qs';
 import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { setWallets } from "../slices/walletSlice";
@@ -24,6 +25,7 @@ import { button } from "framer-motion/client";
 import { getAllTransactions } from "../lib/services/transactionService";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../store";
+import axios from 'axios';
 
 interface DepositRequest {
   userId: number;
@@ -38,9 +40,10 @@ const DepositPage: React.FC = () => {
   const [selectedCrypto, setSelectedCrypto] = useState<
     "btc" | "eth" | "usdt" | "inr"
   >("btc");
-  const [selectedServer, setSelectedServer] = useState<"server1" | "server2">(
-    "server1"
-  );
+  // Update the state type to handle 4 distinct options (removed ipay_qr)
+  const [selectedServer, setSelectedServer] = useState<
+    "upi_instant" | "upi" | "imps" | "novapay_qr"
+  >("upi_instant");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -203,7 +206,8 @@ const DepositPage: React.FC = () => {
     }
   };
 
-  const launchGateway = () => {
+  // Update the launchGateway function to handle different payment systems
+  const launchGateway = async () => {
     const validationError = validateAmount(amount1, "upi");
     if (validationError) {
       setError(validationError);
@@ -215,15 +219,60 @@ const DepositPage: React.FC = () => {
       toast.error("Please Login First");
       return;
     }
-    const amount = parseFloat(amount1);
-    const phone = 1234567890;
 
-    // Different URLs for different servers
-    const serverUrls = {
-      server1: `https://pay.rollix777.com/index.php?uid=${uid}&amount=${amount}&phone=${phone}`,
-      server2: `https://pay.rollix777.com/novapay.php?uid=${uid}&amount=${amount}&phone=${phone}&tyid=1`,
-    };
-    window.location.href = serverUrls[selectedServer];
+    try {
+      setLoading(true);
+      const amount = parseFloat(amount1);
+      const phone = 1234567890; // Default phone number
+      
+      // Check if it's a QR payment option (Novapay only now)
+      if (selectedServer === "novapay_qr") {
+        // Direct redirect for QR payments
+        const serverUrls = {
+          novapay_qr: `https://pay.rollix777.com/novapay.php?uid=${uid}&amount=${amount}&phone=${phone}&tyid=1`,
+        };
+        
+        window.location.href = serverUrls[selectedServer];
+        return;
+      }
+      
+      // For UPI and IMPS options, make API call
+      const paymentSystemMap = {
+        upi_instant: 'inr_p2c',
+        upi: 'inr_p2p',
+        imps: 'imps',
+      };
+      
+      // Prepare the data and stringify it using qs
+      const data = {
+        userid: uid,
+        amount,
+        paySys: paymentSystemMap[selectedServer],
+      };
+      
+      const queryString = qs.stringify(data);
+      
+      // Make API call to get the payment URL
+      const response = await axios.post('https://payapy.rollix777.com', queryString, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+      console.log('API Response:', response.data);
+
+      if (response.data.success && response.data.url) {
+        // Redirect to the payment URL
+        window.location.href = response.data.url;
+      } else {
+        toast.error("Failed to generate payment link. Please try again.");
+      }
+    } catch (error) {
+      console.error('Error calling payment API:', error);
+      toast.error("Failed to process payment request. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // const handleModalClose = () => {
@@ -348,32 +397,66 @@ const DepositPage: React.FC = () => {
               {/* Server Selection */}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <button
-                  onClick={() => setSelectedServer("server1")}
+                  onClick={() => setSelectedServer("upi_instant")}
                   className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "server1"
+                    selectedServer === "upi_instant"
                       ? "bg-green-500/20 border-green-500 text-white"
                       : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">Server 1</span>
+                    <span className="font-medium">UPI (Instant)</span>
                     <span className="text-xs">Recommended</span>
+                    <span className="text-xs text-green-400">Deposit - ₹300-20K</span>
                   </div>
                 </button>
 
                 <button
-                  onClick={() => setSelectedServer("server2")}
+                  onClick={() => setSelectedServer("upi")}
                   className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "server2"
+                    selectedServer === "upi"
                       ? "bg-green-500/20 border-green-500 text-white"
                       : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">Server 2</span>
-                    <span className="text-xs">Alternative</span>
+                    <span className="font-medium">UPI</span>
+                    <span className="text-xs">Standard Transfer</span>
+                    <span className="text-xs text-green-400">Deposit - ₹300-20K</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSelectedServer("imps")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "imps"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">IMPS</span>
+                    <span className="text-xs">Fast Transfer</span>
+                    <span className="text-xs text-green-400">Deposit - ₹300-20K</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSelectedServer("novapay_qr")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "novapay_qr"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Novapay (QR)</span>
+                    <span className="text-xs">QR Payment</span>
+                    <span className="text-xs text-green-400">Deposit - ₹100-20K</span>
                   </div>
                 </button>
               </div>
@@ -418,11 +501,14 @@ const DepositPage: React.FC = () => {
                     Amount (INR)
                   </label>
                   <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <span className="text-green-400 font-medium">₹</span>
+                    </div>
                     <input
                       type="text"
                       value={amount1}
                       onChange={(e) => handleAmountChange(e, "upi")}
-                      className={`w-full py-3 px-4 bg-[#252547] border ${
+                      className={`w-full py-3 pl-8 pr-4 bg-[#252547] border ${
                         error ? "border-red-500" : "border-green-500/20"
                       } rounded-lg text-white focus:outline-none focus:border-green-500`}
                       placeholder="Enter amount"
@@ -448,9 +534,7 @@ const DepositPage: React.FC = () => {
                 >
                   {loading
                     ? "Processing..."
-                    : `Deposit via ${
-                        selectedServer === "server1" ? "Server 1" : "Server 2"
-                      }`}
+                    : `Deposit via ${selectedServer.replace('_', ' ').toUpperCase()}`}
                 </button>
               </div>
 
@@ -458,10 +542,42 @@ const DepositPage: React.FC = () => {
               <div className="p-4 bg-[#1A1A2E] rounded-lg border border-green-500/20 text-sm text-gray-400">
                 <p className="mb-2">Important:</p>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>Send only via UPI Method</li>
-                  <li>Minimum deposit: 100 INR</li>
-                  <li>Deposits are credited instantly</li>
-                  <li>Choose server based on your location</li>
+                  {selectedServer === "upi_instant" && (
+                    <>
+                      <li>Send only via UPI Instant Method</li>
+                      <li>Minimum deposit: ₹300 INR</li>
+                      <li>Maximum deposit: ₹20,000 INR</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Recommended for fast transactions</li>
+                    </>
+                  )}
+                  {selectedServer === "upi" && (
+                    <>
+                      <li>Send only via UPI Standard Method</li>
+                      <li>Minimum deposit: ₹300 INR</li>
+                      <li>Maximum deposit: ₹20,000 INR</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Standard transfer option</li>
+                    </>
+                  )}
+                  {selectedServer === "imps" && (
+                    <>
+                      <li>Send only via IMPS Method</li>
+                      <li>Minimum deposit: ₹300 INR</li>
+                      <li>Maximum deposit: ₹20,000 INR</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Fast transfer option</li>
+                    </>
+                  )}
+                  {selectedServer === "novapay_qr" && (
+                    <>
+                      <li>Scan QR code to pay via Novapay</li>
+                      <li>Minimum deposit: ₹100 INR</li>
+                      <li>Maximum deposit: ₹20,000 INR</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>QR payment method</li>
+                    </>
+                  )}
                 </ul>
               </div>
             </div>

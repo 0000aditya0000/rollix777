@@ -26,7 +26,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose, onLogout }) => {
   // console.log(onLogout);
   const navigate = useNavigate();
   if (!isOpen) return null;
-  const name = localStorage.getItem("userName") || "User";
+  const name = localStorage.getItem("userName")==="null"?"Welcome Player":localStorage.getItem("userName");
   const userId = localStorage.getItem("userId");
 
   const menuItems = [
