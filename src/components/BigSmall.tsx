@@ -1,5 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
-import { X, ArrowLeft, Clock, Check } from "lucide-react";
+import {
+  X,
+  ArrowLeft,
+  Clock,
+  Check,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Eye,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
@@ -18,6 +26,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import { getAllTransactions } from "../lib/services/transactionService";
 
 type Record = {
   id: number;
@@ -72,6 +81,12 @@ const BigSmall = () => {
     "5min": 0,
     "10min": 0,
   });
+  const [transactionFilter, setTransactionFilter] = useState<
+    "all" | "approved" | "pending" | "rejected"
+  >("all");
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const [transactions, setTransactions] = useState<any[]>([]);
 
   // Add a new state to track which timers have already triggered their API calls
   const [triggeredTimers, setTriggeredTimers] = useState<Set<string>>(
@@ -102,6 +117,43 @@ const BigSmall = () => {
       Object.values(intervalRefs.current).forEach(clearInterval);
     };
   }, []); // Empty dependency array means this runs once on mount
+
+  useEffect(() => {
+    const uid = localStorage.getItem("userId");
+    const fetchTransactions = async () => {
+      try {
+        const data = await getAllTransactions(uid);
+        setTransactions(data.transactions || []);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    };
+    fetchTransactions();
+  }, [user?.id]);
+
+  const getFilteredTransactions = () => {
+    if (transactionFilter === "all") {
+      return transactions;
+    }
+    return transactions.filter((txn) => {
+      switch (transactionFilter) {
+        case "approved":
+          return txn.status.toLowerCase() === "approved";
+        case "pending":
+          return txn.status.toLowerCase() === "pending";
+        case "rejected":
+          return txn.status.toLowerCase() === "rejected";
+        default:
+          return true;
+      }
+    });
+  };
+
+  // Add function to handle viewing rejection note
+  const handleViewRejection = (transaction: any) => {
+    setSelectedTransaction(transaction);
+    setShowRejectionModal(true);
+  };
 
   // Modify fetchPeriodNumber to use mins in payload
   const fetchPeriodNumber = async (duration: string) => {
@@ -786,6 +838,158 @@ const BigSmall = () => {
                 >
                   Next
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Transaction Section */}
+        <div className="mt-6 bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl sm:rounded-2xl border border-purple-500/20">
+          <div className="p-4 sm:p-6 border-b border-purple-500/10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+                <h3 className="text-lg sm:text-xl font-semibold text-white">
+                  Recent Transactions
+                </h3>
+              </div>
+
+              {/* Filter Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setTransactionFilter("all")}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    transactionFilter === "all"
+                      ? "bg-purple-600 text-white"
+                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setTransactionFilter("approved")}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    transactionFilter === "approved"
+                      ? "bg-green-600 text-white"
+                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
+                  }`}
+                >
+                  Approved
+                </button>
+                <button
+                  onClick={() => setTransactionFilter("pending")}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    transactionFilter === "pending"
+                      ? "bg-yellow-600 text-white"
+                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
+                  }`}
+                >
+                  Pending
+                </button>
+                <button
+                  onClick={() => setTransactionFilter("rejected")}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    transactionFilter === "rejected"
+                      ? "bg-red-600 text-white"
+                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
+                  }`}
+                >
+                  Rejected
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Transaction List with Scroll */}
+          <div className="w-full p-4 sm:p-6">
+            <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+              <div className="space-y-3 sm:space-y-4">
+                {getFilteredTransactions().length > 0 ? (
+                  getFilteredTransactions().map((txn: any) => {
+                    const isDeposit = txn.transaction_type === "recharge";
+                    const isWithdrawal = txn.transaction_type === "withdraw";
+                    const typeLabel = isDeposit
+                      ? "Deposit"
+                      : isWithdrawal
+                      ? "Withdrawal"
+                      : txn.transaction_type;
+                    const iconBg = isDeposit
+                      ? "bg-green-500/10"
+                      : "bg-red-500/10";
+                    const icon = isDeposit ? (
+                      <ArrowDownCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
+                    ) : (
+                      <ArrowUpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
+                    );
+                    const amountSign = isDeposit
+                      ? "+"
+                      : isWithdrawal
+                      ? "-"
+                      : "";
+
+                    const amountColor =
+                      txn.status.toLowerCase() === "approved"
+                        ? "text-green-500"
+                        : txn.status.toLowerCase() === "rejected"
+                        ? "text-red-500"
+                        : "text-yellow-500";
+
+                    const statusColor = amountColor;
+
+                    return (
+                      <div
+                        key={txn.id}
+                        className="w-full flex items-center justify-between p-3 sm:p-4 bg-[#1A1A2E] rounded-lg sm:rounded-xl hover:bg-[#252547] transition-colors"
+                      >
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center ${iconBg}`}
+                          >
+                            {icon}
+                          </div>
+                          <div>
+                            <p className="text-white font-medium text-base sm:text-lg">
+                              {typeLabel}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-400">
+                              {txn.transaction_date}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <p
+                                className={`text-xs sm:text-sm ${statusColor}`}
+                              >
+                                {txn.status}
+                              </p>
+                              {txn.status.toLowerCase() === "rejected" && (
+                                <button
+                                  onClick={() => handleViewRejection(txn)}
+                                  className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                                  title="View rejection details"
+                                >
+                                  <Eye size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span
+                            className={`text-base sm:text-lg font-semibold ${amountColor}`}
+                          >
+                            {amountSign}₹{txn.amount}
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-400">
+                            {txn.order_id}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-gray-400 text-center py-6">
+                    No transactions found.
+                  </div>
+                )}
               </div>
             </div>
           </div>
