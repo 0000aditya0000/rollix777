@@ -14,7 +14,6 @@ import ColorGame from "./ColorGame";
 import GameCarousel from "./GameCarousel";
 import TrendingGames from "./TrendingGames";
 import HotGames from "./HotGames";
-import DepositModal from "./DepositModal";
 import WithdrawModal from "./WithdrawModal";
 import LatestGames from "./LatestGames";
 import ExclusiveGames from "./ExclusiveGames";
@@ -24,8 +23,10 @@ import { setWallets } from "../slices/walletSlice";
 import { fetchUserWallets } from "../lib/services/WalletServices.js";
 import ActivityTracker from "./ActivityTracker.js";
 import TodaysEarningChart from "./TodaysEarningChart.js";
-import DisclaimerPage from "./Disclaimer.js";
 import Disclaimer from "./Disclaimer.js";
+import FirstDepositModal from "./modals/FirstDepositModal.js";
+import ReferralModal from "./modals/ReferralModal.js";
+import BonusModal from "./modals/BonusModal.js";
 
 const Dashboard = () => {
   // const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -35,6 +36,8 @@ const Dashboard = () => {
   const dispatch = useDispatch();
   const { wallets } = useSelector((state: RootState) => state.wallet);
   const navigate = useNavigate();
+  const [modalStep, setModalStep] = useState(0);
+
   async function fetchData() {
     if (userId) {
       try {
@@ -50,6 +53,13 @@ const Dashboard = () => {
   useEffect(() => {
     fetchData();
   }, [userId, dispatch]);
+
+  useEffect(() => {
+    if (userId) {
+      setModalStep(1);
+    }
+  }, [userId]);
+
   // function launchGame() {
   //   window.location.href = "https://fusion.imitator-host.site/post?gameId=229&mobile=52&agentId=Imitatorbhai_Seamless&agentKey=118e35769483ef7508b4616c308d84458b26a5e7&referrerUrl=https://jili.rollix777.com";
   // }
@@ -91,15 +101,12 @@ const Dashboard = () => {
               </button>
             </div>
           </div> */}
-
           <ImageSlider />
           <ColorGame />
           <ExclusiveGames title="Exclusive Games" />
           <LatestGames title="Latest Games" type="latest" />
-
           <GameCarousel title="Popular Games" type="popular" />
           <TrendingGames title="Trending Games" type="trending" />
-
           <HotGames title="Hot Games" type="hot" />
           <ActivityTracker />
           <TodaysEarningChart />
@@ -238,6 +245,32 @@ const Dashboard = () => {
             fetchData={fetchData}
           />
         </>
+      )}
+
+      {modalStep === 1 && (
+        <FirstDepositModal
+          onClose={() => {
+            setModalStep(0);
+            setTimeout(() => setModalStep(2), 500);
+          }}
+        />
+      )}
+
+      {modalStep === 2 && (
+        <ReferralModal
+          onClose={() => {
+            setModalStep(0);
+            setTimeout(() => setModalStep(3), 500);
+          }}
+        />
+      )}
+
+      {modalStep === 3 && (
+        <BonusModal
+          onClose={() => {
+            setModalStep(0);
+          }}
+        />
       )}
     </div>
   );
