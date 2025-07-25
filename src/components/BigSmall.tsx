@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { getAllTransactions } from "../lib/services/transactionService";
+import { getBetHistoryByGameType } from "../lib/services/betService";
 
 type Record = {
   id: number;
@@ -52,6 +53,7 @@ type BetHistory = {
 };
 
 const BigSmall = () => {
+  const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
   const [timeLeft, setTimeLeft] = useState(60);
@@ -65,6 +67,7 @@ const BigSmall = () => {
   const [records, setRecords] = useState<Record[]>([]);
   const [currentPeriod, setCurrentPeriod] = useState<number>();
   const [bets, setBets] = useState<Bet[]>([]);
+  const [currentBets, setCurrentBets] = useState<Bet[]>([]);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const [winner, setWinner] = useState(false);
   const [popup, setpopup] = useState("");
@@ -75,6 +78,7 @@ const BigSmall = () => {
   const intervalRefs = useRef({});
   const isFetchingRef = useRef({});
   const [error, setError] = useState<string | null>(null);
+  const [gameTypeFilter, setGameTypeFilter] = useState("wingo");
   const [timers, setTimers] = useState({
     "1min": 0,
     "3min": 0,
@@ -353,8 +357,9 @@ const BigSmall = () => {
   };
 
   // Modify getResult to fetch new period number after result generation
-  const getResult = async (duration: string, periodNumber: number) => {
+  const getResult = async (duration: string, currentPeriodNumber: number) => {
     try {
+      const periodNumber = currentPeriodNumber - 1;
       console.log(
         "getResult called with duration:",
         duration,
@@ -399,6 +404,44 @@ const BigSmall = () => {
       throw error;
     }
   };
+
+  useEffect(() => {
+    const fetchBetHistory = async () => {
+      try {
+        const response = await getBetHistoryByGameType(gameTypeFilter, userId);
+
+        // Handle different response structures
+        let betData = [];
+        if (gameTypeFilter === "wingo") {
+          betData = response.betHistory || [];
+        } else if (gameTypeFilter === "other") {
+          betData = response.transactions || response.data || [];
+
+          // Sort other games data by date (latest first)
+          if (Array.isArray(betData)) {
+            betData.sort((a, b) => {
+              const dateA = new Date(a.bet_date);
+              const dateB = new Date(b.bet_date);
+              return dateB.getTime() - dateA.getTime(); // Latest first
+            });
+          }
+        }
+
+        if (!Array.isArray(betData)) {
+          console.error("Unexpected data format:", betData);
+          setCurrentBets([]);
+          return;
+        }
+
+        setCurrentBets(betData as Bet[]);
+      } catch (err: any) {
+        console.error("Error fetching data:", err.message);
+        setError(err.message);
+      }
+    };
+
+    fetchBetHistory();
+  }, [gameTypeFilter, userId]);
 
   const checkWinLose = async (result: any) => {
     try {
@@ -543,10 +586,131 @@ const BigSmall = () => {
     }
   };
 
+  // Filter and pagination logic
+  const filteredBets = currentBets.filter((bet) =>
+    statusFilter === "all" ? true : bet.status === statusFilter
+  );
+
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
+  const currentRecords = records?.slice(indexOfFirstRecord, indexOfLastRecord);
+  const finalRecords = filteredBets.slice(
+    indexOfFirstRecord,
+    indexOfLastRecord
+  );
+
+  console.log(finalRecords, "final");
   const totalPages = Math.ceil(records.length / recordsPerPage);
+
+  const getColorBadge = (color: string) => {
+    // Ensure color is a string and convert it to lowercase
+    const colorLower = typeof color === "string" ? color.toLowerCase() : "";
+
+    switch (colorLower) {
+      case "red":
+        return "bg-red-500 w-4 h-4 rounded-full";
+      case "green":
+        return "bg-green-500 w-4 h-4 rounded-full";
+      default:
+        return "bg-gray-500 w-4 h-4 rounded-full";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "won":
+        return "bg-green-500/20 text-green-400";
+      case "lost":
+        return "bg-red-500/20 text-red-400";
+      default:
+        return "bg-gray-500/20 text-gray-400";
+    }
+  };
+
+  const WinGoTable = () => (
+    <div className="overflow-x-auto max-w-full touch-pan-x">
+      <table className="w-full">
+        <thead>
+          <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
+            <th className="py-4 md:py-5 px-6 font-medium">No.</th>
+            <th className="py-4 md:py-5 px-6 font-medium">ID</th>
+            <th className="py-4 md:py-5 px-6 font-medium">Game</th>
+            <th className="py-4 md:py-5 px-6 font-medium">Amount</th>
+            <th className="py-4 md:py-5 px-6 font-medium">Bet Type</th>
+            <th className="py-4 md:py-5 px-6 font-medium">Result</th>
+            <th className="py-4 md:py-5 px-6 font-medium">Status</th>
+            <th className="py-4 md:py-5 px-6 font-medium">Payout</th>
+            <th className="py-4 md:py-5 px-6 font-medium">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {finalRecords.map((bet, index) => (
+            <tr
+              key={bet.betId}
+              className="border-b border-purple-500/10 text-white hover:bg-purple-500/5 transition-colors duration-150"
+            >
+              <td className="py-4 px-6 text-gray-400">
+                {indexOfFirstRecord + index + 1}
+              </td>
+              <td className="py-4 px-6 text-purple-400">BET-{bet.betId}</td>
+              <td className="py-4 px-6">
+                <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400">
+                  WinGo
+                </span>
+              </td>
+              <td className="py-4 px-6">₹{bet.amount}</td>
+              <td className="py-4 px-6">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`${getColorBadge(
+                      bet.betValue
+                    )} md:ring-2 md:ring-white/10`}
+                  ></div>
+                  <span>{bet.betValue}</span>
+                </div>
+              </td>
+              <td className="py-4 px-6">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`${getColorBadge(
+                      bet.periodNumber
+                    )} md:ring-2 md:ring-white/10`}
+                  ></div>
+                  <span>{bet.periodNumber}</span>
+                </div>
+              </td>
+              <td className="py-4 px-6">
+                <span
+                  className={`px-2 md:px-3 py-1 md:py-1.5 rounded-full text-xs ${getStatusColor(
+                    bet.status
+                  )}`}
+                >
+                  {bet?.status?.charAt(0).toUpperCase() + bet?.status?.slice(1)}
+                </span>
+              </td>
+              <td className="py-4 px-6">
+                <span
+                  className={
+                    bet.status === "won" ? "text-green-400" : "text-red-400"
+                  }
+                >
+                  ₹{bet.amountReceived}
+                </span>
+              </td>
+              <td className="py-4 px-6 text-gray-400">{bet.date}</td>
+            </tr>
+          ))}
+          {currentRecords.length === 0 && (
+            <tr>
+              <td colSpan={9} className="py-8 text-center text-gray-400">
+                No records found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 
   return (
     <div className=" px-2 pt-20 pb-24 bg-[#0F0F19]">
@@ -844,155 +1008,8 @@ const BigSmall = () => {
         </div>
 
         {/* Transaction Section */}
-        <div className="mt-6 bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl sm:rounded-2xl border border-purple-500/20">
-          <div className="p-4 sm:p-6 border-b border-purple-500/10">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-                <h3 className="text-lg sm:text-xl font-semibold text-white">
-                  Recent Transactions
-                </h3>
-              </div>
-
-              {/* Filter Buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setTransactionFilter("all")}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    transactionFilter === "all"
-                      ? "bg-purple-600 text-white"
-                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setTransactionFilter("approved")}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    transactionFilter === "approved"
-                      ? "bg-green-600 text-white"
-                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
-                  }`}
-                >
-                  Approved
-                </button>
-                <button
-                  onClick={() => setTransactionFilter("pending")}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    transactionFilter === "pending"
-                      ? "bg-yellow-600 text-white"
-                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
-                  }`}
-                >
-                  Pending
-                </button>
-                <button
-                  onClick={() => setTransactionFilter("rejected")}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    transactionFilter === "rejected"
-                      ? "bg-red-600 text-white"
-                      : "bg-[#1A1A2E] text-gray-400 hover:text-white"
-                  }`}
-                >
-                  Rejected
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Transaction List with Scroll */}
-          <div className="w-full p-4 sm:p-6">
-            <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
-              <div className="space-y-3 sm:space-y-4">
-                {getFilteredTransactions().length > 0 ? (
-                  getFilteredTransactions().map((txn: any) => {
-                    const isDeposit = txn.transaction_type === "recharge";
-                    const isWithdrawal = txn.transaction_type === "withdraw";
-                    const typeLabel = isDeposit
-                      ? "Deposit"
-                      : isWithdrawal
-                      ? "Withdrawal"
-                      : txn.transaction_type;
-                    const iconBg = isDeposit
-                      ? "bg-green-500/10"
-                      : "bg-red-500/10";
-                    const icon = isDeposit ? (
-                      <ArrowDownCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
-                    ) : (
-                      <ArrowUpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
-                    );
-                    const amountSign = isDeposit
-                      ? "+"
-                      : isWithdrawal
-                      ? "-"
-                      : "";
-
-                    const amountColor =
-                      txn.status.toLowerCase() === "approved"
-                        ? "text-green-500"
-                        : txn.status.toLowerCase() === "rejected"
-                        ? "text-red-500"
-                        : "text-yellow-500";
-
-                    const statusColor = amountColor;
-
-                    return (
-                      <div
-                        key={txn.id}
-                        className="w-full flex items-center justify-between p-3 sm:p-4 bg-[#1A1A2E] rounded-lg sm:rounded-xl hover:bg-[#252547] transition-colors"
-                      >
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <div
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center ${iconBg}`}
-                          >
-                            {icon}
-                          </div>
-                          <div>
-                            <p className="text-white font-medium text-base sm:text-lg">
-                              {typeLabel}
-                            </p>
-                            <p className="text-xs sm:text-sm text-gray-400">
-                              {txn.transaction_date}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <p
-                                className={`text-xs sm:text-sm ${statusColor}`}
-                              >
-                                {txn.status}
-                              </p>
-                              {txn.status.toLowerCase() === "rejected" && (
-                                <button
-                                  onClick={() => handleViewRejection(txn)}
-                                  className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
-                                  title="View rejection details"
-                                >
-                                  <Eye size={14} />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span
-                            className={`text-base sm:text-lg font-semibold ${amountColor}`}
-                          >
-                            {amountSign}₹{txn.amount}
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-400">
-                            {txn.order_id}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-gray-400 text-center py-6">
-                    No transactions found.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        <div className="mt-6 overflow-y-scroll bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl sm:rounded-2xl border border-purple-500/20">
+          <WinGoTable />
         </div>
       </div>
 
