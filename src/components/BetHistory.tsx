@@ -89,6 +89,8 @@ const BetHistory = () => {
   );
   const totalPages = Math.ceil(filteredBets.length / recordsPerPage);
 
+  console.log(currentRecords, "records");
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "won":
