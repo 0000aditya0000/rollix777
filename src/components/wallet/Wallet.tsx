@@ -63,6 +63,8 @@ const Wallet: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
+  console.log(wallets, "wallets");
+
   async function fetchData() {
     if (userId) {
       try {

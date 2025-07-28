@@ -1,28 +1,57 @@
 import { useEffect, useState } from "react";
-import WithdrawModal from "./WithdrawModal";
-import { RootState } from "../store";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { setWallets } from "../slices/walletSlice";
-import { fetchUserWallets } from "../lib/services/WalletServices.js";
-import { Flame, Sparkles, Volume2 } from "lucide-react";
+import {
+  latestResult5D,
+  getPeriod5D,
+  placeBet5D,
+  resultHistory5D,
+} from "../lib/services/wingo5dGameService";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import { toast } from "react-hot-toast";
 
 function Wingo5dGame() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const userId = Number(localStorage.getItem("userId")) || 0;
   const { wallets } = useSelector((state: RootState) => state.wallet);
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const userId = Number(localStorage.getItem("userId")) || 0;
+  const [betHistory, setBetHistory] = useState([]);
   const [selectedTimer, setSelectedTimer] = useState<number | null>(null);
   const [selectedTab, setSelectedTab] = useState("A");
   const [isAnimating, setIsAnimating] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [activeTimer, setActiveTimer] = useState(1);
   const [selectedBet, setSelectedBet] = useState<string | null>(null);
+  const [periodNumber, setPeriodNumber] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState({
     minutes: 1,
     seconds: 0,
   });
+  const [currentQuantity, setCurrentQuantity] = useState(1);
+  const [currentMultiplier, setCurrentMultiplier] = useState(1);
+  const [selectedBalance, setSelectedBalance] = useState(10);
+
+  // Also add these helper functions before your return statement
+  const calculateTotalAmount = () => {
+    return selectedBalance * currentQuantity * currentMultiplier;
+  };
+
+  const getINRWallet = () => {
+    return wallets.find((wallet) => wallet.cryptoname === "INR");
+  };
+
+  const getINRBalance = () => {
+    const inrWallet = getINRWallet();
+    return inrWallet ? parseFloat(inrWallet.balance) : 0;
+  };
+
+  const canPlaceBet = () => {
+    const totalAmount = calculateTotalAmount();
+    const currentBalance = getINRBalance();
+    return currentBalance >= totalAmount;
+  };
+
+  const getTimerString = (timer: number) => `${timer}min`;
+
   const [lotteryResults, setLotteryResults] = useState([
     { number: 4, letter: "A" },
     { number: 6, letter: "B" },
@@ -31,43 +60,94 @@ function Wingo5dGame() {
     { number: 6, letter: "E" },
   ]);
 
-  const durationsVal = [1, 3, 5, 10];
+  const getBetType = (value) => {
+    if (!value) return "";
 
-  const mainBalance =
-    wallets.find((w) => w.cryptoname === "INR")?.balance || "0";
+    const lower = value.toLowerCase();
+
+    // Handle the specific button values
+    if (lower === "big2") return "high";
+    if (lower === "small2") return "low";
+    if (lower === "odd2") return "odd";
+    if (lower === "even2") return "even";
+
+    // Handle number values
+    if (!isNaN(value)) return "number";
+
+    return "";
+  };
 
   const totalSum = lotteryResults.reduce(
     (sum, result) => sum + result.number,
     0
   );
-  const currentPeriod = "20250721102030138";
 
-  const generateNewLotteryResult = () => {
+  const generateNewLotteryResult = async (
+    timerStr: string,
+    periodNumber: number
+  ) => {
     setIsAnimating(true);
 
-    // Animate the generation process
-    setTimeout(() => {
-      const letters = ["A", "B", "C", "D", "E"];
-      const results = letters.map((letter) => ({
-        letter,
-        number: Math.floor(Math.random() * 10),
-      }));
-      setLotteryResults(results);
+    try {
+      const res = await latestResult5D({
+        timer: timerStr,
+        periodNumber,
+      });
+
+      if (res?.success && res.result) {
+        const result = res.result;
+
+        const formatted = [
+          { letter: "A", number: result.digit_a },
+          { letter: "B", number: result.digit_b },
+          { letter: "C", number: result.digit_c },
+          { letter: "D", number: result.digit_d },
+          { letter: "E", number: result.digit_e },
+        ];
+
+        setLotteryResults(formatted);
+      }
+    } catch (err) {
+      console.error("Error fetching latest result:", err);
+    } finally {
       setIsAnimating(false);
-    }, 500);
+    }
   };
 
   useEffect(() => {
-    // Generate initial numbers
-    generateNewLotteryResult();
+    const init = async () => {
+      const timerStr = getTimerString(activeTimer);
 
-    // Set up timer to generate new numbers every 1 minute (60000ms)
-    const timer = setInterval(() => {
-      generateNewLotteryResult();
-    }, 60000);
+      try {
+        const periodRes = await getPeriod5D({ mins: timerStr });
+        console.log(periodRes, "period number");
+        const periodNumber = periodRes?.period_number;
+        setPeriodNumber(periodNumber);
 
-    return () => clearInterval(timer);
-  }, []);
+        if (periodNumber) {
+          generateNewLotteryResult(timerStr, periodNumber);
+        }
+
+        // Fetch bet history on component load
+        const historyRes = await resultHistory5D({
+          timer: timerStr,
+          userId,
+        });
+
+        if (historyRes?.success) {
+          // Based on your Postman response, use 'bets' instead of 'data'
+          setBetHistory(historyRes.results || historyRes.results || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch period or history:", err);
+      }
+    };
+
+    init();
+
+    const interval = setInterval(init, activeTimer * 60000);
+    return () => clearInterval(interval);
+  }, [activeTimer, userId]);
 
   // Timer countdown effect
   useEffect(() => {
@@ -75,12 +155,35 @@ function Wingo5dGame() {
       setTimeRemaining((prev) => {
         const { minutes, seconds } = prev;
 
-        if (minutes === 0 && seconds === 0) {
-          generateNewLotteryResult();
+        const handleTimerEnd = async () => {
+          const minsString = getTimerString(activeTimer);
+
+          try {
+            const res = await getPeriod5D({ mins: minsString });
+
+            if (res?.success && res.period_number) {
+              await generateNewLotteryResult(minsString, res.period_number);
+
+              const historyRes = await resultHistory5D({
+                timer: minsString, // Changed from 'mins' to 'timer'
+                userId,
+              });
+              if (historyRes?.success) {
+                setBetHistory(historyRes.bets || historyRes.data || []); // Use bets or data
+              }
+            }
+          } catch (err) {
+            console.error("Error during timer end logic:", err);
+          }
 
           const resetTo = selectedTimer ?? 1;
-          setActiveTimer(resetTo); // make sure activeTimer updates
-          return { minutes: resetTo, seconds: 0 };
+          setActiveTimer(resetTo);
+          setTimeRemaining({ minutes: resetTo, seconds: 0 });
+        };
+
+        if (minutes === 0 && seconds === 0) {
+          handleTimerEnd(); // Call the async handler
+          return prev; // Keep current state until async finishes
         }
 
         if (seconds > 0) {
@@ -94,7 +197,7 @@ function Wingo5dGame() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [selectedTimer]);
+  }, [activeTimer, selectedTimer]);
 
   useEffect(() => {
     if (selectedTimer !== null) {
@@ -103,48 +206,74 @@ function Wingo5dGame() {
     }
   }, [selectedTimer]);
 
-  async function fetchData() {
-    if (userId) {
-      try {
-        const data = await fetchUserWallets(userId);
-        if (data) {
-          dispatch(setWallets(data));
-        }
-      } catch (error) {
-        console.error("Error fetching wallet data:", error);
-      }
+  const handlePlaceBet = async () => {
+    const totalAmount = calculateTotalAmount();
+    const currentBalance = getINRBalance();
+
+    if (!canPlaceBet()) {
+      toast.error("Insufficient INR wallet balance!");
+      return;
     }
-  }
-  useEffect(() => {
-    fetchData();
-  }, [userId, dispatch]);
+
+    const inrWallet = getINRWallet();
+    if (!inrWallet) {
+      toast.error("INR wallet not found!");
+      return;
+    }
+
+    const betType = getBetType(selectedBet);
+
+    const payload = {
+      userId,
+      position: selectedTab,
+      betType: betType,
+      betValue: betType === "number" ? selectedBet : "", // Only send betValue for numbers
+      amount: totalAmount,
+      periodNumber,
+      timer: getTimerString(activeTimer),
+    };
+
+    console.log("Sending bet payload:", payload); // Debug log
+
+    try {
+      const res = await placeBet5D(payload);
+
+      if (res?.success) {
+        toast.success("Bet placed successfully!");
+        // Reset selections
+        setSelectedBet(null);
+        setCurrentQuantity(1);
+        setCurrentMultiplier(1);
+        setSelectedBalance(10);
+
+        // Refresh bet history
+        const historyRes = await resultHistory5D({
+          timer: getTimerString(activeTimer),
+          userId,
+        });
+
+        if (historyRes?.success) {
+          setBetHistory(historyRes.bets || historyRes.data || []);
+        }
+      } else {
+        toast.error(res.message || "Failed to place bet.");
+      }
+    } catch (error) {
+      console.error("Error placing bet:", error);
+      toast.error("An error occurred while placing the bet.");
+    }
+  };
+
+  console.log(betHistory, "bethistory");
 
   const handleClose = () => setShowHowToPlay(false);
-
   return (
     <>
-      {/* Deposit and withdrawal buttons */}
-      <div className="flex justify-center gap-4 mb-10 mt-20">
-        <button
-          onClick={() => navigate("/deposit")}
-          className="w-36 sm:w-44 py-3 px-6 bg-green-600 text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 rounded-md"
-        >
-          <span>Deposit</span>
-        </button>
-
-        <button
-          onClick={() => setIsWithdrawModalOpen(true)}
-          className="w-36 sm:w-44 py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 rounded-md"
-        >
-          <span>Withdraw</span>
-        </button>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-4 items-start px-2 sm:px-4 py-6">
+      <div className="flex flex-col lg:flex-row gap-2 lg:gap-4 items-start px-2 sm:px-4 py-2 sm:py-6">
         {/* LEFT SIDE: Main Wingo Content */}
-        <div className="lg:w-[58%]">
+        <div className="w-full lg:w-[58%]">
           {/* Timer Buttons Section */}
-          <div className="flex justify-center items-center gap-4 mb-10">
+          <div className="flex justify-center items-center gap-1 sm:gap-4 mb-4 sm:mb-10 px-2">
             {[
               { label: "1 Min", value: 1 },
               { label: "3 Min", value: 3 },
@@ -154,7 +283,7 @@ function Wingo5dGame() {
               <button
                 key={timer.value}
                 onClick={() => setSelectedTimer(timer.value)}
-                className={`w-36 px-4 py-1.5 rounded-md text-sm font-medium border transition-all
+                className={`flex-1 sm:w-36 sm:flex-none px-2 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium border transition-all
             ${
               selectedTimer === timer.value
                 ? "bg-purple-600 text-white border-purple-600"
@@ -167,22 +296,24 @@ function Wingo5dGame() {
           </div>
 
           {/* Lottery Results Section */}
-          <div className="bg-[#1F1F30] rounded-xl shadow-lg p-6 border border-[#2D2D45] max-w-3xl mx-auto mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Lottery Results</h2>
+          <div className="bg-[#1F1F30] rounded-xl shadow-lg p-3 sm:p-6 border border-[#2D2D45] mx-2 sm:max-w-3xl sm:mx-auto mb-4 sm:mb-8">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-white">
+                Lottery Results
+              </h2>
             </div>
 
-            <div className="flex items-center justify-center gap-4 flex-wrap">
+            <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
               {/* Numbers */}
-              <div className="flex gap-2">
+              <div className="flex gap-1 sm:gap-2">
                 {lotteryResults.map((result, index) => (
                   <div key={index} className="text-center">
-                    <div className="w-14 h-14 bg-[#2A2A3E] border border-[#3D3D5C] rounded-lg flex items-center justify-center">
-                      <span className="text-xl font-bold text-white">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 bg-[#2A2A3E] border border-[#3D3D5C] rounded-lg flex items-center justify-center">
+                      <span className="text-lg sm:text-xl font-bold text-white">
                         {result.number}
                       </span>
                     </div>
-                    <span className="text-sm text-gray-400 mt-1 block">
+                    <span className="text-xs sm:text-sm text-gray-400 mt-1 block">
                       {result.letter}
                     </span>
                   </div>
@@ -191,8 +322,8 @@ function Wingo5dGame() {
 
               {/* Total Sum */}
               <div className="text-center">
-                <div className="w-20 h-14 bg-gradient-to-r from-purple-600 to-purple-800 rounded-lg flex items-center justify-center mb-6">
-                  <span className="text-2xl font-bold text-white">
+                <div className="w-16 h-10 sm:w-20 sm:h-14 bg-gradient-to-r from-purple-600 to-purple-800 rounded-lg flex items-center justify-center mb-2 sm:mb-6">
+                  <span className="text-lg sm:text-2xl font-bold text-white">
                     {totalSum}
                   </span>
                 </div>
@@ -201,15 +332,15 @@ function Wingo5dGame() {
           </div>
 
           {/* Period Section */}
-          <div className="bg-[#1F1F30] rounded-xl shadow-lg p-6 border border-[#2D2D45] max-w-3xl mx-auto">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Period</p>
+          <div className="bg-[#1F1F30] rounded-xl shadow-lg p-3 sm:p-6 border border-[#2D2D45] mx-2 sm:max-w-3xl sm:mx-auto">
+            <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm text-gray-400 mb-1">Period</p>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-2xl font-bold text-white">
-                    {currentPeriod}
+                  <span className="text-lg sm:text-2xl font-bold text-white truncate">
+                    {periodNumber}
                   </span>
-                  <button className="flex items-center gap-1 bg-[#2A2A3E] text-purple-400 border border-gray-700 px-3 py-1 rounded-full text-sm font-semibold hover:bg-[#3A3A4E] transition">
+                  <button className="flex items-center gap-1 bg-[#2A2A3E] text-purple-400 border border-gray-700 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold hover:bg-[#3A3A4E] transition whitespace-nowrap">
                     <button onClick={() => setShowHowToPlay(true)}>
                       How to play
                     </button>
@@ -217,8 +348,10 @@ function Wingo5dGame() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-400 mb-1">Time remaining</p>
-                <div className="flex items-center gap-1 text-3xl font-bold">
+                <p className="text-xs sm:text-sm text-gray-400 mb-1">
+                  Time remaining
+                </p>
+                <div className="flex items-center gap-1 text-2xl sm:text-3xl font-bold">
                   <span className="text-purple-800">
                     {timeRemaining.minutes}
                   </span>
@@ -232,11 +365,11 @@ function Wingo5dGame() {
 
             {/* Animated Lottery Display */}
             <div
-              className={`relative bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl p-4 shadow-xl transform transition-all duration-500 mt-6 w-full max-w-md mx-auto ${
+              className={`relative bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl p-3 sm:p-4 shadow-xl transform transition-all duration-500 mt-4 sm:mt-6 w-full max-w-xs sm:max-w-md mx-auto ${
                 isAnimating ? "scale-105" : "scale-100"
               }`}
             >
-              <div className="flex justify-center space-x-2">
+              <div className="flex justify-center space-x-1 sm:space-x-2">
                 {lotteryResults.map((result, index) => (
                   <div
                     key={result.letter}
@@ -246,17 +379,17 @@ function Wingo5dGame() {
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div
-                      className={`w-16 h-20 rounded-lg flex items-center justify-center shadow-md ${
+                      className={`w-12 h-16 sm:w-16 sm:h-20 rounded-lg flex items-center justify-center shadow-md ${
                         index === 0 ? "bg-purple-700" : "bg-[#2D2D54]"
                       }`}
                     >
                       <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
                           index === 0 ? "bg-purple-400" : "bg-white"
                         } shadow-inner`}
                       >
                         <span
-                          className={`text-2xl font-bold ${
+                          className={`text-lg sm:text-2xl font-bold ${
                             index === 0 ? "text-white" : "text-gray-800"
                           }`}
                         >
@@ -274,13 +407,13 @@ function Wingo5dGame() {
           </div>
 
           {/* Betting Tabs */}
-          <div className="bg-[#1F1F30] rounded-xl shadow-lg p-4 border border-[#2D2D45] max-w-3xl mx-auto mt-8">
-            <div className="flex justify-between border-b border-[#33334a] mb-4">
+          <div className="bg-[#1F1F30] rounded-xl shadow-lg p-3 sm:p-4 border border-[#2D2D45] mx-2 sm:max-w-3xl sm:mx-auto mt-4 sm:mt-8">
+            <div className="flex justify-between border-b border-[#33334a] mb-4 overflow-x-auto">
               {["A", "B", "C", "D", "E", "SUM"].map((label, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedTab(label)}
-                  className={`text-sm font-bold px-4 py-2 transition ${
+                  className={`text-xs sm:text-sm font-bold px-2 sm:px-4 py-2 transition whitespace-nowrap ${
                     selectedTab === label
                       ? "text-white border-b-2 border-red-500"
                       : "text-gray-400"
@@ -293,12 +426,12 @@ function Wingo5dGame() {
 
             {/* Selector Grid */}
             {
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                 {["Big2", "Small2", "Odd2", "Even2"].map((type) => (
                   <button
                     key={type}
                     onClick={() => setSelectedBet(type)}
-                    className={`py-2 rounded-md text-center transition-all duration-200 ${
+                    className={`py-2 rounded-md text-center transition-all duration-200 text-xs sm:text-sm ${
                       selectedBet === type
                         ? "bg-purple-600 text-white shadow-lg"
                         : "bg-[#2A2A3E] text-white hover:bg-purple-600"
@@ -313,28 +446,33 @@ function Wingo5dGame() {
                   <button
                     key={i}
                     onClick={() => setSelectedBet(i.toString())}
-                    className={`py-2 rounded-md text-center transition-all duration-200 ${
+                    className={`py-2 rounded-md text-center transition-all duration-200 text-xs sm:text-sm ${
                       selectedBet === i.toString()
                         ? "bg-purple-600 text-white shadow-lg"
                         : "bg-[#2A2A3E] text-white hover:bg-purple-600"
                     }`}
                   >
-                    {i} <span className="text-sm text-gray-400 ml-1">9X</span>
+                    {i} <span className="text-xs text-gray-400 ml-1">9X</span>
                   </button>
                 ))}
               </div>
             }
             {/* Bet Controls Section */}
             {selectedBet && (
-              <div className="mt-6 space-y-4">
+              <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
                 {/* Balance Options */}
-                <div className="flex flex-row justify-between">
-                  <p className="text-white text-sm mb-2">Balance</p>
-                  <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
+                  <p className="text-white text-sm mb-1 sm:mb-2">Balance</p>
+                  <div className="flex gap-2 sm:gap-3">
                     {[1, 10, 100, 1000].map((val) => (
                       <button
                         key={val}
-                        className="bg-[#2A2A3E] text-white px-4 py-2 rounded-md hover:bg-purple-600 transition"
+                        onClick={() => setSelectedBalance(val)}
+                        className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-md transition text-xs sm:text-sm ${
+                          selectedBalance === val
+                            ? "bg-purple-600 text-white"
+                            : "bg-[#2A2A3E] text-white hover:bg-purple-600"
+                        }`}
                       >
                         {val === 1000 ? "1K" : val}
                       </button>
@@ -345,32 +483,46 @@ function Wingo5dGame() {
                 <div>
                   <p className="text-white text-sm mb-2">Quantity</p>
 
-                  <div className="flex justify-between items-center flex-wrap gap-4">
-                    {/* Quantity Selector - Left side */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                    {/* Quantity Selector */}
                     <div className="flex items-center gap-2">
-                      <button className="bg-[#2A2A3E] text-white px-3 py-1 rounded-md text-lg hover:bg-purple-600">
+                      <button
+                        onClick={() =>
+                          setCurrentQuantity(Math.max(1, currentQuantity - 1))
+                        }
+                        className="bg-[#2A2A3E] text-white px-3 py-1 rounded-md text-lg hover:bg-purple-600"
+                      >
                         -
                       </button>
                       <input
                         type="text"
-                        value={1}
+                        value={currentQuantity}
                         readOnly
                         className="bg-[#2A2A3E] w-14 text-center text-white px-3 py-1 rounded-md border border-[#3D3D5C]"
                       />
-                      <button className="bg-[#2A2A3E] text-white px-3 py-1 rounded-md text-lg hover:bg-purple-600">
+                      <button
+                        onClick={() => setCurrentQuantity(currentQuantity + 1)}
+                        className="bg-[#2A2A3E] text-white px-3 py-1 rounded-md text-lg hover:bg-purple-600"
+                      >
                         +
                       </button>
                     </div>
 
-                    {/* Multiplier Options - Right side */}
-                    <div className="flex gap-2 flex-wrap">
+                    {/* Multiplier Options */}
+                    <div className="grid grid-cols-3 sm:flex gap-1 sm:gap-2 w-full sm:w-auto">
                       {["X1", "X5", "X10", "X20", "X50", "X100"].map(
                         (label, index) => (
                           <button
                             key={index}
-                            className={`px-3 py-1 rounded-md border ${
-                              label === "X1"
-                                ? "text-white"
+                            onClick={() =>
+                              setCurrentMultiplier(
+                                parseInt(label.replace("X", ""))
+                              )
+                            }
+                            className={`px-2 sm:px-3 py-1 rounded-md border text-xs sm:text-sm ${
+                              currentMultiplier ===
+                              parseInt(label.replace("X", ""))
+                                ? "bg-purple-600 text-white border-purple-600"
                                 : "bg-[#2A2A3E] text-white hover:bg-purple-600"
                             }`}
                           >
@@ -384,12 +536,33 @@ function Wingo5dGame() {
 
                 {/* Total Amount */}
                 <div className="flex justify-between items-center mt-4 bg-[#2A2A3E] p-3 rounded-md">
-                  <button className="text-white border border-gray-500 rounded-md px-4 py-1 hover:bg-[#3A3A4E]">
-                    Cancel
+                  <button
+                    onClick={handlePlaceBet}
+                    disabled={!canPlaceBet()}
+                    className={`border rounded-md px-3 sm:px-4 py-1 text-xs sm:text-sm ${
+                      canPlaceBet()
+                        ? "text-white border-gray-500 hover:bg-purple-700"
+                        : "text-gray-400 border-gray-700 bg-gray-600 cursor-not-allowed"
+                    }`}
+                  >
+                    Place Bet
                   </button>
-                  <span className="text-white font-semibold">
+
+                  {/* Add this before the Total Amount section */}
+                  <div className="bg-[#2A2A3E] p-3 rounded-md mb-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-400">INR Wallet Balance:</span>
+                      <span className="text-white font-semibold">
+                        ₹{getINRBalance().toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="text-white font-semibold text-xs sm:text-sm">
                     Total amount
-                    <span className="text-gray-400 ml-2">₹1.00</span>
+                    <span className="text-gray-400 ml-2">
+                      ₹{calculateTotalAmount().toFixed(2)}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -397,80 +570,135 @@ function Wingo5dGame() {
           </div>
         </div>
 
-        {/* RIGHT SIDE: Table */}
-        <div className="w-full lg:w-[42%] h-[500px] bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
+        {/* RIGHT SIDE: Table - Hidden on mobile, shown on desktop */}
+        <div className="hidden lg:block w-full lg:w-[42%] h-[500px] bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden mt-20 mr-10">
           <div className="p-4 border-b border-purple-500/10">
             <h2 className="text-xl font-bold text-white">History</h2>
           </div>
 
           <div className="overflow-y-auto h-[calc(100%-56px)]">
-            <table className="w-full table-fixed text-sm sm:text-base">
-              <thead>
-                <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
-                  <th className="py-4 px-6">Period</th>
-                  <th className="py-4 px-6">Result</th>
-                  <th className="py-4 px-6">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  {
-                    period: "20250722103030138",
-                    result: [4, 6, 0, 8, 6],
-                    total: 24,
-                  },
-                  {
-                    period: "20250722102930138",
-                    result: [3, 2, 7, 1, 5],
-                    total: 18,
-                  },
-                  {
-                    period: "20250722102830138",
-                    result: [9, 1, 3, 0, 4],
-                    total: 17,
-                  },
-                  {
-                    period: "20250722102730138",
-                    result: [5, 5, 5, 5, 5],
-                    total: 25,
-                  },
-                  {
-                    period: "20250722102630138",
-                    result: [1, 2, 3, 4, 0],
-                    total: 10,
-                  },
-                ].map((row, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-purple-500/10 text-white hover:bg-purple-500/5"
-                  >
-                    <td className="py-4 px-6">{row.period}</td>
-                    <td className="py-4 px-6 flex gap-2">
-                      {row.result.map((num, index) => (
-                        <div
-                          key={index}
-                          className="w-8 h-6 rounded-full border border-gray-400 flex items-center justify-center text-sm font-medium"
-                        >
-                          {num}
-                        </div>
-                      ))}
-                    </td>
+            {betHistory && betHistory.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full table-fixed text-sm sm:text-base">
+                  <thead>
+                    <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
+                      <th className="py-4 px-6">Period</th>
+                      <th className="py-4 px-6">Result</th>
+                      <th className="py-4 px-6">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {betHistory?.map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className="border-b border-purple-500/10 text-white hover:bg-purple-500/5"
+                      >
+                        <td className="py-4 px-6">{row.period_number}</td>
+                        <td className="py-4 px-6">
+                          <div className="flex gap-2">
+                            {[
+                              row?.digit_a,
+                              row?.digit_b,
+                              row?.digit_c,
+                              row?.digit_d,
+                              row?.digit_e,
+                            ].map((num, index) => (
+                              <div
+                                key={index}
+                                className="w-8 h-6 rounded-full border border-gray-400 flex items-center justify-center text-sm font-medium text-white bg-[#2A2A3E]"
+                              >
+                                {num}
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 font-semibold">
+                          {row.sum_total}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-gray-400 text-lg mb-2">📊</div>
+                  <p className="text-gray-400 text-sm">No history available</p>
+                  <p className="text-gray-500 text-xs mt-1">
+                    Play some games to see your history here
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
-                    <td className="py-4 px-6">{row.total}</td>
-                  </tr>
+        {/* Mobile History Section - Only visible on mobile */}
+        <div className="block lg:hidden w-full bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden mx-2 mt-4">
+          <div className="p-3 border-b border-purple-500/10">
+            <h2 className="text-lg font-bold text-white">History</h2>
+          </div>
+
+          <div className="max-h-96 overflow-y-auto mb-20">
+            {betHistory && betHistory.length > 0 ? (
+              <div className="p-3 space-y-2">
+                {betHistory.map((row, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-[#1F1F30] border border-purple-500/10 rounded-lg p-3"
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs text-gray-400">Period</span>
+                      <span className="text-xs text-white font-mono">
+                        {row.period_number}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-1">
+                        {[
+                          row.digit_a,
+                          row.digit_b,
+                          row.digit_c,
+                          row.digit_d,
+                          row.digit_e,
+                        ].map((num, index) => (
+                          <div
+                            key={index}
+                            className="w-6 h-6 rounded-full border border-gray-400 flex items-center justify-center text-xs font-medium text-white bg-[#2A2A3E]"
+                          >
+                            {num}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-sm font-bold text-purple-400">
+                        Total: {row.sum_total}
+                      </span>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-40">
+                <div className="text-center p-4">
+                  <div className="text-gray-400 text-lg mb-2">📊</div>
+                  <p className="text-gray-400 text-sm">No history available</p>
+                  <p className="text-gray-500 text-xs mt-1">
+                    Play some games to see your history here
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {showHowToPlay && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-          <div className="bg-[#1F1F30] w-full max-w-3xl rounded-xl p-6 shadow-lg border border-[#2D2D45] overflow-y-auto max-h-[90vh]">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-[#1F1F30] w-full max-w-3xl rounded-xl p-4 sm:p-6 shadow-lg border border-[#2D2D45] overflow-y-auto max-h-[90vh]">
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-lg sm:text-xl font-bold text-white">
                 5D Lottery Game Rules
               </h2>
               <button onClick={handleClose} className="text-white text-2xl">
@@ -479,7 +707,7 @@ function Wingo5dGame() {
             </div>
 
             {/* Game Explanation */}
-            <div className="text-gray-300 text-sm space-y-2 mb-6">
+            <div className="text-gray-300 text-xs sm:text-sm space-y-2 mb-6">
               <ul className="list-disc list-inside space-y-1">
                 <li>
                   <strong>Draw instructions:</strong>
@@ -524,18 +752,6 @@ function Wingo5dGame() {
             </div>
           </div>
         </div>
-      )}
-
-      {userId > 0 && (
-        <>
-          {/* <DepositModal /> */}
-          <WithdrawModal
-            isOpen={isWithdrawModalOpen}
-            onClose={() => setIsWithdrawModalOpen(false)}
-            mainBalance={Number(mainBalance)}
-            fetchData={fetchData}
-          />
-        </>
       )}
     </>
   );

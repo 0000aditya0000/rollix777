@@ -27,6 +27,7 @@ import Disclaimer from "./Disclaimer.js";
 import FirstDepositModal from "./modals/FirstDepositModal.js";
 import ReferralModal from "./modals/ReferralModal.js";
 import BonusModal from "./modals/BonusModal.js";
+import Wingo5d from "./Wingo5d.js";
 
 const Dashboard = () => {
   // const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
