@@ -103,7 +103,16 @@ const Dashboard = () => {
             </div>
           </div> */}
           <ImageSlider />
-          <ColorGame />
+          <div className="px-4 py-4">
+            <div className="grid grid-cols-2 gap-3  ">
+              <div className="w-full">
+                <ColorGame />
+              </div>
+              <div className="w-full">
+                <Wingo5d />
+              </div>
+            </div>
+          </div>
           <ExclusiveGames title="Exclusive Games" />
           <LatestGames title="Latest Games" type="latest" />
           <GameCarousel title="Popular Games" type="popular" />
@@ -198,12 +207,14 @@ const Dashboard = () => {
 
                   {/* Recent Games */}
                   <div className="bg-[#151525] rounded-xl overflow-hidden flex flex-row">
-                    <div className="grid grid-cols-2">
-                      <div className="min-h-[320px] w-full px-6">
-                        <ColorGame />
-                      </div>
-                      <div className="min-h-[320px] w-full">
-                        <Wingo5d />
+                    <div className="bg-[#151525] rounded-xl overflow-hidden p-6 mb-6">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="min-h-[320px] w-full ml-5">
+                          <ColorGame />
+                        </div>
+                        <div className="min-h-[320px] w-full ml-5">
+                          <Wingo5d />
+                        </div>
                       </div>
                     </div>
 
