@@ -27,6 +27,7 @@ import Disclaimer from "./Disclaimer.js";
 import FirstDepositModal from "./modals/FirstDepositModal.js";
 import ReferralModal from "./modals/ReferralModal.js";
 import BonusModal from "./modals/BonusModal.js";
+import Wingo5d from "./Wingo5d.js";
 
 const Dashboard = () => {
   // const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -196,8 +197,16 @@ const Dashboard = () => {
                   </div>
 
                   {/* Recent Games */}
-                  <div className="bg-[#151525] rounded-xl overflow-hidden">
-                    <ColorGame />
+                  <div className="bg-[#151525] rounded-xl overflow-hidden flex flex-row">
+                    <div className="grid grid-cols-2">
+                      <div className="min-h-[320px] w-full px-6">
+                        <ColorGame />
+                      </div>
+                      <div className="min-h-[320px] w-full">
+                        <Wingo5d />
+                      </div>
+                    </div>
+
                     {/* <div className="p-3 border-b border-gray-800/50">
                       <h3 className="text-sm font-bold text-white">Recent Games</h3>
                     </div>

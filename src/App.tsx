@@ -41,6 +41,7 @@ import KYCVerification from "./pages/KYCVerification";
 import ErrorPage from "./components/ErrorPage";
 import DepositPage from "./components/DepositModal";
 import AuthModal from "./components/AuthModal"; // Add this import
+import Wingo5dGame from "./components/Wingo5dGame";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -170,6 +171,14 @@ function App() {
                         element={
                           <ProtectedRoute onLoginRequired={handleLoginRequired}>
                             <ColorGame />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/wingo5d"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Wingo5dGame />
                           </ProtectedRoute>
                         }
                       />
