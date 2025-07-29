@@ -256,7 +256,7 @@ const Dashboard = () => {
         </>
       )}
 
-      {modalStep === 1 && (
+      {/* {modalStep === 1 && (
         <FirstDepositModal
           onClose={() => {
             setModalStep(0);
@@ -280,7 +280,7 @@ const Dashboard = () => {
             setModalStep(0);
           }}
         />
-      )}
+      )} */}
     </div>
   );
 };

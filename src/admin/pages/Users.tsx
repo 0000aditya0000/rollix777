@@ -17,7 +17,7 @@ const Users = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/user/allusers');
+        const response = await axios.get('https://api.rollix777.com/api/user/allusers');
         setUsers(response.data);
         console.log(response.data);
       } catch (error) {
@@ -33,7 +33,7 @@ const Users = () => {
   // Delete User
   const deleteUser = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/user/user/${id}`);
+      await axios.delete(`https://api.rollix777.com/api/user/user/${id}`);
       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
       alert("User deleted successfully.");
     } catch (err) {
@@ -45,7 +45,7 @@ const Users = () => {
   // Add New User
   const addNewUser = async (userData) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/user', userData);
+      const response = await axios.post('https://api.rollix777.com/api/admin/user', userData);
       setUsers((prevUsers) => [...prevUsers, response.data]);
       alert("User added successfully.");
     } catch (err) {
@@ -57,7 +57,7 @@ const Users = () => {
   // Update User
   const updateUser = async (id, userData) => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/user/user/${id}`, userData);
+      const response = await axios.put(`https://api.rollix777.com/api/user/user/${id}`, userData);
       setUsers((prevUsers) =>
         prevUsers.map((user) => (user.id === id ? response.data : user))
       );

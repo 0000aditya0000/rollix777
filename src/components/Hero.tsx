@@ -114,7 +114,7 @@ const Hero: React.FC = () => {
       }
 
       const response = await axios.post(
-        "http://localhost:5000/api/color/launchGame",
+        "https://api.rollix777.com/api/color/launchGame",
         {
           userId,
           id,
