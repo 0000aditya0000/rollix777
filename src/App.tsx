@@ -42,6 +42,7 @@ import ErrorPage from "./components/ErrorPage";
 import DepositPage from "./components/DepositModal";
 import AuthModal from "./components/AuthModal"; // Add this import
 import Wingo5dGame from "./components/Wingo5dGame";
+import TRXGame from "./components/TrxGame";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -179,6 +180,14 @@ function App() {
                         element={
                           <ProtectedRoute onLoginRequired={handleLoginRequired}>
                             <Wingo5dGame />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/trx"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <TRXGame />
                           </ProtectedRoute>
                         }
                       />
