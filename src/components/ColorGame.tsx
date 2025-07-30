@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import WingoRollix from "../assets/WingoRollix.png";
+import Wingo from "../assets/wingo.png";
 
 const ColorGame = () => {
   const auth = useSelector((state: RootState) => state.auth.isAuthenticated);
@@ -26,53 +26,35 @@ const ColorGame = () => {
   return (
     <>
       {/* Mobile View */}
-      <section className="md:hidden h-full w-full">
-        <div className="h-[320px] w-full bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-2xl p-4 border border-purple-500/20 flex flex-col justify-between">
-          {/* Top Section - Icon and Title */}
-          <div className="flex flex-col items-center gap-2">
-            <div className="p-2 bg-purple-500/20 rounded-xl">
-              <Dices className="w-6 h-6 text-purple-400" />
-            </div>
-            <h2 className="text-lg font-bold text-white text-center">WinGo</h2>
-          </div>
+      <section className="md:hidden h-full w-full ">
+        <div
+          className="w-full max-w-[200px] mx-auto bg-[#1a1e3a] rounded-xl border border-[#2d3263] shadow-inner flex flex-col items-center justify-between overflow-hidden"
+          style={{ height: "180px" }}
+        >
+          {/* Title at the top */}
+          <h3 className="text-white font-semibold text-sm text-center mt-3">
+            Win Go
+          </h3>
 
-          {/* Middle Section - Color Buttons */}
-          <div className="flex gap-2 px-1">
-            <div className="flex-1 bg-red-500 h-14 rounded-xl flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
-              <span
-                onClick={handlePlayNow}
-                className="text-base font-bold text-white"
-              >
-                Red
-              </span>
-            </div>
-            <div className="flex-1 bg-green-500 h-14 rounded-xl flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
-              <span
-                onClick={handlePlayNow}
-                className="text-base font-bold text-white"
-              >
-                Green
-              </span>
-            </div>
-          </div>
+          {/* Image in the center */}
+          <img
+            src={Wingo}
+            alt="WinGo"
+            className="w-[70px] h-[70px] object-contain"
+          />
 
-          {/* Bottom Section - Message and Button */}
-          <div className="text-center">
-            <p className="text-gray-300 text-center text-sm mb-3">
-              Choose your color and win big!
-            </p>
-            <button
-              onClick={handlePlayNow}
-              className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity text-sm"
-            >
-              Play Now
-            </button>
-          </div>
+          {/* GO Button at the bottom */}
+          <button
+            onClick={handlePlayNow}
+            className="mb-3 px-5 py-1 text-sm text-white rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
+          >
+            Play
+          </button>
         </div>
       </section>
 
       {/* Desktop View - Fixed height to match other components */}
-      <section className="hidden md:block h-[320px] w-full">
+      <section className="hidden md:block h-[350px] w-full">
         <div className="h-full w-full bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-2xl p-6 border border-purple-500/20 flex flex-col justify-between">
           {/* Top Section - Icon and Title */}
           <div className="flex items-center gap-4">
@@ -83,23 +65,12 @@ const ColorGame = () => {
           </div>
 
           {/* Middle Section - Color Buttons */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-red-500 h-24 rounded-xl flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
-              <span
-                onClick={handlePlayNow}
-                className="text-2xl font-bold text-white"
-              >
-                Red
-              </span>
-            </div>
-            <div className="bg-green-500 h-24 rounded-xl flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
-              <span
-                onClick={handlePlayNow}
-                className="text-2xl font-bold text-white"
-              >
-                Green
-              </span>
-            </div>
+          <div className="flex justify-center items-center flex-1">
+            <img
+              src={Wingo}
+              alt="WinGo"
+              className="w-[150px] h-[150px] object-contain"
+            />
           </div>
 
           {/* Bottom Section - Message and Button */}
