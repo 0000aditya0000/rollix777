@@ -61,3 +61,12 @@ export const latestResult5D = async (data) => {
     throw error.response?.data || error.message;
   }
 };
+
+export const userHistory = async (data) => {
+  try {
+    const response = await axiosInstance.post("/api/5d/bet-history-5d", data);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
