@@ -15,6 +15,8 @@ import ActivityTracker from "./ActivityTracker";
 import ImageSlider from "./ImageSlider";
 import TodaysEarningChart from "./TodaysEarningChart";
 import Disclaimer from "./Disclaimer";
+import Wingo5d from "./Wingo5d";
+import TrxGame from "./TRX";
 
 const Home = () => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
@@ -54,7 +56,7 @@ const Home = () => {
           <main>
             <div className="mt-12">
               <div className="mt-20 mb-4">
-                <div className="flex justify-center gap-4 md:hidden">
+                {/* <div className="flex justify-center gap-4 md:hidden">
                   <button
                     onClick={handleLoginClick}
                     className="w-36 sm:w-44 py-3 px-6 bg-green-600 text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 rounded-md"
@@ -68,13 +70,24 @@ const Home = () => {
                   >
                     <span>Register</span>
                   </button>
-                </div>
+                </div> */}
                 <ImageSlider />
               </div>
               <Hero />
             </div>
             <div className="md:hidden">
-              <ColorGame />
+              <h6 className="text-white text-xl font-bold mb-4 ml-4">Wingo</h6>
+              <div className="grid grid-cols-2 gap-3 mb-4 m-2">
+                <div className="w-full">
+                  <ColorGame />
+                </div>
+                <div className="w-full">
+                  <Wingo5d />
+                </div>
+                <div className="w-full">
+                  <TrxGame />
+                </div>
+              </div>
             </div>
             <div className="space-y-8 md:space-y-12">
               <ExclusiveGames title="Exclusive Games" />
