@@ -1,34 +1,64 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   latestResult5D,
   getPeriod5D,
   placeBet5D,
   resultHistory5D,
+  userHistory,
 } from "../lib/services/wingo5dGameService";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { toast } from "react-hot-toast";
+import { getTimerData } from "../lib/services/BigSmallServices";
+import { X } from "lucide-react";
 
 function Wingo5dGame() {
   const navigate = useNavigate();
   const { wallets } = useSelector((state: RootState) => state.wallet);
   const userId = Number(localStorage.getItem("userId")) || 0;
   const [betHistory, setBetHistory] = useState([]);
-  const [selectedTimer, setSelectedTimer] = useState<number | null>(null);
+  const [selectedTimer, setSelectedTimer] = useState<number | null>(1);
   const [selectedTab, setSelectedTab] = useState("A");
   const [isAnimating, setIsAnimating] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [activeTimer, setActiveTimer] = useState(1);
   const [selectedBet, setSelectedBet] = useState<string | null>(null);
   const [periodNumber, setPeriodNumber] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState({
-    minutes: 1,
-    seconds: 0,
-  });
   const [currentQuantity, setCurrentQuantity] = useState(1);
   const [currentMultiplier, setCurrentMultiplier] = useState(1);
   const [selectedBalance, setSelectedBalance] = useState(10);
+  const [winner, setWinner] = useState(false);
+  const [popup, setPopup] = useState("");
+  const [result, setResult] = useState(null);
+  const [latestBetResult, setLatestBetResult] = useState(null);
+  const [timers, setTimers] = useState<Record<1 | 3 | 5 | 10, number>>({
+    1: 0,
+    3: 0,
+    5: 0,
+    10: 0,
+  });
+
+  const timerOptions: { label: string; value: TimerKey }[] = [
+    { label: "1 Min", value: 1 },
+    { label: "3 Min", value: 3 },
+    { label: "5 Min", value: 5 },
+    { label: "10 Min", value: 10 },
+  ];
+
+  const intervalRefs = useRef<{ [key: number]: NodeJS.Timeout | null }>({});
+  const isFetchingRef = useRef<{ [key: number]: boolean }>({});
+  const [triggeredTimers, setTriggeredTimers] = useState<Set<number>>(
+    new Set()
+  );
+
+  // Add period numbers for each timer
+  const [periodNumbers, setPeriodNumbers] = useState({
+    1: 0,
+    3: 0,
+    5: 0,
+    10: 0,
+  });
 
   // Also add these helper functions before your return statement
   const calculateTotalAmount = () => {
@@ -53,14 +83,14 @@ function Wingo5dGame() {
   const getTimerString = (timer: number) => `${timer}min`;
 
   const [lotteryResults, setLotteryResults] = useState([
-    { number: 4, letter: "A" },
-    { number: 6, letter: "B" },
+    { number: 0, letter: "A" },
+    { number: 0, letter: "B" },
     { number: 0, letter: "C" },
-    { number: 8, letter: "D" },
-    { number: 6, letter: "E" },
+    { number: 0, letter: "D" },
+    { number: 0, letter: "E" },
   ]);
 
-  const getBetType = (value) => {
+  const getBetType = (value: any) => {
     if (!value) return "";
 
     const lower = value.toLowerCase();
@@ -82,12 +112,202 @@ function Wingo5dGame() {
     0
   );
 
+  const fetchPeriodNumber = async (timer: number) => {
+    try {
+      const timerStr = getTimerString(timer);
+      const data = await getPeriod5D({ mins: timerStr });
+
+      if (data && typeof data.period_number === "number") {
+        setPeriodNumbers((prev) => ({
+          ...prev,
+          [timer]: data.period_number,
+        }));
+
+        if (timer === activeTimer) {
+          setPeriodNumber(data.period_number);
+        }
+        return data.period_number;
+      } else {
+        console.error("Invalid period number received from API:", data);
+        throw new Error("Invalid period number received from API");
+      }
+    } catch (error) {
+      console.error(`Failed to fetch period number for ${timer}min:`, error);
+      throw error;
+    }
+  };
+
+  const formatTime = (seconds: any) => {
+    if (typeof seconds !== "number" || isNaN(seconds)) {
+      return "00:00";
+    }
+
+    const mins = Math.floor(Math.abs(seconds) / 60);
+    const secs = Math.abs(seconds) % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  // Add fetchTimerData function
+  const fetchTimerData = async (timer: any) => {
+    if (isFetchingRef.current[timer]) {
+      return;
+    }
+
+    try {
+      isFetchingRef.current[timer] = true;
+
+      await fetchPeriodNumber(timer);
+
+      const timerStr = getTimerString(timer);
+      const data = await getTimerData(timerStr);
+
+      let remainingSeconds;
+      if (timer === 1) {
+        remainingSeconds = data.remainingTimeSeconds;
+      } else {
+        remainingSeconds =
+          data.remainingTimeMinutes * 60 + data.remainingTimeSeconds;
+      }
+
+      if (typeof remainingSeconds === "number" && !isNaN(remainingSeconds)) {
+        startLocalCountdown(timer, remainingSeconds);
+      } else {
+        console.error(`Invalid timer data received for ${timer}min:`, data);
+        throw new Error("Invalid timer data received");
+      }
+    } catch (err) {
+      console.error(`Failed to fetch ${timer}min timer:`, err);
+      startLocalCountdown(
+        timer,
+        timer === 1 ? 60 : timer === 3 ? 180 : timer === 5 ? 300 : 600
+      );
+    } finally {
+      isFetchingRef.current[timer] = false;
+    }
+  };
+
+  // Add startLocalCountdown function
+  const startLocalCountdown = (timer: any, initialTime: any) => {
+    if (typeof initialTime !== "number" || isNaN(initialTime)) {
+      console.error(`Invalid initial time for ${timer}min:`, initialTime);
+      return;
+    }
+
+    // Clear existing interval for this timer
+    if (intervalRefs.current[timer]) {
+      clearInterval(intervalRefs.current[timer]);
+    }
+
+    // Reset the triggered state for this timer
+    setTriggeredTimers((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(timer);
+      return newSet;
+    });
+
+    // Set initial time
+    setTimers((prev) => ({
+      ...prev,
+      [timer]: Math.floor(initialTime),
+    }));
+
+    let isProcessing = false;
+
+    // Start local countdown
+    intervalRefs.current[timer] = setInterval(async () => {
+      setTimers((current) => {
+        const currentTime = current[timer];
+        if (currentTime <= 1) {
+          if (!isProcessing && !triggeredTimers.has(timer)) {
+            isProcessing = true;
+            console.log(`Timer ended for ${timer}min, making API calls`);
+
+            setTriggeredTimers((prev) => new Set(prev).add(timer));
+
+            fetchPeriodNumber(timer)
+              .then((newPeriodNumber) => {
+                if (newPeriodNumber && !isNaN(newPeriodNumber)) {
+                  return generateNewLotteryResult(
+                    getTimerString(timer),
+                    newPeriodNumber
+                  );
+                } else {
+                  throw new Error("Invalid period number received");
+                }
+              })
+              .then(() => {
+                console.log(
+                  `API calls completed for ${timer}min, fetching new timer data`
+                );
+                return fetchTimerData(timer);
+              })
+              .catch((error) => {
+                console.error(
+                  `Error in timer end process for ${timer}min:`,
+                  error
+                );
+                setTriggeredTimers((prev) => {
+                  const newSet = new Set(prev);
+                  newSet.delete(timer);
+                  return newSet;
+                });
+              })
+              .finally(() => {
+                isProcessing = false;
+              });
+          }
+          return { ...current, [timer]: 0 };
+        }
+        return { ...current, [timer]: currentTime - 1 };
+      });
+    }, 1000);
+  };
+
+  const checkWinLose = async (gameResult: any) => {
+    try {
+      // Fetch the latest bet result to check if player won or lost
+      const historyRes = await userHistory({
+        timer: getTimerString(activeTimer),
+        userId,
+      });
+
+      console.log(historyRes, "historyRes");
+
+      if (historyRes?.success && historyRes.bets?.length > 0) {
+        const latestBet = historyRes.bets[0];
+        console.log(latestBet, "latestbet");
+        setLatestBetResult(latestBet);
+
+        // Check if the latest bet matches the current result period
+        if (latestBet.period_number === gameResult.period_number) {
+          // You'll need to implement your win/lose logic here based on your API response
+          // This is just an example - adjust according to your bet result structure
+          if (latestBet.status === "won" || latestBet.win_amount > 0) {
+            setWinner(true);
+            setPopup("won");
+          } else if (
+            latestBet.status === "lost" ||
+            latestBet.win_amount === 0
+          ) {
+            setWinner(true);
+            setPopup("lost");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error checking win/lose:", error);
+    }
+  };
+
   const generateNewLotteryResult = async (
     timerStr: string,
-    periodNumber: number
+    currentPeriodNumber: number
   ) => {
     setIsAnimating(true);
 
+    const periodNumber = currentPeriodNumber - 1;
     try {
       const res = await latestResult5D({
         timer: timerStr,
@@ -106,6 +326,11 @@ function Wingo5dGame() {
         ];
 
         setLotteryResults(formatted);
+        setResult(res.result); // Store the result for popup
+
+        // Check if player won or lost
+        console.log("ttttttttttttttttttttttttttttttttt");
+        await checkWinLose(res.result);
       }
     } catch (err) {
       console.error("Error fetching latest result:", err);
@@ -135,7 +360,6 @@ function Wingo5dGame() {
         });
 
         if (historyRes?.success) {
-          // Based on your Postman response, use 'bets' instead of 'data'
           setBetHistory(historyRes.results || historyRes.results || []);
         }
       } catch (err) {
@@ -147,68 +371,24 @@ function Wingo5dGame() {
 
     const interval = setInterval(init, activeTimer * 60000);
     return () => clearInterval(interval);
-  }, [activeTimer, userId]);
+  }, [userId]);
 
   // Timer countdown effect
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        const { minutes, seconds } = prev;
+    // Initial fetch for all timers
+    [1, 3, 5, 10].forEach((timer) => {
+      fetchTimerData(timer);
+      fetchPeriodNumber(timer);
+    });
 
-        const handleTimerEnd = async () => {
-          const minsString = getTimerString(activeTimer);
-
-          try {
-            const res = await getPeriod5D({ mins: minsString });
-
-            if (res?.success && res.period_number) {
-              await generateNewLotteryResult(minsString, res.period_number);
-
-              const historyRes = await resultHistory5D({
-                timer: minsString, // Changed from 'mins' to 'timer'
-                userId,
-              });
-              if (historyRes?.success) {
-                setBetHistory(historyRes.bets || historyRes.data || []); // Use bets or data
-              }
-            }
-          } catch (err) {
-            console.error("Error during timer end logic:", err);
-          }
-
-          const resetTo = selectedTimer ?? 1;
-          setActiveTimer(resetTo);
-          setTimeRemaining({ minutes: resetTo, seconds: 0 });
-        };
-
-        if (minutes === 0 && seconds === 0) {
-          handleTimerEnd(); // Call the async handler
-          return prev; // Keep current state until async finishes
-        }
-
-        if (seconds > 0) {
-          return { ...prev, seconds: seconds - 1 };
-        } else if (minutes > 0) {
-          return { minutes: minutes - 1, seconds: 59 };
-        }
-
-        return prev;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [activeTimer, selectedTimer]);
-
-  useEffect(() => {
-    if (selectedTimer !== null) {
-      setActiveTimer(selectedTimer);
-      setTimeRemaining({ minutes: selectedTimer, seconds: 0 });
-    }
-  }, [selectedTimer]);
+    // Cleanup intervals when component unmounts
+    return () => {
+      Object.values(intervalRefs.current).forEach(clearInterval);
+    };
+  }, []);
 
   const handlePlaceBet = async () => {
     const totalAmount = calculateTotalAmount();
-    const currentBalance = getINRBalance();
 
     if (!canPlaceBet()) {
       toast.error("Insufficient INR wallet balance!");
@@ -233,7 +413,7 @@ function Wingo5dGame() {
       timer: getTimerString(activeTimer),
     };
 
-    console.log("Sending bet payload:", payload); // Debug log
+    console.log("Sending bet payload:", payload);
 
     try {
       const res = await placeBet5D(payload);
@@ -246,14 +426,15 @@ function Wingo5dGame() {
         setCurrentMultiplier(1);
         setSelectedBalance(10);
 
-        // Refresh bet history
+        // Refresh bet history - Fix: Use consistent property name
         const historyRes = await resultHistory5D({
           timer: getTimerString(activeTimer),
           userId,
         });
 
         if (historyRes?.success) {
-          setBetHistory(historyRes.bets || historyRes.data || []);
+          // Use the same property name as in the initial load (historyRes.results)
+          setBetHistory(historyRes.results || []);
         }
       } else {
         toast.error(res.message || "Failed to place bet.");
@@ -264,35 +445,40 @@ function Wingo5dGame() {
     }
   };
 
-  console.log(betHistory, "bethistory");
+  console.log(winner, latestBetResult, popup, "status");
 
   const handleClose = () => setShowHowToPlay(false);
   return (
     <>
       <div className="flex flex-col lg:flex-row gap-2 lg:gap-4 items-start px-2 sm:px-4 py-2 sm:py-6">
         {/* LEFT SIDE: Main Wingo Content */}
+
         <div className="w-full lg:w-[58%]">
           {/* Timer Buttons Section */}
-          <div className="flex justify-center items-center gap-1 sm:gap-4 mb-4 sm:mb-10 px-2">
-            {[
-              { label: "1 Min", value: 1 },
-              { label: "3 Min", value: 3 },
-              { label: "5 Min", value: 5 },
-              { label: "10 Min", value: 10 },
-            ].map((timer) => (
-              <button
-                key={timer.value}
-                onClick={() => setSelectedTimer(timer.value)}
-                className={`flex-1 sm:w-36 sm:flex-none px-2 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium border transition-all
-            ${
-              selectedTimer === timer.value
-                ? "bg-purple-600 text-white border-purple-600"
-                : "bg-transparent text-gray-300 border-purple-500/30 hover:border-purple-500"
-            }`}
-              >
-                {timer.label}
-              </button>
-            ))}
+          <div className="w-full max-w-3xl mx-auto mb-6 mt-20 px-2 sm:px-4">
+            <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-5">
+              {timerOptions.map((timer) => (
+                <button
+                  key={timer.value}
+                  onClick={() => {
+                    setSelectedTimer(timer.value);
+                    setActiveTimer(timer.value);
+                  }}
+                  className={`min-w-[90px] px-5 py-3 rounded-xl text-base font-semibold border transition-all ${
+                    selectedTimer === timer.value
+                      ? "bg-purple-600 text-white border-purple-600 shadow-lg"
+                      : "bg-transparent text-gray-300 border-purple-400 hover:border-purple-500 hover:bg-purple-600/20"
+                  }`}
+                >
+                  <div className="flex flex-col items-center justify-center">
+                    <span>{timer.label}</span>
+                    <span className="text-sm mt-1">
+                      {formatTime(timers[timer.value])}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Lottery Results Section */}
@@ -353,12 +539,12 @@ function Wingo5dGame() {
                 </p>
                 <div className="flex items-center gap-1 text-2xl sm:text-3xl font-bold">
                   <span className="text-purple-800">
-                    {timeRemaining.minutes}
+                    {formatTime(timers[activeTimer])}
                   </span>
-                  <span className="text-gray-400">:</span>
-                  <span className="text-purple-800">
+                  {/* <span className="text-gray-400">:</span> */}
+                  {/* <span className="text-purple-800">
                     {timeRemaining.seconds.toString().padStart(2, "0")}
-                  </span>
+                  </span> */}
                 </div>
               </div>
             </div>
@@ -750,6 +936,188 @@ function Wingo5dGame() {
                 </li>
               </ul>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Win/Loss Popup */}
+      {winner && latestBetResult && popup === "won" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm mx-auto bg-gradient-to-b from-green-800 to-green-500 rounded-3xl overflow-visible shadow-2xl animate-fadeIn border-t-8 border-green-600 pt-16">
+            {/* Close button */}
+            <button
+              onClick={() => setWinner(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-green-600 hover:text-green-800 transition-colors z-10 border border-green-200 shadow"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+            {/* Trophy emoji */}
+            <div className="flex justify-center absolute left-1/2 -translate-x-1/2 -top-14 z-20">
+              <div className="w-24 h-24 bg-white/30 rounded-full flex items-center justify-center shadow-lg border-4 border-green-200 backdrop-blur">
+                <span className="text-5xl">🎉</span>
+              </div>
+            </div>
+            {/* Header */}
+            <div className="flex flex-col items-center pt-14 pb-2">
+              <h2 className="text-2xl font-bold text-green-100 mb-2 drop-shadow">
+                Congratulations!
+              </h2>
+              {/* Results display */}
+              <div className="flex gap-2 mb-2">
+                {result &&
+                  [
+                    result.digit_a,
+                    result.digit_b,
+                    result.digit_c,
+                    result.digit_d,
+                    result.digit_e,
+                  ].map((digit, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 rounded-full text-sm font-semibold bg-green-600 text-white shadow"
+                    >
+                      {digit}
+                    </span>
+                  ))}
+              </div>
+              <div className="text-xs text-green-200 mb-2">
+                Period: 5D {getTimerString(activeTimer)} ·{" "}
+                {result?.period_number ?? "-"}
+              </div>
+            </div>
+            {/* WIN ticket area */}
+            <div
+              className="relative flex flex-col items-center bg-gradient-to-b from-white/95 to-green-100/80 mx-6 mt-2 mb-4 shadow-lg rounded-2xl"
+              style={{ boxShadow: "0 8px 32px 0 rgba(31, 135, 31, 0.15)" }}
+            >
+              <div className="w-full flex flex-col items-center py-8 px-2">
+                <div
+                  className="text-4xl font-extrabold text-green-700 mb-2 tracking-wider uppercase"
+                  style={{
+                    fontFamily: "monospace, sans-serif",
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  WIN
+                </div>
+                <div className="text-2xl font-bold text-green-600 mb-1">
+                  ₹
+                  {latestBetResult.win_amount ||
+                    latestBetResult.amount_received ||
+                    "0"}
+                </div>
+                <div className="text-xs text-green-400 mt-1">
+                  Period: 5D {getTimerString(activeTimer)} ·{" "}
+                  {result?.period_number ?? "-"}
+                </div>
+              </div>
+              {/* Wavy bottom edge */}
+              <svg
+                viewBox="0 0 320 20"
+                width="100%"
+                height="20"
+                className="block"
+              >
+                <path
+                  d="M0 10 Q 20 20 40 10 T 80 10 T 120 10 T 160 10 T 200 10 T 240 10 T 280 10 T 320 10 V20 H0Z"
+                  fill="#fff"
+                />
+              </svg>
+            </div>
+            {/* Auto close message */}
+            {/* <div className="flex items-center justify-center pb-4">
+              <span className="text-xs text-green-200">
+                3 seconds auto close
+              </span>
+            </div> */}
+          </div>
+        </div>
+      )}
+
+      {/* Loss popup */}
+      {winner && latestBetResult && popup === "lost" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm mx-auto bg-gradient-to-b from-red-800 to-red-500 rounded-3xl overflow-visible shadow-2xl animate-fadeIn border-t-8 border-red-600 pt-16">
+            {/* Close button */}
+            <button
+              onClick={() => setWinner(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-red-600 hover:text-red-800 transition-colors z-10 border border-red-200 shadow"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+            {/* Sad emoji */}
+            <div className="flex justify-center absolute left-1/2 -translate-x-1/2 -top-14 z-20">
+              <div className="w-24 h-24 bg-white/30 rounded-full flex items-center justify-center shadow-lg border-4 border-red-200 backdrop-blur">
+                <span className="text-5xl">🥲</span>
+              </div>
+            </div>
+            {/* Header */}
+            <div className="flex flex-col items-center pt-14 pb-2">
+              <h2 className="text-2xl font-bold text-red-100 mb-2 drop-shadow">
+                Sorry, you lost!
+              </h2>
+              {/* Results display */}
+              <div className="flex gap-2 mb-2">
+                {result &&
+                  [
+                    result.digit_a,
+                    result.digit_b,
+                    result.digit_c,
+                    result.digit_d,
+                    result.digit_e,
+                  ].map((digit, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 rounded-full text-sm font-semibold bg-red-600 text-white shadow"
+                    >
+                      {digit}
+                    </span>
+                  ))}
+              </div>
+              <div className="text-xs text-red-200 mb-2">
+                Period: 5D {getTimerString(activeTimer)} ·{" "}
+                {result?.period_number ?? "-"}
+              </div>
+            </div>
+            {/* LOSS ticket area */}
+            <div
+              className="relative flex flex-col items-center bg-gradient-to-b from-white/95 to-red-100/80 mx-6 mt-2 mb-4 shadow-lg rounded-2xl"
+              style={{ boxShadow: "0 8px 32px 0 rgba(135, 31, 31, 0.15)" }}
+            >
+              <div className="w-full flex flex-col items-center py-8 px-2">
+                <div
+                  className="text-4xl font-extrabold text-red-700 mb-2 tracking-wider uppercase"
+                  style={{
+                    fontFamily: "monospace, sans-serif",
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  LOSS
+                </div>
+                <div className="text-xs text-red-400 mt-1">
+                  Period: 5D {getTimerString(activeTimer)} ·{" "}
+                  {result?.period_number ?? "-"}
+                </div>
+              </div>
+              {/* Wavy bottom edge */}
+              <svg
+                viewBox="0 0 320 20"
+                width="100%"
+                height="20"
+                className="block"
+              >
+                <path
+                  d="M0 10 Q 20 20 40 10 T 80 10 T 120 10 T 160 10 T 200 10 T 240 10 T 280 10 T 320 10 V20 H0Z"
+                  fill="#fff"
+                />
+              </svg>
+            </div>
+            {/* Auto close message */}
+            {/* <div className="flex items-center justify-center pb-4">
+              <span className="text-xs text-red-200">3 seconds auto close</span>
+            </div> */}
           </div>
         </div>
       )}

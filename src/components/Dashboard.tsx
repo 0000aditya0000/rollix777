@@ -28,6 +28,7 @@ import FirstDepositModal from "./modals/FirstDepositModal.js";
 import ReferralModal from "./modals/ReferralModal.js";
 import BonusModal from "./modals/BonusModal.js";
 import Wingo5d from "./Wingo5d.js";
+import TrxGame from "./TRX.js";
 
 const Dashboard = () => {
   // const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -104,12 +105,16 @@ const Dashboard = () => {
           </div> */}
           <ImageSlider />
           <div className="px-4 py-4">
+            <h4 className="text-white text-xl font-bold mb-4">Wingo</h4>
             <div className="grid grid-cols-2 gap-3  ">
               <div className="w-full">
                 <ColorGame />
               </div>
               <div className="w-full">
                 <Wingo5d />
+              </div>
+              <div className="w-full">
+                <TrxGame />
               </div>
             </div>
           </div>
@@ -208,12 +213,15 @@ const Dashboard = () => {
                   {/* Recent Games */}
                   <div className="bg-[#151525] rounded-xl overflow-hidden flex flex-row">
                     <div className="bg-[#151525] rounded-xl overflow-hidden p-6 mb-6">
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="min-h-[320px] w-full ml-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="min-h-[320px] w-full">
                           <ColorGame />
                         </div>
-                        <div className="min-h-[320px] w-full ml-5">
+                        <div className="min-h-[320px] w-full">
                           <Wingo5d />
+                        </div>
+                        <div className="min-h-[320px] w-full">
+                          <TrxGame />
                         </div>
                       </div>
                     </div>
