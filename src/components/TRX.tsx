@@ -15,7 +15,7 @@ const TrxGame = () => {
     if (!auth) {
       setAuthModalOpen(true);
     } else {
-      //   navigate("/trxwin");
+      navigate("/trx");
     }
   };
 
@@ -57,7 +57,7 @@ const TrxGame = () => {
             <div className="p-3 bg-purple-500/20 rounded-xl">
               <Dice1 className="w-8 h-8 text-purple-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white">WinGo</h2>
+            <h2 className="text-2xl font-bold text-white">TRX</h2>
           </div>
 
           {/* Middle Section - Color Buttons */}
