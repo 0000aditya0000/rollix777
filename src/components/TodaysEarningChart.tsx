@@ -9,6 +9,29 @@ interface EarnerInfo {
   position: number;
 }
 
+// Array of random names for top 3 positions
+const randomNames = [
+  "Jai***ram", "Mem***MDG", "Mem***PX0", "Muk***a g", "Mem***MF0",
+  "Mem***B4A", "Mem***FTW", "Mem***MYV", "Mem***HRM", "Mem***NG",
+  "Aka***sha", "Roh***hit", "San***jana", "Ady***tan", "Ree***sha",
+  "Raj***esh", "Pri***ya", "Ami***t", "Sne***ha", "Vik***ash",
+  "Neh***a", "Rah***ul", "Ani***ta", "Sau***rab", "Div***ya",
+  "Kav***ya", "Man***ish", "Poo***ja", "Har***sh", "Tan***vi",
+  "Aar***av", "Ish***ita", "Kri***sh", "Zar***a", "Yuv***raj",
+  "Meh***ak", "Sha***n", "Pal***ak", "Rit***ik", "Nav***ya",
+  "Chi***rag", "Dee***pti", "Gau***rav", "Khy***ati", "Ran***bir",
+  "Sim***ran", "Ved***ant", "Mai***ra", "Kun***al", "Rid***hi",
+  "Arj***un", "Sah***il", "Niv***eta", "Piy***ush", "Rit***ika",
+  "Dev***ansh", "Aar***adhya", "Sha***urya", "Kav***ita", "Rud***ra",
+  "Ish***ani", "Vih***aan", "Pra***chi", "Aya***an", "Sou***mya",
+  "Kri***ti", "Adv***ait", "Rid***dhi", "Sha***an", "Aar***ya",
+  "Ved***ika", "Kri***sh", "Tan***ya", "Rah***ul", "Pri***ya",
+  "Aar***av", "Zar***a", "Man***ish", "Kav***ya", "Har***sh",
+  "Ish***ita", "Vik***ash", "Poo***ja", "Raj***esh", "Neh***a",
+  "Sha***n", "Ami***t", "Rah***ul", "Sne***ha", "Div***ya",
+  "Kri***sh", "Ani***ta", "Sau***rab", "Roh***hit", "San***jana"
+];
+
 const dummyEarners: EarnerInfo[] = [
   {
     id: 1,
@@ -118,12 +141,31 @@ const dummyEarners: EarnerInfo[] = [
 ];
 
 const TodaysEarningChart: React.FC = () => {
-  const [earners, setEarners] = useState<EarnerInfo[]>(dummyEarners);
+  const [earners, setEarners] = useState<EarnerInfo[]>([]);
   const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
+    // Generate random names for top 3 positions
+    const shuffledNames = [...randomNames].sort(() => Math.random() - 0.5);
+    
+    const updatedEarners = dummyEarners.map((earner, index) => {
+      if (index < 3) {
+        return {
+          ...earner,
+          name: shuffledNames[index]
+        };
+      }
+      return earner;
+    });
+    
+    setEarners(updatedEarners);
     setAnimate(true);
   }, []);
+
+  // Don't render until earners data is loaded
+  if (earners.length === 0) {
+    return null;
+  }
 
   const getPodiumStyle = (position: number) => {
     switch (position) {

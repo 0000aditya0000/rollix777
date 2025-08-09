@@ -34,7 +34,7 @@ import rouletteGames from '../../gamesData/roulette.json';
 import rubyplayGames from '../../gamesData/rubyplay.json';
 import scientificgamesGames from '../../gamesData/scientificgames.json';
 import sportbettingGames from '../../gamesData/sportbetting.json';
-import spribeGames from '../../gamesData/spribe.json';
+//import spribeGames from '../../gamesData/spribe.json';
 import vegasGames from '../../gamesData/vegas.json';
 import wazdanGames from '../../gamesData/wazdan.json';
 import zitroGames from '../../gamesData/zitro.json';
@@ -99,9 +99,9 @@ const AllGames: React.FC = () => {
         img: game.img,
         vendor: 'PGSOFT'
       }))
-    },
+    },  
     
-    { id: 'spribe', name: 'SPRIBE', games: spribeGames },
+    // { id: 'spribe', name: 'SPRIBE', games: spribeGames },
     { id: 'apollo', name: 'APOLLO', games: apolloGames },
     { id: 'booming', name: 'BOOMING', games: boomingGames },
     { 

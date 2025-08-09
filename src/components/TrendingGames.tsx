@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import AuthModal from "./AuthModal";
 import axios from "axios";
-import spribeGames from "../gamesData/spribe.json";
+import spribeGames from "../gamesData/vegas.json";
 
 interface TrendingGamesProps {
   title: string;

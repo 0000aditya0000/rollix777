@@ -105,7 +105,12 @@ const Dashboard = () => {
           </div> */}
           <ImageSlider />
           <div className="px-4 py-4">
-            <h4 className="text-white text-xl font-bold mb-4">Wingo</h4>
+            {/* Rollix Originals Heading - Mobile */}
+            <div className="mb-4 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-purple-500" />
+              <h4 className="text-white text-xl font-bold">Rollix777 Originals</h4>
+            </div>
+            
             <div className="grid grid-cols-2 gap-3  ">
               <div className="w-full">
                 <ColorGame />
@@ -213,6 +218,12 @@ const Dashboard = () => {
                   {/* Recent Games */}
                   <div className="bg-[#151525] rounded-xl overflow-hidden flex flex-row">
                     <div className="bg-[#151525] rounded-xl overflow-hidden p-6 mb-6">
+                      {/* Rollix Originals Heading */}
+                      <div className="mb-4 flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-purple-500" />
+                        <h3 className="text-lg font-bold text-white">Rollix777 Originals</h3>
+                      </div>
+                      
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="min-h-[320px] w-full">
                           <ColorGame />
