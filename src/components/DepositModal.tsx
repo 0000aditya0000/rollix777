@@ -16,7 +16,7 @@ import {
   Clock,
 } from "lucide-react";
 import { depositService } from "../services/api";
-import qs from 'qs';
+import qs from "qs";
 import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { setWallets } from "../slices/walletSlice";
@@ -25,7 +25,7 @@ import { button } from "framer-motion/client";
 import { getAllTransactions } from "../lib/services/transactionService";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../store";
-import axios from 'axios';
+import axios from "axios";
 
 interface DepositRequest {
   userId: number;
@@ -42,7 +42,7 @@ const DepositPage: React.FC = () => {
   >("btc");
   // Update the state type to handle 4 distinct options (removed ipay_qr)
   const [selectedServer, setSelectedServer] = useState<
-    "upi_instant" | "upi" | "imps" | "novapay_qr"
+    "upi_instant" | "upi" | "imps" | "novapay_qr" | "sunpay"
   >("upi_instant");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
@@ -224,42 +224,72 @@ const DepositPage: React.FC = () => {
       setLoading(true);
       const amount = parseFloat(amount1);
       const phone = 1234567890; // Default phone number
-      
+
       // Check if it's a QR payment option (Novapay only now)
       if (selectedServer === "novapay_qr") {
         // Direct redirect for QR payments
         const serverUrls = {
           novapay_qr: `https://pay.rollix777.com/novapay.php?uid=${uid}&amount=${amount}&phone=${phone}&tyid=1`,
         };
-        
+
         window.location.href = serverUrls[selectedServer];
         return;
       }
-      
+
+      if (selectedServer === "sunpay") {
+        const validationError = validateAmount(amount1, "upi");
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+
+        const amt = parseFloat(amount1);
+        if (amt < 100 || amt > 100000) {
+          toast.error(
+            "Amount must be between ₹100,000 and ₹200,000 for Sunpay."
+          );
+          return;
+        }
+
+        const uid = localStorage.getItem("userId");
+        if (!uid) {
+          toast.error("Please Login First");
+          return;
+        }
+
+        const phone = "8574657463"; // static or from user profile
+        window.location.href = `https://sunpay.rollix777.com/?userId=${uid}&amount=${amt}&phone=${phone}`;
+        return;
+      }
+
       // For UPI and IMPS options, make API call
       const paymentSystemMap = {
-        upi_instant: 'inr_p2c',
-        upi: 'inr_p2p',
-        imps: 'imps',
+        upi_instant: "inr_p2c",
+        upi: "inr_p2p",
+        imps: "imps",
       };
-      
+
       // Prepare the data and stringify it using qs
       const data = {
         userid: uid,
         amount,
         paySys: paymentSystemMap[selectedServer],
       };
-      
-      const queryString = qs.stringify(data);
-      
-      // Make API call to get the payment URL
-      const response = await axios.post('https://payapy.rollix777.com', queryString, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
 
-      console.log('API Response:', response.data);
+      const queryString = qs.stringify(data);
+
+      // Make API call to get the payment URL
+      const response = await axios.post(
+        "https://payapy.rollix777.com",
+        queryString,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
+
+      console.log("API Response:", response.data);
 
       if (response.data.success && response.data.url) {
         // Redirect to the payment URL
@@ -268,7 +298,7 @@ const DepositPage: React.FC = () => {
         toast.error("Failed to generate payment link. Please try again.");
       }
     } catch (error) {
-      console.error('Error calling payment API:', error);
+      console.error("Error calling payment API:", error);
       toast.error("Failed to process payment request. Please try again.");
     } finally {
       setLoading(false);
@@ -408,7 +438,9 @@ const DepositPage: React.FC = () => {
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                     <span className="font-medium">UPI (Instant)</span>
                     <span className="text-xs">Recommended</span>
-                    <span className="text-xs text-green-400">Deposit - ₹300-20K</span>
+                    <span className="text-xs text-green-400">
+                      Deposit - ₹300-20K
+                    </span>
                   </div>
                 </button>
 
@@ -424,7 +456,9 @@ const DepositPage: React.FC = () => {
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                     <span className="font-medium">UPI</span>
                     <span className="text-xs">Standard Transfer</span>
-                    <span className="text-xs text-green-400">Deposit - ₹300-20K</span>
+                    <span className="text-xs text-green-400">
+                      Deposit - ₹300-20K
+                    </span>
                   </div>
                 </button>
 
@@ -440,11 +474,29 @@ const DepositPage: React.FC = () => {
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                     <span className="font-medium">IMPS</span>
                     <span className="text-xs">Fast Transfer</span>
-                    <span className="text-xs text-green-400">Deposit - ₹300-20K</span>
+                    <span className="text-xs text-green-400">
+                      Deposit - ₹300-20K
+                    </span>
                   </div>
                 </button>
 
-                
+                <button
+                  onClick={() => setSelectedServer("sunpay")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "sunpay"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Sunpay (High Limit)</span>
+                    <span className="text-xs">₹100 - ₹100K</span>
+                    <span className="text-xs text-green-400">
+                      Fast processing
+                    </span>
+                  </div>
+                </button>
               </div>
 
               {/* Existing crypto selection */}
@@ -520,7 +572,9 @@ const DepositPage: React.FC = () => {
                 >
                   {loading
                     ? "Processing..."
-                    : `Deposit via ${selectedServer.replace('_', ' ').toUpperCase()}`}
+                    : `Deposit via ${selectedServer
+                        .replace("_", " ")
+                        .toUpperCase()}`}
                 </button>
               </div>
 
@@ -562,6 +616,15 @@ const DepositPage: React.FC = () => {
                       <li>Maximum deposit: ₹20,000 INR</li>
                       <li>Deposits are credited instantly</li>
                       <li>QR payment method</li>
+                    </>
+                  )}
+                  {selectedServer === "sunpay" && (
+                    <>
+                      <li>Use Sunpay for high-value deposits only</li>
+                      <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹100,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Ensure your bank supports large transactions</li>
                     </>
                   )}
                 </ul>
