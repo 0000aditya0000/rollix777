@@ -128,10 +128,12 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          <LatestGames title="Latest Games" type="latest" />
-          <GameCarousel title="Popular Games" type="popular" />
-          <TrendingGames title="Trending Games" type="trending" />
-          <HotGames title="Hot Games" type="hot" />
+          <div className="space-y-8 md:space-y-12">
+            <LatestGames title="Latest Games" type="latest" />
+            <GameCarousel title="Popular Games" type="popular" />
+            <TrendingGames title="Trending Games" type="trending" />
+            <HotGames title="Hot Games" type="hot" />
+          </div>
           <ActivityTracker />
           <TodaysEarningChart />
           <Disclaimer />
