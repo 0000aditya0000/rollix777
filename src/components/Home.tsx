@@ -10,7 +10,7 @@ import Features from "./Features";
 import Footer from "./Footer";
 import AuthModal from "./AuthModal";
 import ExclusiveGames from "./ExclusiveGames";
-import { Activity } from "lucide-react";
+import { Activity, Trophy } from "lucide-react";
 import ActivityTracker from "./ActivityTracker";
 import ImageSlider from "./ImageSlider";
 import TodaysEarningChart from "./TodaysEarningChart";
@@ -75,9 +75,18 @@ const Home = () => {
               </div>
               <Hero />
             </div>
+
+            <ExclusiveGames title="Exclusive Games" />
+
             <div className="md:hidden">
-              <h6 className="text-white text-xl font-bold mb-4 ml-4">Wingo</h6>
-              <div className="grid grid-cols-2 gap-3 mb-4 m-2">
+              <div className="mb-4 flex items-center gap-2 px-4 py-4">
+                <Trophy className="w-5 h-5 text-purple-500" />
+                <h4 className="text-white text-xl font-bold">
+                  Rollix777 Originals
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3  ">
                 <div className="w-full">
                   <ColorGame />
                 </div>
