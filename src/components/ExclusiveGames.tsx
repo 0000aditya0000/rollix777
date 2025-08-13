@@ -57,7 +57,7 @@ const ExclusiveGames: React.FC<ExclusiveGamesProps> = ({ title }) => {
   return (
     <>
       {/* Mobile View */}
-      <section className="md:hidden py-8 px-4 bg-[#1A1A2E]">
+      <section className="md:hidden py-8 px-4 bg-[#1A1A2E] mt-8">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-orange-500" />
