@@ -43,7 +43,7 @@ const DepositPage: React.FC = () => {
   // Update the state type to handle 4 distinct options (removed ipay_qr)
   const [selectedServer, setSelectedServer] = useState<
     "upi_instant" | "upi" | "imps" | "novapay_qr" | "sunpay"
-  >("upi_instant");
+  >("sunpay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -258,7 +258,7 @@ const DepositPage: React.FC = () => {
         }
 
         const phone = "8574657463"; // static or from user profile
-        window.location.href = `https://sunpay.rollix777.com/?userId=${uid}&amount=${amt}&phone=${phone}`;
+        window.location.href = `https://sunpay.rollix777.com/?uid=${uid}&amount=${amt}&phone=${phone}`;
         return;
       }
 
@@ -426,6 +426,24 @@ const DepositPage: React.FC = () => {
             <div className="space-y-4 ">
               {/* Server Selection */}
               <div className="grid grid-cols-2 gap-4 mb-4">
+              <button
+                  onClick={() => setSelectedServer("sunpay")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "sunpay"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Sunpay (High Limit)</span>
+                    <span className="text-xs">Recommended</span>
+                    <span className="text-xs">₹100 - ₹100K</span>
+                    <span className="text-xs text-green-400">
+                      Fast processing
+                    </span>
+                  </div>
+                </button>
                 <button
                   onClick={() => setSelectedServer("upi_instant")}
                   className={`p-4 rounded-lg border transition-all ${
@@ -480,23 +498,7 @@ const DepositPage: React.FC = () => {
                   </div>
                 </button>
 
-                <button
-                  onClick={() => setSelectedServer("sunpay")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "sunpay"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">Sunpay (High Limit)</span>
-                    <span className="text-xs">₹100 - ₹100K</span>
-                    <span className="text-xs text-green-400">
-                      Fast processing
-                    </span>
-                  </div>
-                </button>
+               
               </div>
 
               {/* Existing crypto selection */}

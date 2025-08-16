@@ -5,7 +5,7 @@ import AuthModal from "./AuthModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import Wingo from "../assets/Wingo.jpg";
-import WingoGame from "../assets/wingoGame.png";
+import WINGOOO from "../assets/WINGOOO.png"
 
 const ColorGame = () => {
   const auth = useSelector((state: RootState) => state.auth.isAuthenticated);
@@ -33,7 +33,7 @@ const ColorGame = () => {
           style={{ height: "200px" }}
         >
           <img
-            src={WingoGame}
+            src={WINGOOO}
             alt="WinGo TRX"
             className="w-full h-full object-cover rounded-xl"
           />
@@ -54,7 +54,7 @@ const ColorGame = () => {
       <section className="hidden md:block h-[350px] w-full">
         <div className="h-full w-full rounded-2xl overflow-hidden relative group">
           <img
-            src={WingoGame}
+            src={WINGOOO}
             alt="WinGo TRX"
             className="w-full h-full object-cover rounded-2xl"
           />
