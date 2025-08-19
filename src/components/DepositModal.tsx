@@ -426,7 +426,7 @@ const DepositPage: React.FC = () => {
             <div className="space-y-4 ">
               {/* Server Selection */}
               <div className="grid grid-cols-2 gap-4 mb-4">
-              <button
+                <button
                   onClick={() => setSelectedServer("sunpay")}
                   className={`p-4 rounded-lg border transition-all ${
                     selectedServer === "sunpay"
@@ -438,7 +438,7 @@ const DepositPage: React.FC = () => {
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                     <span className="font-medium">Sunpay (High Limit)</span>
                     <span className="text-xs">Recommended</span>
-                    <span className="text-xs">₹100 - ₹100K</span>
+                    <span className="text-xs">₹200 - ₹100K</span>
                     <span className="text-xs text-green-400">
                       Fast processing
                     </span>
@@ -497,8 +497,6 @@ const DepositPage: React.FC = () => {
                     </span>
                   </div>
                 </button>
-
-               
               </div>
 
               {/* Existing crypto selection */}
