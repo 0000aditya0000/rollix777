@@ -17,6 +17,9 @@ import TodaysEarningChart from "./TodaysEarningChart";
 import Disclaimer from "./Disclaimer";
 import Wingo5d from "./Wingo5d";
 import TrxGame from "./TRX";
+import ChickenRoad from "./ChickenRoad";
+import ChickenRoad2 from "./ChickenRoad2";
+import Aviator from "./Aviator";
 
 const Home = () => {
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
@@ -76,25 +79,32 @@ const Home = () => {
               <Hero />
             </div>
 
-            <ExclusiveGames title="Exclusive Games" />
-
             <div className="md:hidden">
               <div className="mb-4 flex items-center gap-2 px-4 py-4">
                 <Trophy className="w-5 h-5 text-purple-500" />
                 <h4 className="text-white text-xl font-bold">
-                  Rollix777 Originals
+                  Rollix777 Recommended
                 </h4>
               </div>
 
               <div className="grid grid-cols-2 gap-3  ">
-                <div className="w-full">
+                <div className=" w-full">
+                  <ChickenRoad />
+                </div>
+                <div className=" w-full">
+                  <ChickenRoad2 />
+                </div>
+                <div className=" w-full">
                   <ColorGame />
                 </div>
-                <div className="w-full">
+                <div className=" w-full">
                   <Wingo5d />
                 </div>
-                <div className="w-full">
+                <div className=" w-full">
                   <TrxGame />
+                </div>
+                <div className=" w-full">
+                  <Aviator />
                 </div>
               </div>
             </div>

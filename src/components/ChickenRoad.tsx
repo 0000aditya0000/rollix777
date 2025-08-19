@@ -1,41 +1,34 @@
-import { useState } from "react";
-import { Dices } from "lucide-react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthModal from "./AuthModal";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import Wingo from "../assets/Wingo.jpg";
-import WINGOOO from "../assets/WINGOOO.png";
-
-const ColorGame = () => {
-  const auth = useSelector((state: RootState) => state.auth.isAuthenticated);
+import AuthModal from "./AuthModal";
+import ChickenRoadImg from "../assets/chickenRoad.png";
+const ChickenRoad = () => {
   const navigate = useNavigate();
+  const auth = useSelector((state: RootState) => state.auth.isAuthenticated);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const handlePlayNow = () => {
     if (!auth) {
       setAuthModalOpen(true);
     } else {
-      navigate("/bigsmall");
+      //   navigate("/chickenroad");
     }
-  };
-
-  const handleOnClose = () => {
-    setAuthModalOpen(false);
   };
 
   return (
     <>
       {/* Mobile View */}
-      <section className="md:hidden h-full w-full ">
+      <section className="md:hidden h-full w-full">
         <div
           className="w-full max-w-[200px] mx-auto rounded-xl overflow-hidden relative group"
           style={{ height: "200px" }}
         >
           <img
-            src={WINGOOO}
-            alt="WinGo TRX"
-            className="w-full h-full object-cover rounded-xl"
+            src={ChickenRoadImg}
+            alt="Chicken Road"
+            className="w-full h-full object-fill rounded-xl"
           />
 
           {/* Overlay with Play button - shown on hover */}
@@ -50,16 +43,16 @@ const ColorGame = () => {
         </div>
       </section>
 
-      {/* Desktop View - Fixed height to match other components */}
+      {/* Desktop View */}
       <section className="hidden md:block h-[200px] w-full">
         <div className="h-full w-full rounded-2xl overflow-hidden relative group">
           <img
-            src={WINGOOO}
-            alt="WinGo TRX"
-            className="w-full h-full object-cover rounded-2xl"
+            src={ChickenRoadImg}
+            alt="Chicken Road"
+            className="w-full h-full object-full rounded-2xl"
           />
 
-          {/* Overlay with Play Now button - shown on hover */}
+          {/* Overlay with Play Now button */}
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl flex items-center justify-center">
             <button
               onClick={handlePlayNow}
@@ -73,11 +66,11 @@ const ColorGame = () => {
 
       <AuthModal
         isOpen={authModalOpen}
-        onClose={handleOnClose}
-        onLoginSuccess={handleOnClose}
+        onClose={() => setAuthModalOpen(false)}
+        onLoginSuccess={() => setAuthModalOpen(false)}
       />
     </>
   );
 };
 
-export default ColorGame;
+export default ChickenRoad;
