@@ -171,7 +171,7 @@ const MyAccount: React.FC = () => {
     <div className="min-h-screen bg-[#0F0F19] w-full lg:px-2 px-1">
       {/* Header Section */}
       <div className="w-full px-1">
-        <div className="mt-10">
+        <div className="mt-14">
           <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-6">
             <Link
               to="/"
@@ -227,7 +227,10 @@ const MyAccount: React.FC = () => {
                     <div className="text-left">
                       <p className="text-gray-400 text-sm">Available Balance</p>
                       <h3 className="text-xl font-bold text-white">
-                        {selectedCurrency.symbol} {selectedCurrency.balance}
+                        {selectedCurrency.symbol}{" "}
+                        {parseFloat(selectedCurrency?.balance || "0").toFixed(
+                          2
+                        )}
                       </h3>
                     </div>
                   </div>

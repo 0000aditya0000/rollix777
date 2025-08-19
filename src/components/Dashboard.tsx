@@ -29,6 +29,9 @@ import ReferralModal from "./modals/ReferralModal.js";
 import BonusModal from "./modals/BonusModal.js";
 import Wingo5d from "./Wingo5d.js";
 import TrxGame from "./TRX.js";
+import ChickenRoad from "./ChickenRoad.js";
+import ChickenRoad2 from "./ChickenRoad2.js";
+import Aviator from "./Aviator.js";
 
 const Dashboard = () => {
   // const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -105,18 +108,22 @@ const Dashboard = () => {
           </div> */}
           <ImageSlider />
 
-          <ExclusiveGames title="Exclusive Games" />
-
           <div className="px-4 py-4">
             {/* Rollix Originals Heading - Mobile */}
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-4 flex items-center gap-2 mt-8">
               <Trophy className="w-5 h-5 text-purple-500" />
               <h4 className="text-white text-xl font-bold">
-                Rollix777 Originals
+                Rollix777 Recommended
               </h4>
             </div>
 
             <div className="grid grid-cols-2 gap-3  ">
+              <div className="w-full">
+                <ChickenRoad />
+              </div>
+              <div className="w-full">
+                <ChickenRoad2 />
+              </div>
               <div className="w-full">
                 <ColorGame />
               </div>
@@ -126,9 +133,13 @@ const Dashboard = () => {
               <div className="w-full">
                 <TrxGame />
               </div>
+              <div className="w-full">
+                <Aviator />
+              </div>
             </div>
           </div>
           <div className="space-y-8 md:space-y-12">
+            <ExclusiveGames title="Exclusive Games" />
             <LatestGames title="Latest Games" type="latest" />
             <GameCarousel title="Popular Games" type="popular" />
             <TrendingGames title="Trending Games" type="trending" />
@@ -228,19 +239,28 @@ const Dashboard = () => {
                       <div className="mb-4 flex items-center gap-2">
                         <Trophy className="w-5 h-5 text-purple-500" />
                         <h3 className="text-lg font-bold text-white">
-                          Rollix777 Originals
+                          Rollix777 Recommended
                         </h3>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="min-h-[320px] w-full">
+                        <div className=" w-full">
+                          <ChickenRoad />
+                        </div>
+                        <div className=" w-full">
+                          <ChickenRoad2 />
+                        </div>
+                        <div className=" w-full">
                           <ColorGame />
                         </div>
-                        <div className="min-h-[320px] w-full">
+                        <div className=" w-full">
                           <Wingo5d />
                         </div>
-                        <div className="min-h-[320px] w-full">
+                        <div className=" w-full">
                           <TrxGame />
+                        </div>
+                        <div className=" w-full">
+                          <Aviator />
                         </div>
                       </div>
                     </div>

@@ -47,7 +47,7 @@ const TrxGame = () => {
       </section>
 
       {/* Desktop View - Fixed height to match other components */}
-      <section className="hidden md:block h-[350px] w-full">
+      <section className="hidden md:block h-[200px] w-full">
         <div className="h-full w-full rounded-2xl overflow-hidden relative group">
           <img
             src={WingoTRX}
