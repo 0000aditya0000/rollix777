@@ -54,6 +54,7 @@ const DepositPage: React.FC = () => {
     "all" | "approved" | "pending" | "rejected"
   >("all");
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [sunpayError, setSunpayError] = useState("");
 
   const navigate = useNavigate();
 
@@ -113,35 +114,75 @@ const DepositPage: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const validateAmount = (value: string, type: "upi" | "card") => {
+  // const validateAmount = (value: string, type: "upi" | "card" | "sunpay") => {
+  //   const amount = parseFloat(value);
+  //   if (!value) {
+  //     return type === "upi" ? "Amount is required" : "Card amount is required";
+  //   }
+  //   if (isNaN(amount) || amount <= 0) {
+  //     return "Please enter a valid amount";
+  //   }
+  //   if (type === "upi" && amount <= 300) {
+  //     return "Minimum deposit amount is 300 INR";
+  //   }
+  //   if (type === "card" && amount < 10) {
+  //     return "Minimum deposit amount is 10 USDT";
+  //   }
+  //   if (type === "sunpay" && amount <= 200) {
+  //     return "Minimum deposit amount is 200 INR";
+  //   }
+  //   return "";
+  // };
+
+  const validateAmount = (value: string, server: string) => {
     const amount = parseFloat(value);
     if (!value) {
-      return type === "upi" ? "Amount is required" : "Card amount is required";
+      return "Amount is required";
     }
     if (isNaN(amount) || amount <= 0) {
       return "Please enter a valid amount";
     }
-    if (type === "upi" && amount < 100) {
+
+    // Different minimum amounts based on server
+    if (server === "sunpay" && amount <= 200) {
+      return "Minimum deposit amount is 200 INR";
+    }
+    if (
+      (server === "upi_instant" || server === "upi" || server === "imps") &&
+      amount <= 300
+    ) {
+      return "Minimum deposit amount is 300 INR";
+    }
+    if (server === "novapay_qr" && amount <= 100) {
       return "Minimum deposit amount is 100 INR";
     }
-    if (type === "card" && amount < 10) {
-      return "Minimum deposit amount is 10 USDT";
-    }
+
     return "";
   };
 
-  const handleAmountChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "upi" | "card"
-  ) => {
+  // const handleAmountChange = (
+  //   e: React.ChangeEvent<HTMLInputElement>,
+  //   type: "upi" | "card" | "sunpay"
+  // ) => {
+  //   const value = e.target.value;
+  //   if (type === "upi") {
+  //     setAmount(value);
+  //     setError(validateAmount(value, "upi"));
+  //   }
+  //   if (type === "card") {
+  //     setCardAmount(value);
+  //     setCardError(validateAmount(value, "card"));
+  //   }
+  //   if (type === "sunpay") {
+  //     // setCardAmount(value);
+  //     setSunpayError(validateAmount(value, "sunpay"));
+  //   }
+  // };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (type === "upi") {
-      setAmount(value);
-      setError(validateAmount(value, "upi"));
-    } else {
-      setCardAmount(value);
-      setCardError(validateAmount(value, "card"));
-    }
+    setAmount(value);
+    setError(validateAmount(value, selectedServer));
   };
 
   const handleTabChange = (tab: "crypto" | "usdt") => {
@@ -208,7 +249,7 @@ const DepositPage: React.FC = () => {
 
   // Update the launchGateway function to handle different payment systems
   const launchGateway = async () => {
-    const validationError = validateAmount(amount1, "upi");
+    const validationError = validateAmount(amount1, selectedServer);
     if (validationError) {
       setError(validationError);
       return;
@@ -237,14 +278,14 @@ const DepositPage: React.FC = () => {
       }
 
       if (selectedServer === "sunpay") {
-        const validationError = validateAmount(amount1, "upi");
+        const validationError = validateAmount(amount1, "sunpay");
         if (validationError) {
           setError(validationError);
           return;
         }
 
         const amt = parseFloat(amount1);
-        if (amt < 100 || amt > 100000) {
+        if (amt <= 200 || amt > 100000) {
           toast.error(
             "Amount must be between ₹100,000 and ₹200,000 for Sunpay."
           );
