@@ -1,7 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { Search, ArrowLeft, HelpCircle, UserRoundCog, ChevronRight, MessageCircle, Phone, Mail, Send, X, Loader2, CheckCircle, AlertCircle, Info, History } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { submitQuery, getQueryById, getQuerySearch } from '../lib/services/queryService';
+import React, { useState, useEffect } from "react";
+import {
+  Search,
+  ArrowLeft,
+  HelpCircle,
+  UserRoundCog,
+  ChevronRight,
+  MessageCircle,
+  Phone,
+  Mail,
+  Send,
+  X,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  History,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  submitQuery,
+  getQueryById,
+  getQuerySearch,
+  addQueryComment,
+} from "../lib/services/queryService";
+import toast from "react-hot-toast";
 
 interface FAQItem {
   question: string;
@@ -16,6 +38,7 @@ interface QueryFormData {
   telegramId: string;
   queryType: string;
   queryText: string;
+  image: string;
 }
 
 interface ValidationState {
@@ -35,7 +58,7 @@ interface FormValidation {
 interface QuerySubmission extends QueryFormData {
   id: string;
   timestamp: number;
-  status: 'pending' | 'resolved';
+  status: "pending" | "resolved";
 }
 
 interface ValidationErrors {
@@ -63,37 +86,33 @@ interface QueryResponse {
   telegram_id: string;
   query_type: string;
   message: string;
-  status: 'pending' | 'resolved';
+  status: "pending" | "resolved";
   created_at: string;
   updated_at: string;
   user_id: number;
   comments: QueryComment[];
 }
 
-const queryTypes = [
-  "general",
-  "account",
-  "payment",
-  "technical",
-  "other"
-];
+const queryTypes = ["general", "account", "payment", "technical", "other"];
 
 const faqData: FAQItem[] = [
   {
     question: "How do I get started?",
-    answer: "You can get started by creating an account and following our quick start guide.",
-    category: "Getting Started"
+    answer:
+      "You can get started by creating an account and following our quick start guide.",
+    category: "Getting Started",
   },
   {
     question: "How do I reset my password?",
-    answer: "Click on the 'Forgot Password' link on the login page and follow the instructions sent to your email.",
-    category: "Account"
+    answer:
+      "Click on the 'Forgot Password' link on the login page and follow the instructions sent to your email.",
+    category: "Account",
   },
   {
     question: "What payment methods do you accept?",
     answer: "We accept UPI and USDT deposits and withdrawals",
-    category: "Billing"
-  }
+    category: "Billing",
+  },
 ];
 
 const categories = [
@@ -102,123 +121,196 @@ const categories = [
   { name: "Billing", icon: Mail },
   { name: "Find A Teacher", icon: UserRoundCog },
   { name: "Send Query", icon: Send },
-  { name: "Track Query", icon: History }
+  { name: "Track Query", icon: History },
 ];
 
 export const HelpCenter: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
   const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
-  
+
   const [validation, setValidation] = useState<FormValidation>({
-    name: { isValid: false, message: '', isTouched: false },
-    email: { isValid: false, message: '', isTouched: false },
-    phone: { isValid: false, message: '', isTouched: false },
-    telegramId: { isValid: false, message: '', isTouched: false },
-    queryText: { isValid: false, message: '', isTouched: false }
+    name: { isValid: false, message: "", isTouched: false },
+    email: { isValid: false, message: "", isTouched: false },
+    phone: { isValid: false, message: "", isTouched: false },
+    telegramId: { isValid: false, message: "", isTouched: false },
+    queryText: { isValid: false, message: "", isTouched: false },
   });
 
-  
   const [queryFormData, setQueryFormData] = useState<QueryFormData>({
-    name: '',
-    email: '',
-    phone: '',
-    telegramId: '',
+    name: "",
+    email: "",
+    phone: "",
+    telegramId: "",
     queryType: queryTypes[0],
-    queryText: ''
+    queryText: "",
+    image: "",
   });
 
   const [queries, setQueries] = useState<QueryResponse[]>([]);
-  const [searchQueryId, setSearchQueryId] = useState('');
+  const [searchQueryId, setSearchQueryId] = useState("");
   const [isLoadingQueries, setIsLoadingQueries] = useState(false);
-  const [queryError, setQueryError] = useState('');
+  const [queryError, setQueryError] = useState("");
   const [expandedComments, setExpandedComments] = useState<string | null>(null);
+
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState<{ [key: string]: string }>({});
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
-      case 'name':
-        if (!value.trim()) return 'Name is required';
-        if (value.trim().length < 2) return 'Name must be at least 2 characters';
-        return '';
-      
-      case 'email':
-        if (!value.trim()) return 'Email is required';
+      case "name":
+        if (!value.trim()) return "Name is required";
+        if (value.trim().length < 2)
+          return "Name must be at least 2 characters";
+        return "";
+
+      case "email":
+        if (!value.trim()) return "Email is required";
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        if (!emailRegex.test(value)) return 'Please enter a valid email address';
-        return '';
-      
-      case 'phone':
-        if (!value.trim()) return 'Phone number is required';
-        if (!/^\d{10}$/.test(value)) return 'Phone number must be exactly 10 digits';
-        return '';
-      
-      case 'telegramId':
-        if (!value.trim()) return 'Telegram ID is required';
-        if (value.trim().length < 3) return 'Telegram ID must be at least 3 characters';
-        return '';
-      
-      case 'queryText':
-        if (!value.trim()) return 'Query message is required';
-        if (value.trim().length < 10) return 'Query must be at least 10 characters';
-        return '';
-      
-      case 'queryType':
-        if (!value.trim()) return 'Query type is required';
-        return '';
-      
+        if (!emailRegex.test(value))
+          return "Please enter a valid email address";
+        return "";
+
+      case "phone":
+        if (!value.trim()) return "Phone number is required";
+        if (!/^\d{10}$/.test(value))
+          return "Phone number must be exactly 10 digits";
+        return "";
+
+      case "telegramId":
+        if (!value.trim()) return "Telegram ID is required";
+        if (value.trim().length < 3)
+          return "Telegram ID must be at least 3 characters";
+        return "";
+
+      case "queryText":
+        if (!value.trim()) return "Query message is required";
+        if (value.trim().length < 10)
+          return "Query must be at least 10 characters";
+        return "";
+
+      case "queryType":
+        if (!value.trim()) return "Query type is required";
+        return "";
+
       default:
-        return '';
+        return "";
     }
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
-    setQueryFormData(prev => ({ ...prev, [name]: value }));
-    
+    setQueryFormData((prev) => ({ ...prev, [name]: value }));
+
     // Validate field and update errors immediately
     const error = validateField(name, value);
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [name]: error || undefined // Only set error if there is one
+      [name]: error || undefined, // Only set error if there is one
     }));
   };
 
   const handleBlur = (name: string) => {
     const value = queryFormData[name as keyof QueryFormData];
     const error = validateField(name, value);
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
+
+  const uploadToCloudinary = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "kyc-presets");
+    try {
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dwytm0sdm/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (data.secure_url) {
+        return data.secure_url;
+      } else {
+        console.error("Cloudinary upload failed:", data);
+        return null;
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      return null;
+    }
+  };
+
+  const handleScreenshotUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // ✅ Validate size
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size should be less than 5MB");
+      return;
+    }
+
+    // ✅ Validate type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload only image files");
+      return;
+    }
+
+    setScreenshot(file);
+
+    // ✅ Preview
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result as string);
+    reader.readAsDataURL(file);
+
+    // ✅ Upload to Cloudinary
+    const uploadedUrl = await uploadToCloudinary(file);
+    if (uploadedUrl) {
+      console.log("Screenshot uploaded:", uploadedUrl);
+      setUploadedUrl(uploadedUrl);
+    } else {
+      toast.error("Cloudinary upload failed");
+    }
   };
 
   const handleQuerySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate all fields
     const newErrors: ValidationErrors = {
-      name: validateField('name', queryFormData.name),
-      email: validateField('email', queryFormData.email),
-      phone: validateField('phone', queryFormData.phone),
-      telegramId: validateField('telegramId', queryFormData.telegramId),
-      queryType: validateField('queryType', queryFormData.queryType),
-      queryText: validateField('queryText', queryFormData.queryText)
+      name: validateField("name", queryFormData.name),
+      email: validateField("email", queryFormData.email),
+      phone: validateField("phone", queryFormData.phone),
+      telegramId: validateField("telegramId", queryFormData.telegramId),
+      queryType: validateField("queryType", queryFormData.queryType),
+      queryText: validateField("queryText", queryFormData.queryText),
     };
 
     setErrors(newErrors);
 
     // Check if there are any errors
-    if (Object.values(newErrors).some(error => error)) {
+    if (Object.values(newErrors).some((error) => error)) {
       return;
     }
 
     setIsLoading(true);
     try {
       // Get userId from localStorage
-      const userId = localStorage.getItem('userId');
+      const userId = localStorage.getItem("userId");
 
       // Prepare payload for API with the correct query type and userId
       const payload = {
@@ -228,29 +320,31 @@ export const HelpCenter: React.FC = () => {
         telegram_id: queryFormData.telegramId,
         query_type: queryFormData.queryType,
         message: queryFormData.queryText,
-        user_id: userId || '' // Add userId to payload, empty string if not found
+        user_id: userId || "", // Add userId to payload, empty string if not found
+        image: uploadedUrl || "",
       };
 
       // Call API service
       await submitQuery(payload);
 
       setShowSuccess(true);
-      
+
       setTimeout(() => {
         setShowSuccess(false);
         setIsQueryModalOpen(false);
         setQueryFormData({
-          name: '',
-          email: '',
-          phone: '',
-          telegramId: '',
+          name: "",
+          email: "",
+          phone: "",
+          telegramId: "",
           queryType: queryTypes[0],
-          queryText: ''
+          queryText: "",
+          image: "",
         });
         setErrors({});
       }, 1000);
     } catch (error) {
-      console.error('Error submitting query:', error);
+      console.error("Error submitting query:", error);
     } finally {
       setIsLoading(false);
     }
@@ -258,11 +352,11 @@ export const HelpCenter: React.FC = () => {
 
   const fetchQueries = async () => {
     setIsLoadingQueries(true);
-    setQueryError('');
+    setQueryError("");
     try {
-      const userId = localStorage.getItem('userId');
+      const userId = localStorage.getItem("userId");
       if (!userId) {
-        setQueryError('User ID not found. Please login again.');
+        setQueryError("User ID not found. Please login again.");
         return;
       }
       const response = await getQueryById(userId);
@@ -270,14 +364,14 @@ export const HelpCenter: React.FC = () => {
         setQueries(response.data);
       }
     } catch (error: any) {
-      setQueryError(error.message || 'Failed to fetch queries');
+      setQueryError(error.message || "Failed to fetch queries");
     } finally {
       setIsLoadingQueries(false);
     }
   };
 
   useEffect(() => {
-    if (selectedCategory === 'Track Query') {
+    if (selectedCategory === "Track Query") {
       fetchQueries();
     }
   }, [selectedCategory]);
@@ -285,35 +379,61 @@ export const HelpCenter: React.FC = () => {
   const handleQuerySearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQueryId.trim()) {
-      setQueryError('Please enter a query ID');
+      setQueryError("Please enter a query ID");
       return;
     }
     setIsLoadingQueries(true);
-    setQueryError('');
+    setQueryError("");
     try {
       const response = await getQuerySearch(searchQueryId);
       if (response.success) {
-        // Since the API returns a single query object, wrap it in an array
         setQueries([response.data]);
       }
     } catch (error: any) {
-      setQueryError(error.message || 'Failed to fetch query');
+      setQueryError(error.message || "Failed to fetch query");
     } finally {
       setIsLoadingQueries(false);
     }
   };
 
-  const filteredFAQs = faqData.filter(faq => {
-    const matchesSearch = faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || faq.category === selectedCategory;
+  const filteredFAQs = faqData.filter((faq) => {
+    const matchesSearch =
+      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      !selectedCategory || faq.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleAddComment = async (e: React.FormEvent, queryId: string) => {
+    e.preventDefault();
+
+    if (!newComment[queryId]?.trim()) return;
+
+    try {
+      await addQueryComment(queryId, {
+        comment: newComment[queryId],
+        is_admin: false,
+      });
+
+      // Refresh queries after comment
+      await fetchQueries();
+
+      // Clear input
+      setNewComment((prev) => ({ ...prev, [queryId]: "" }));
+
+      // Clear input
+      setNewComment((prev) => ({ ...prev, [queryId]: "" }));
+    } catch (error) {
+      console.error(error);
+      alert("Error posting comment. Please try again.");
+    }
+  };
 
   const renderTrackQuerySection = () => (
     <div className="bg-gradient-to-br from-[#1A1A2E] to-[#252547] rounded-xl p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Track Your Queries</h2>
-      
+
       <form onSubmit={handleQuerySearch} className="mb-6">
         <div className="flex gap-4">
           <div className="flex-1">
@@ -354,65 +474,130 @@ export const HelpCenter: React.FC = () => {
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Query #{query.id}</h3>
-                  <p className="text-sm text-gray-400">{new Date(query.created_at).toLocaleString()}</p>
+                  <h3 className="text-lg font-semibold text-white">
+                    Query #{query.id}
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    {new Date(query.created_at).toLocaleString()}
+                  </p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  query.status === 'pending' 
-                    ? 'bg-yellow-500/20 text-yellow-400' 
-                    : 'bg-green-500/20 text-green-400'
-                }`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    query.status === "pending"
+                      ? "bg-yellow-500/20 text-yellow-400"
+                      : "bg-green-500/20 text-green-400"
+                  }`}
+                >
                   {query.status}
                 </span>
               </div>
               <div className="space-y-2">
                 <p className="text-gray-300">
-                  <span className="text-gray-400">Type:</span> {query.query_type}
+                  <span className="text-gray-400">Type:</span>{" "}
+                  {query.query_type}
                 </p>
                 <p className="text-gray-300">
-                  <span className="text-gray-400">Message:</span> {query.message}
+                  <span className="text-gray-400">Message:</span>{" "}
+                  {query.message}
                 </p>
                 <div className="flex justify-between items-center text-sm text-gray-400">
-                  <span>Last Updated: {new Date(query.updated_at).toLocaleString()}</span>
-                    <button
-                      onClick={() => setExpandedComments(expandedComments === query.id ? null : query.id)}
-                      className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
-                    >
-                      <span>Comments ({query.comment_count})</span>
-                      <ChevronRight 
-                        className={`w-4 h-4 transform transition-transform ${
-                          expandedComments === query.id ? 'rotate-90' : ''
-                        }`} 
-                      />
-                    </button>
+                  <span>
+                    Last Updated: {new Date(query.updated_at).toLocaleString()}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setExpandedComments(
+                        expandedComments === query.id ? null : query.id
+                      )
+                    }
+                    className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+                  >
+                    <span>Comments ({query.comment_count})</span>
+                    <ChevronRight
+                      className={`w-4 h-4 transform transition-transform ${
+                        expandedComments === query.id ? "rotate-90" : ""
+                      }`}
+                    />
+                  </button>
                 </div>
-                
+
                 {/* Expandable Comments Section */}
-                {expandedComments === query.id && query.comments && query.comments.length > 0 && (
+                {expandedComments === query.id && (
                   <div className="mt-4 pt-4 border-t border-purple-500/10">
                     <div className="space-y-3">
-                      {query.comments.map((comment, index) => (
-                        comment?.comment && (
-                          <div key={index} className="bg-[#1A1A2E]/50 rounded-lg p-3">
-                            <div className="flex items-start gap-3">
-                              <div className="flex-1">
-                                <p className="text-gray-300 text-sm">{comment.comment}</p>
-                                {comment.admin_comment && (
-                                  <p className="text-purple-400 text-sm mt-1">
-                                    Admin: {comment.admin_comment}
-                                  </p>
-                                )}
-                                {comment.created_at && (
-                                  <p className="text-gray-500 text-xs mt-1">
-                                    {new Date(comment.created_at).toLocaleString()}
-                                  </p>
-                                )}
+                      {query.comments && query.comments.length > 0 ? (
+                        query.comments.map(
+                          (comment, index) =>
+                            comment?.comment && (
+                              <div
+                                key={index}
+                                className="bg-[#1A1A2E]/50 rounded-lg p-3"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-1">
+                                    {comment.role === "admin" ? (
+                                      <p className="text-sm mt-1">
+                                        <span className="text-purple-400 font-medium">
+                                          Admin:
+                                        </span>{" "}
+                                        <span className="text-white">
+                                          {comment.comment}
+                                        </span>
+                                      </p>
+                                    ) : (
+                                      <p className="text-sm mt-1">
+                                        <span className="text-purple-400 font-medium">
+                                          You:
+                                        </span>{" "}
+                                        <span className="text-white">
+                                          {comment.comment}
+                                        </span>
+                                      </p>
+                                    )}
+
+                                    {comment.created_at && (
+                                      <p className="text-gray-500 text-xs mt-1">
+                                        {new Date(
+                                          comment.created_at
+                                        ).toLocaleString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
+                            )
                         )
-                      ))}
+                      ) : (
+                        <p className="text-gray-500 text-sm">
+                          No comments yet.
+                        </p>
+                      )}
                     </div>
+
+                    {/* Add new comment form */}
+                    <form
+                      onSubmit={(e) => handleAddComment(e, query.id)}
+                      className="mt-4 flex gap-2"
+                    >
+                      <input
+                        type="text"
+                        value={newComment[query.id] || ""}
+                        onChange={(e) =>
+                          setNewComment((prev) => ({
+                            ...prev,
+                            [query.id]: e.target.value,
+                          }))
+                        }
+                        placeholder="Write a comment..."
+                        className="flex-1 px-3 py-2 bg-[#252547]/50 border border-purple-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-all"
+                      >
+                        Post
+                      </button>
+                    </form>
                   </div>
                 )}
               </div>
@@ -423,7 +608,9 @@ export const HelpCenter: React.FC = () => {
             <History className="w-12 h-12 text-purple-400/50 mx-auto mb-4" />
             <p className="text-gray-400 mb-2 text-lg">No queries found</p>
             <p className="text-sm text-gray-500">
-              {searchQueryId ? 'Try a different query ID' : 'Submit a new query to see it here'}
+              {searchQueryId
+                ? "Try a different query ID"
+                : "Submit a new query to see it here"}
             </p>
           </div>
         )}
@@ -437,13 +624,15 @@ export const HelpCenter: React.FC = () => {
       <header className="fixed top-0 left-0 right-0 bg-[#1A1A2E]/95 backdrop-blur-lg border-b border-purple-500/10 z-50">
         <div className="max-w-[1400px] mx-auto px-4 h-16 md:h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="p-2 rounded-lg bg-purple-600/10 text-purple-400 hover:bg-purple-600/20 transition-all"
             >
               <ArrowLeft size={20} />
             </Link>
-            <h1 className="text-xl md:text-2xl font-bold text-white">Help Center</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-white">
+              Help Center
+            </h1>
           </div>
         </div>
       </header>
@@ -456,32 +645,38 @@ export const HelpCenter: React.FC = () => {
               <div className="absolute inset-0 bg-[#1A1A2E]/95 backdrop-blur-sm flex items-center justify-center z-10 rounded-2xl">
                 <div className="text-center p-4">
                   <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
-                  <p className="text-white text-lg font-medium">Query Submitted!</p>
+                  <p className="text-white text-lg font-medium">
+                    Query Submitted!
+                  </p>
                 </div>
               </div>
             )}
 
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-white">Send Query</h2>
-              <button 
+              <h2 className="text-xl md:text-2xl font-bold text-white">
+                Send Query
+              </h2>
+              <button
                 onClick={() => setIsQueryModalOpen(false)}
                 className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleQuerySubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Name *</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Name *
+                </label>
                 <input
                   type="text"
                   name="name"
                   value={queryFormData.name}
                   onChange={handleInputChange}
-                  onBlur={() => handleBlur('name')}
+                  onBlur={() => handleBlur("name")}
                   className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 ${
-                    errors.name ? 'border-red-500/50' : 'border-purple-500/20'
+                    errors.name ? "border-red-500/50" : "border-purple-500/20"
                   }`}
                   placeholder="Enter your name"
                 />
@@ -492,17 +687,19 @@ export const HelpCenter: React.FC = () => {
                   </p>
                 )}
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Email *</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Email *
+                </label>
                 <input
                   type="email"
                   name="email"
                   value={queryFormData.email}
                   onChange={handleInputChange}
-                  onBlur={() => handleBlur('email')}
+                  onBlur={() => handleBlur("email")}
                   className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 ${
-                    errors.email ? 'border-red-500/50' : 'border-purple-500/20'
+                    errors.email ? "border-red-500/50" : "border-purple-500/20"
                   }`}
                   placeholder="Enter your email"
                 />
@@ -513,17 +710,19 @@ export const HelpCenter: React.FC = () => {
                   </p>
                 )}
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Phone *</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Phone *
+                </label>
                 <input
                   type="number"
                   name="phone"
                   value={queryFormData.phone}
                   onChange={handleInputChange}
-                  onBlur={() => handleBlur('phone')}
+                  onBlur={() => handleBlur("phone")}
                   className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                    errors.phone ? 'border-red-500/50' : 'border-purple-500/20'
+                    errors.phone ? "border-red-500/50" : "border-purple-500/20"
                   }`}
                   placeholder="Enter phone number"
                   pattern="[0-9]*"
@@ -536,17 +735,21 @@ export const HelpCenter: React.FC = () => {
                   </p>
                 )}
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Telegram ID *</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Telegram ID *
+                </label>
                 <input
                   type="text"
                   name="telegramId"
                   value={queryFormData.telegramId}
                   onChange={handleInputChange}
-                  onBlur={() => handleBlur('telegramId')}
+                  onBlur={() => handleBlur("telegramId")}
                   className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 ${
-                    errors.telegramId ? 'border-red-500/50' : 'border-purple-500/20'
+                    errors.telegramId
+                      ? "border-red-500/50"
+                      : "border-purple-500/20"
                   }`}
                   placeholder="Enter your Telegram ID"
                 />
@@ -557,35 +760,42 @@ export const HelpCenter: React.FC = () => {
                   </p>
                 )}
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Query Type *</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Query Type *
+                </label>
                 <select
                   name="queryType"
                   value={queryFormData.queryType}
                   onChange={handleInputChange}
-                  onBlur={() => handleBlur('queryType')}
+                  onBlur={() => handleBlur("queryType")}
                   className="w-full px-4 py-2.5 bg-[#252547]/50 border border-purple-500/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white appearance-none"
                 >
                   <option value="">Select Query Type</option>
-                  {queryTypes.map(type => (
+                  {queryTypes.map((type) => (
                     <option key={type} value={type} className="bg-[#1A1A2E]">
-                      {type.charAt(0).toUpperCase() + type.slice(1)} {/* Capitalize first letter for display */}
+                      {type.charAt(0).toUpperCase() + type.slice(1)}{" "}
+                      {/* Capitalize first letter for display */}
                     </option>
                   ))}
                 </select>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Your Query *</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Your Query *
+                </label>
                 <textarea
                   name="queryText"
                   value={queryFormData.queryText}
                   onChange={handleInputChange}
-                  onBlur={() => handleBlur('queryText')}
+                  onBlur={() => handleBlur("queryText")}
                   rows={3}
                   className={`w-full px-4 py-2.5 bg-[#252547]/50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder-gray-500 resize-none ${
-                    errors.queryText ? 'border-red-500/50' : 'border-purple-500/20'
+                    errors.queryText
+                      ? "border-red-500/50"
+                      : "border-purple-500/20"
                   }`}
                   placeholder="Describe your query..."
                 ></textarea>
@@ -596,7 +806,33 @@ export const HelpCenter: React.FC = () => {
                   </p>
                 )}
               </div>
-              
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Upload Screenshot (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleScreenshotUpload}
+                  className="w-full text-sm text-gray-300
+                  file:mr-4 file:py-2.5 file:px-4
+                  file:rounded-xl file:border-0
+                  file:text-sm file:font-medium
+                  file:bg-purple-600 file:text-white
+                  hover:file:bg-purple-700 cursor-pointer"
+                />
+                {preview && (
+                  <div className="mt-2">
+                    <img
+                      src={preview}
+                      alt="Preview"
+                      className="w-32 h-32 rounded-lg object-cover border"
+                    />
+                  </div>
+                )}
+              </div>
+
               <button
                 type="submit"
                 disabled={isLoading}
@@ -608,7 +844,7 @@ export const HelpCenter: React.FC = () => {
                     Submitting...
                   </>
                 ) : (
-                  'Submit Query'
+                  "Submit Query"
                 )}
               </button>
             </form>
@@ -622,7 +858,7 @@ export const HelpCenter: React.FC = () => {
         <div className="relative bg-gradient-to-br from-[#1A1A2E] to-[#252547] rounded-2xl p-6 md:p-12 mb-8 overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-600/10 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
-          
+
           <div className="relative text-center mb-8">
             <div className="w-20 h-20 md:w-24 md:h-24 mx-auto rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-[2px] mb-8 transform hover:scale-105 transition-transform duration-300">
               <div className="w-full h-full rounded-2xl bg-[#1A1A2E] flex items-center justify-center">
@@ -636,7 +872,7 @@ export const HelpCenter: React.FC = () => {
               Search our help center or browse categories below
             </p>
           </div>
-          
+
           <div className="relative max-w-2xl mx-auto">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-purple-400" />
@@ -655,9 +891,7 @@ export const HelpCenter: React.FC = () => {
           {/* Categories Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-gradient-to-br from-[#1A1A2E] to-[#252547] rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-6">
-                Categories
-              </h2>
+              <h2 className="text-xl font-bold text-white mb-6">Categories</h2>
               <div className="flex flex-wrap lg:flex-col gap-3">
                 {categories.map(({ name, icon: Icon }) => (
                   <button
@@ -666,26 +900,40 @@ export const HelpCenter: React.FC = () => {
                       if (name === "Send Query" || name === "Find A Teacher") {
                         setIsQueryModalOpen(true);
                       } else {
-                        setSelectedCategory(name === selectedCategory ? null : name);
+                        setSelectedCategory(
+                          name === selectedCategory ? null : name
+                        );
                       }
                     }}
                     className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 group ${
                       selectedCategory === name
-                        ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/20'
-                        : 'hover:bg-[#252547] border border-transparent hover:border-purple-500/20'
+                        ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/20"
+                        : "hover:bg-[#252547] border border-transparent hover:border-purple-500/20"
                     }`}
                   >
-                    <Icon className={`w-5 h-5 ${
-                      selectedCategory === name ? 'text-purple-400' : 'text-gray-400 group-hover:text-purple-400'
-                    }`} />
-                    <span className={`flex-1 ${
-                      selectedCategory === name ? 'text-white' : 'text-gray-400 group-hover:text-white'
-                    }`}>
+                    <Icon
+                      className={`w-5 h-5 ${
+                        selectedCategory === name
+                          ? "text-purple-400"
+                          : "text-gray-400 group-hover:text-purple-400"
+                      }`}
+                    />
+                    <span
+                      className={`flex-1 ${
+                        selectedCategory === name
+                          ? "text-white"
+                          : "text-gray-400 group-hover:text-white"
+                      }`}
+                    >
                       {name}
                     </span>
-                    <ChevronRight className={`w-4 h-4 transform transition-transform ${
-                      selectedCategory === name ? 'rotate-90 text-purple-400' : 'text-gray-400 group-hover:text-purple-400'
-                    }`} />
+                    <ChevronRight
+                      className={`w-4 h-4 transform transition-transform ${
+                        selectedCategory === name
+                          ? "rotate-90 text-purple-400"
+                          : "text-gray-400 group-hover:text-purple-400"
+                      }`}
+                    />
                   </button>
                 ))}
               </div>
@@ -694,7 +942,7 @@ export const HelpCenter: React.FC = () => {
 
           {/* Main Content Area */}
           <div className="lg:col-span-3">
-            {selectedCategory === 'Track Query' ? (
+            {selectedCategory === "Track Query" ? (
               renderTrackQuerySection()
             ) : (
               <div className="bg-gradient-to-br from-[#1A1A2E] to-[#252547] rounded-xl p-6">
@@ -707,28 +955,38 @@ export const HelpCenter: React.FC = () => {
                       <div
                         key={index}
                         className={`bg-[#252547]/50 backdrop-blur-sm rounded-xl border border-purple-500/10 transition-all duration-300 ${
-                          expandedFAQ === index ? 'p-6' : 'p-4 hover:border-purple-500/20'
+                          expandedFAQ === index
+                            ? "p-6"
+                            : "p-4 hover:border-purple-500/20"
                         }`}
-                        onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
+                        onClick={() =>
+                          setExpandedFAQ(expandedFAQ === index ? null : index)
+                        }
                       >
                         <div className="flex items-start gap-4 cursor-pointer">
                           <div className="flex-1">
                             <h3 className="text-lg font-semibold text-white mb-2">
                               {faq.question}
                             </h3>
-                            <div className={`overflow-hidden transition-all duration-300 ${
-                              expandedFAQ === index ? 'max-h-96' : 'max-h-0'
-                            }`}>
-                              <p className="text-gray-400 mb-4">
-                                {faq.answer}
-                              </p>
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ${
+                                expandedFAQ === index ? "max-h-96" : "max-h-0"
+                              }`}
+                            >
+                              <p className="text-gray-400 mb-4">{faq.answer}</p>
                             </div>
                           </div>
-                          <ChevronRight className={`w-5 h-5 text-purple-400 transform transition-transform ${
-                            expandedFAQ === index ? 'rotate-90' : ''
-                          }`} />
+                          <ChevronRight
+                            className={`w-5 h-5 text-purple-400 transform transition-transform ${
+                              expandedFAQ === index ? "rotate-90" : ""
+                            }`}
+                          />
                         </div>
-                        <div className={`mt-4 ${expandedFAQ === index ? 'block' : 'hidden'}`}>
+                        <div
+                          className={`mt-4 ${
+                            expandedFAQ === index ? "block" : "hidden"
+                          }`}
+                        >
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-600/20 text-purple-400">
                             {faq.category}
                           </span>
@@ -783,4 +1041,4 @@ export const HelpCenter: React.FC = () => {
       </main>
     </div>
   );
-}; 
+};
