@@ -188,6 +188,15 @@ const AllGames: React.FC = () => {
         window.location.href = gameUrl;
         return;
       }
+       
+      if (vendor === 'EXCLUSIVE') {
+         const mobile = userId;
+           const signRaw = mobile + id;
+           const sign = CryptoJS.MD5(signRaw).toString().toUpperCase();
+           const url = `https://inout.rollix777.com/?mobile=${mobile}&gameId=${id}&sign=${sign}`;
+           window.location.href = url;
+           return;
+      }
 
       // Original game launch logic for other providers
       const response = await axios.post("https://api.rollix777.com/api/color/launchGame", {
