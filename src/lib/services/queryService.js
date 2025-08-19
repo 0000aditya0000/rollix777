@@ -26,3 +26,15 @@ export const getQuerySearch = async (id) => {
     throw error.response?.data || error.message;
   }
 };
+
+export const addQueryComment = async (queryId, data) => {
+  try {
+    const response = await axiosInstance.post(
+      `/api/queries/${queryId}/comment`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
