@@ -144,12 +144,12 @@ const DepositPage: React.FC = () => {
     }
 
     // Different minimum amounts based on server
-    if (server === "sunpay" && amount <= 200) {
+    if (server === "sunpay" && amount < 200) {
       return "Minimum deposit amount is 200 INR";
     }
     if (
       (server === "upi_instant" || server === "upi" || server === "imps") &&
-      amount <= 300
+      amount < 300
     ) {
       return "Minimum deposit amount is 300 INR";
     }
@@ -662,7 +662,7 @@ const DepositPage: React.FC = () => {
                   {selectedServer === "sunpay" && (
                     <>
                       <li>Use Sunpay for high-value deposits only</li>
-                      <li>Minimum deposit: ₹100</li>
+                      <li>Minimum deposit: ₹200</li>
                       <li>Maximum deposit: ₹100,000</li>
                       <li>Deposits are credited instantly</li>
                       <li>Ensure your bank supports large transactions</li>
