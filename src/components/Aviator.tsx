@@ -9,17 +9,73 @@ const Aviator = () => {
   const navigate = useNavigate();
   const auth = useSelector((state: RootState) => state.auth.isAuthenticated);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePlayNow = () => {
     if (!auth) {
       setAuthModalOpen(true);
     } else {
-      // navigate("/aviator");  <-- uncomment once you have the route
+      setIsLoading(true);
+
+      setTimeout(() => {
+        window.location.href =
+          "https://aviafly.inout.games/api/modes/game?gameMode=aviafly&operatorId=d0d83e95-ac7e-470e-930f-3bd3af37a645&authToken=453ad8e5-134f-4766-9a00-5e8c20622178&currency=INR&lang=en&theme=&gameCustomizationId=&lobbyUrl=https://rollix777.com";
+      }, 800);
     }
   };
 
   return (
     <>
+      {/* Enhanced Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-gradient-to-b from-black/95 to-black/90 backdrop-blur-xl z-50 flex flex-col items-center justify-center">
+          <div className="relative flex flex-col items-center gap-8">
+            {/* Main Loading Animation */}
+            <div className="relative w-32 h-32">
+              {/* Outer Ring */}
+              <div className="absolute inset-0 border-4 border-orange-500/20 rounded-full animate-[spin_3s_linear_infinite]"></div>
+              {/* Middle Ring */}
+              <div className="absolute inset-2 border-4 border-orange-500/40 rounded-full animate-[spin_2s_linear_infinite_reverse]"></div>
+              {/* Inner Ring */}
+              <div className="absolute inset-4 border-4 border-orange-500 rounded-full animate-[spin_1s_linear_infinite] border-t-transparent"></div>
+              {/* Center Circle */}
+              <div className="absolute inset-6 flex items-center justify-center">
+                <div className="w-full h-full bg-orange-500/10 rounded-full animate-pulse"></div>
+              </div>
+              {/* Orbiting Dots */}
+              <div className="absolute inset-0 animate-[spin_4s_linear_infinite]">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rounded-full"></div>
+              </div>
+              <div className="absolute inset-0 animate-[spin_4s_linear_infinite_reverse]">
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rounded-full"></div>
+              </div>
+            </div>
+
+            {/* Text and Dots */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <h2 className="text-3xl font-bold text-white tracking-wider">
+                  Game Launching
+                </h2>
+                <div className="absolute -bottom-2 left-0 w-full h-1 bg-orange-500/30 rounded-full overflow-hidden">
+                  <div className="w-1/2 h-full bg-orange-500 rounded-full animate-[shimmer_2s_infinite]"></div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <span className="w-3 h-3 bg-orange-500 rounded-full animate-[bounce_1s_infinite_0ms]"></span>
+                <span className="w-3 h-3 bg-orange-500 rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                <span className="w-3 h-3 bg-orange-500 rounded-full animate-[bounce_1s_infinite_400ms]"></span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-64 h-1 bg-orange-500/20 rounded-full overflow-hidden">
+              <div className="h-full bg-orange-500 rounded-full animate-[progress_2s_ease-in-out_infinite]"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile View */}
       <section className="md:hidden h-full w-full">
         <div
