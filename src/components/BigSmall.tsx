@@ -391,6 +391,7 @@ const BigSmall = () => {
         await fetchTableData();
       }
 
+      console.log(data, "win/");
       await checkWinLose(data);
       setBets([]);
       setError(null);
@@ -452,7 +453,7 @@ const BigSmall = () => {
       // Get the current period for the active timer from periodNumbers state
       const currentPeriodForTimer = periodNumbers[activeTab];
 
-      if (latestBetHistory.periodNumber === result.period_number) {
+      if (latestBetHistory.periodNumber === result?.periodNumber) {
         if (latestBetHistory.status === "won") {
           dispatch(
             deposit({
