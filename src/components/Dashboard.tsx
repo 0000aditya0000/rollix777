@@ -117,7 +117,7 @@ const Dashboard = () => {
               </h4>
             </div>
 
-            <div className="grid grid-cols-2 gap-3  ">
+            <div className="grid grid-cols-2 gap-2  ">
               <div className="w-full">
                 <ChickenRoad />
               </div>
