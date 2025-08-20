@@ -6,15 +6,17 @@ import {
   placeBet5D,
   resultHistory5D,
   userHistory,
+  getTimerData,
 } from "../lib/services/wingo5dGameService";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { toast } from "react-hot-toast";
-import { getTimerData } from "../lib/services/BigSmallServices";
+// import { getTimerData } from "../lib/services/BigSmallServices";
 import { X } from "lucide-react";
 
 function Wingo5dGame() {
   const navigate = useNavigate();
+  const recordsPerPage = 10;
   const { wallets } = useSelector((state: RootState) => state.wallet);
   const userId = Number(localStorage.getItem("userId")) || 0;
   const [betHistory, setBetHistory] = useState([]);
@@ -32,6 +34,9 @@ function Wingo5dGame() {
   const [popup, setPopup] = useState("");
   const [result, setResult] = useState(null);
   const [latestBetResult, setLatestBetResult] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(betHistory.length / recordsPerPage);
+
   const [timers, setTimers] = useState<Record<1 | 3 | 5 | 10, number>>({
     1: 0,
     3: 0,
@@ -59,6 +64,20 @@ function Wingo5dGame() {
     5: 0,
     10: 0,
   });
+
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  console.log(indexOfFirstRecord, indexOfLastRecord, "records");
+  console.log(betHistory, "bethis");
+  const currentRecords = betHistory?.slice(
+    indexOfFirstRecord,
+    indexOfLastRecord
+  );
+  console.log(currentRecords, "currentRecords");
+  // const finalRecords = filteredBets.slice(
+  //   indexOfFirstRecord,
+  //   indexOfLastRecord
+  // );
 
   // Also add these helper functions before your return statement
   const calculateTotalAmount = () => {
@@ -111,6 +130,19 @@ function Wingo5dGame() {
     (sum, result) => sum + result.number,
     0
   );
+
+  // Timer countdown effect
+  useEffect(() => {
+    [1, 3, 5, 10].forEach((timer) => {
+      fetchTimerData(timer);
+      fetchPeriodNumber(timer);
+    });
+
+    // Cleanup intervals when component unmounts
+    return () => {
+      Object.values(intervalRefs.current).forEach(clearInterval);
+    };
+  }, []);
 
   const fetchPeriodNumber = async (timer: number) => {
     try {
@@ -241,6 +273,12 @@ function Wingo5dGame() {
                 console.log(
                   `API calls completed for ${timer}min, fetching new timer data`
                 );
+                // Refresh history when active timer updates
+                if (timer === activeTimer) {
+                  setTimeout(() => {
+                    fetchUserHistory();
+                  }, 1500);
+                }
                 return fetchTimerData(timer);
               })
               .catch((error) => {
@@ -264,6 +302,65 @@ function Wingo5dGame() {
       });
     }, 1000);
   };
+
+  useEffect(() => {
+    if (activeTimer) {
+      fetchPeriodNumber(activeTimer);
+    }
+  }, [activeTimer]);
+
+  useEffect(() => {
+    const loadInitial = async () => {
+      try {
+        const timerStr = getTimerString(activeTimer);
+        const data = await getPeriod5D({ mins: timerStr });
+
+        if (data?.period_number) {
+          setPeriodNumber(data.period_number);
+
+          // ✅ fetch last completed result immediately (like BigSmall does with fetchTableData)
+          await generateNewLotteryResult(timerStr, data.period_number);
+        }
+      } catch (err) {
+        console.error("Failed to load initial data:", err);
+      }
+    };
+
+    loadInitial();
+  }, [activeTimer]);
+
+  const fetchUserHistory = async () => {
+    try {
+      if (!userId) {
+        console.warn("No userId found in localStorage");
+        return;
+      }
+
+      const res = await resultHistory5D({
+        timer: getTimerString(activeTimer),
+        userId,
+      });
+
+      console.log(res, "response");
+
+      if (res?.success) {
+        // API gives back results array
+        setBetHistory(res.results || []);
+      } else {
+        console.error("Failed to fetch user history:", res?.message);
+        setBetHistory([]);
+      }
+    } catch (error: any) {
+      console.error("Error fetching user history:", error.message || error);
+      setBetHistory([]);
+    }
+  };
+
+  useEffect(() => {
+    if (userId && activeTimer) {
+      fetchUserHistory();
+    }
+  }, [activeTimer, userId]);
 
   const checkWinLose = async (gameResult: any) => {
     try {
@@ -339,54 +436,6 @@ function Wingo5dGame() {
     }
   };
 
-  useEffect(() => {
-    const init = async () => {
-      const timerStr = getTimerString(activeTimer);
-
-      try {
-        const periodRes = await getPeriod5D({ mins: timerStr });
-        console.log(periodRes, "period number");
-        const periodNumber = periodRes?.period_number;
-        setPeriodNumber(periodNumber);
-
-        if (periodNumber) {
-          generateNewLotteryResult(timerStr, periodNumber);
-        }
-
-        // Fetch bet history on component load
-        const historyRes = await resultHistory5D({
-          timer: timerStr,
-          userId,
-        });
-
-        if (historyRes?.success) {
-          setBetHistory(historyRes.results || historyRes.results || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch period or history:", err);
-      }
-    };
-
-    init();
-
-    const interval = setInterval(init, activeTimer * 60000);
-    return () => clearInterval(interval);
-  }, [userId]);
-
-  // Timer countdown effect
-  useEffect(() => {
-    // Initial fetch for all timers
-    [1, 3, 5, 10].forEach((timer) => {
-      fetchTimerData(timer);
-      fetchPeriodNumber(timer);
-    });
-
-    // Cleanup intervals when component unmounts
-    return () => {
-      Object.values(intervalRefs.current).forEach(clearInterval);
-    };
-  }, []);
-
   const handlePlaceBet = async () => {
     const totalAmount = calculateTotalAmount();
 
@@ -445,7 +494,8 @@ function Wingo5dGame() {
     }
   };
 
-  console.log(winner, latestBetResult, popup, "status");
+  // console.log(winner, latestBetResult, popup, "status");
+  // console.log(betHistory, "betHistory");
 
   const handleClose = () => setShowHowToPlay(false);
   return (
@@ -763,7 +813,7 @@ function Wingo5dGame() {
           </div>
 
           <div className="overflow-y-auto h-[calc(100%-56px)]">
-            {betHistory && betHistory.length > 0 ? (
+            {currentRecords && currentRecords.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full table-fixed text-sm sm:text-base">
                   <thead>
@@ -774,7 +824,7 @@ function Wingo5dGame() {
                     </tr>
                   </thead>
                   <tbody>
-                    {betHistory?.map((row, idx) => (
+                    {currentRecords?.map((row, idx) => (
                       <tr
                         key={idx}
                         className="border-b border-purple-500/10 text-white hover:bg-purple-500/5"
@@ -805,6 +855,59 @@ function Wingo5dGame() {
                     ))}
                   </tbody>
                 </table>
+                {/* Pagination */}
+                <div className="p-4 border-t border-purple-500/10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                  <p className="text-gray-400 text-sm">
+                    Showing {indexOfFirstRecord + 1}-
+                    {Math.min(indexOfLastRecord, betHistory.length)} of{" "}
+                    {betHistory.length} records
+                  </p>
+
+                  <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2">
+                    <button
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 py-1 px-3 border border-purple-500/20 rounded-lg text-gray-200 hover:text-gray-400 transition-colors"
+                      disabled={currentPage === 1}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
+                    >
+                      Previous
+                    </button>
+
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageToShow;
+                      if (totalPages <= 5) pageToShow = i + 1;
+                      else if (currentPage <= 3) pageToShow = i + 1;
+                      else if (currentPage >= totalPages - 2)
+                        pageToShow = totalPages - 4 + i;
+                      else pageToShow = currentPage - 2 + i;
+
+                      return (
+                        <button
+                          key={i}
+                          className={`py-1 px-3 rounded-lg ${
+                            currentPage === pageToShow
+                              ? "bg-purple-500/20 border border-purple-500/20 text-white"
+                              : "bg-[#1A1A2E] border border-purple-500/20 text-gray-400 hover:text-white transition-colors"
+                          }`}
+                          onClick={() => setCurrentPage(pageToShow)}
+                        >
+                          {pageToShow}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      className="bg-gradient-to-r from-pink-600 to-purple-600 py-1 px-3 border border-purple-500/20 rounded-lg text-gray-200 hover:text-gray-400 transition-colors"
+                      disabled={currentPage === totalPages}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
@@ -827,9 +930,9 @@ function Wingo5dGame() {
           </div>
 
           <div className="max-h-96 overflow-y-auto mb-20">
-            {betHistory && betHistory.length > 0 ? (
+            {currentRecords && currentRecords.length > 0 ? (
               <div className="p-3 space-y-2">
-                {betHistory.map((row, idx) => (
+                {currentRecords.map((row, idx) => (
                   <div
                     key={idx}
                     className="bg-[#1F1F30] border border-purple-500/10 rounded-lg p-3"
