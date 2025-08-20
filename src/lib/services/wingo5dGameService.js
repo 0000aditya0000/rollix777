@@ -70,3 +70,12 @@ export const userHistory = async (data) => {
     throw error.response?.data || error.message;
   }
 };
+
+export const getTimerData = async (duration = "1min") => {
+  try {
+    const response = await axiosInstance.post("/api/5d/timer", { duration });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
