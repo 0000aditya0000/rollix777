@@ -79,7 +79,7 @@ const ChickenRoad2 = () => {
       {/* Mobile View */}
       <section className="md:hidden h-full w-full">
         <div
-          className="w-full max-w-[200px] mx-auto rounded-xl overflow-hidden relative group"
+          className="w-full max-w-[180px] mx-auto rounded-xl overflow-hidden relative group"
           style={{ height: "200px" }}
         >
           <img
