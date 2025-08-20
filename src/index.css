@@ -45,6 +45,46 @@ html {
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* Mobile touch scrolling improvements */
+.touch-pan-x {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+/* Force horizontal scroll on mobile */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    overflow-x: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-x: none !important;
+    scroll-behavior: auto !important;
+    touch-action: pan-x !important;
+  }
+}
+
+/* Prevent auto-scroll back on mobile */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  will-change: scroll-position;
+}
+
+/* Additional mobile scroll fixes */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-behavior: auto;
+  }
+  
+  .overflow-x-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: none;
+    scroll-behavior: auto;
+    touch-action: pan-x;
+  }
+}
+
 /* Gradient Text */
 .gradient-text {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500;

@@ -35,6 +35,13 @@ type Record = {
   result_number: string;
   result_color: string;
   result_size: string;
+  // Additional properties for API data
+  result?: {
+    winning_color: string;
+    winning_number: number;
+    winning_size: string;
+  };
+  duration?: string;
 };
 
 type Bet = {
@@ -43,6 +50,17 @@ type Bet = {
   color?: string;
   big_small?: string;
   amount: number;
+  // Additional properties for API data
+  id?: number;
+  betId?: number;
+  betType?: string;
+  betValue?: string;
+  periodNumber?: number;
+  status?: string;
+  amountReceived?: number;
+  payout?: number;
+  date?: string;
+  createdAt?: string;
 };
 
 type BetHistory = {
@@ -75,8 +93,8 @@ const BigSmall = () => {
   const [betHistory, setbetHistory] = useState<BetHistory | null>(null);
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("1min");
-  const intervalRefs = useRef({});
-  const isFetchingRef = useRef({});
+  const intervalRefs = useRef<{[key: string]: NodeJS.Timeout | null}>({});
+  const isFetchingRef = useRef<{[key: string]: boolean}>({});
   const [error, setError] = useState<string | null>(null);
   const [gameTypeFilter, setGameTypeFilter] = useState("wingo");
   const [timers, setTimers] = useState({
@@ -85,12 +103,8 @@ const BigSmall = () => {
     "5min": 0,
     "10min": 0,
   });
-  const [transactionFilter, setTransactionFilter] = useState<
-    "all" | "approved" | "pending" | "rejected"
-  >("all");
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+
   const { user } = useSelector((state: RootState) => state.auth);
-  const [transactions, setTransactions] = useState<any[]>([]);
 
   // Add a new state to track which timers have already triggered their API calls
   const [triggeredTimers, setTriggeredTimers] = useState<Set<string>>(
@@ -122,42 +136,7 @@ const BigSmall = () => {
     };
   }, []); // Empty dependency array means this runs once on mount
 
-  useEffect(() => {
-    const uid = localStorage.getItem("userId");
-    const fetchTransactions = async () => {
-      try {
-        const data = await getAllTransactions(uid);
-        setTransactions(data.transactions || []);
-      } catch (error) {
-        console.error("Error fetching transactions:", error);
-      }
-    };
-    fetchTransactions();
-  }, [user?.id]);
 
-  const getFilteredTransactions = () => {
-    if (transactionFilter === "all") {
-      return transactions;
-    }
-    return transactions.filter((txn) => {
-      switch (transactionFilter) {
-        case "approved":
-          return txn.status.toLowerCase() === "approved";
-        case "pending":
-          return txn.status.toLowerCase() === "pending";
-        case "rejected":
-          return txn.status.toLowerCase() === "rejected";
-        default:
-          return true;
-      }
-    });
-  };
-
-  // Add function to handle viewing rejection note
-  const handleViewRejection = (transaction: any) => {
-    setSelectedTransaction(transaction);
-    setShowRejectionModal(true);
-  };
 
   // Modify fetchPeriodNumber to use mins in payload
   const fetchPeriodNumber = async (duration: string) => {
@@ -185,7 +164,7 @@ const BigSmall = () => {
   };
 
   // Keep fetchTimerData with duration in payload
-  const fetchTimerData = async (duration) => {
+  const fetchTimerData = async (duration: string) => {
     if (isFetchingRef.current[duration]) {
       return;
     }
@@ -229,7 +208,7 @@ const BigSmall = () => {
     }
   };
 
-  const startLocalCountdown = (duration, initialTime) => {
+  const startLocalCountdown = (duration: string, initialTime: number) => {
     if (typeof initialTime !== "number" || isNaN(initialTime)) {
       console.error(`Invalid initial time for ${duration}:`, initialTime);
       return;
@@ -307,7 +286,7 @@ const BigSmall = () => {
     }, 1000);
   };
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number) => {
     if (typeof seconds !== "number" || isNaN(seconds)) {
       return "00:00";
     }
@@ -595,121 +574,323 @@ const BigSmall = () => {
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = records?.slice(indexOfFirstRecord, indexOfLastRecord);
-  const finalRecords = filteredBets.slice(
-    indexOfFirstRecord,
-    indexOfLastRecord
-  );
+  
+  // Use actual API data from currentBets
+  const itemsPerPage = 10; // Show 10 items per page
+  const totalPages = Math.ceil(currentBets.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const finalRecords = currentBets.slice(startIndex, endIndex);
 
   console.log(finalRecords, "final");
-  const totalPages = Math.ceil(records.length / recordsPerPage);
 
-  const getColorBadge = (color: string) => {
-    // Ensure color is a string and convert it to lowercase
-    const colorLower = typeof color === "string" ? color.toLowerCase() : "";
 
-    switch (colorLower) {
-      case "red":
-        return "bg-red-500 w-4 h-4 rounded-full";
-      case "green":
-        return "bg-green-500 w-4 h-4 rounded-full";
-      default:
-        return "bg-gray-500 w-4 h-4 rounded-full";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "won":
-        return "bg-green-500/20 text-green-400";
-      case "lost":
-        return "bg-red-500/20 text-red-400";
-      default:
-        return "bg-gray-500/20 text-gray-400";
-    }
-  };
 
   const WinGoTable = () => (
-    <div className="overflow-x-auto max-w-full touch-pan-x">
-      <table className="w-full">
-        <thead>
-          <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
-            <th className="py-4 md:py-5 px-6 font-medium">No.</th>
-            <th className="py-4 md:py-5 px-6 font-medium">ID</th>
-            <th className="py-4 md:py-5 px-6 font-medium">Game</th>
-            <th className="py-4 md:py-5 px-6 font-medium">Amount</th>
-            <th className="py-4 md:py-5 px-6 font-medium">Bet Type</th>
-            <th className="py-4 md:py-5 px-6 font-medium">Result</th>
-            <th className="py-4 md:py-5 px-6 font-medium">Status</th>
-            <th className="py-4 md:py-5 px-6 font-medium">Payout</th>
-            <th className="py-4 md:py-5 px-6 font-medium">Date</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div className="w-full">
+      {/* Mobile Card Layout */}
+      <div className="block md:hidden">
+        {/* Mobile Pagination Info */}
+        <div className="flex justify-between items-center mb-4 p-3 bg-[#1A1A2E] rounded-lg border border-purple-500/20">
+          <span className="text-gray-400 text-sm">
+            Showing {startIndex + 1}-{Math.min(endIndex, currentBets.length)} of {currentBets.length} records
+          </span>
+          <span className="text-purple-400 text-sm">
+            Page {currentPage} of {totalPages}
+          </span>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="space-y-3">
           {finalRecords.map((bet, index) => (
-            <tr
-              key={bet.betId}
-              className="border-b border-purple-500/10 text-white hover:bg-purple-500/5 transition-colors duration-150"
-            >
-              <td className="py-4 px-6 text-gray-400">
-                {indexOfFirstRecord + index + 1}
-              </td>
-              <td className="py-4 px-6 text-purple-400">BET-{bet.betId}</td>
-              <td className="py-4 px-6">
-                <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400">
+            <div key={index} className="bg-[#1A1A2E] rounded-lg p-4 border border-purple-500/20">
+              <div className="flex justify-between items-start mb-3">
+                               <div className="flex items-center gap-2">
+                 <span className="text-gray-400 text-sm">#{startIndex + index + 1}</span>
+                 <span className="text-purple-400 text-sm">BET-{bet.id || bet.betId || index + 1}</span>
+               </div>
+                <span className="px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs">
                   WinGo
                 </span>
-              </td>
-              <td className="py-4 px-6">₹{bet.amount}</td>
-              <td className="py-4 px-6">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`${getColorBadge(
-                      bet.betValue
-                    )} md:ring-2 md:ring-white/10`}
-                  ></div>
-                  <span>{bet.betValue}</span>
-                </div>
-              </td>
-              <td className="py-4 px-6">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`${getColorBadge(
-                      bet.periodNumber
-                    )} md:ring-2 md:ring-white/10`}
-                  ></div>
-                  <span>{bet.periodNumber}</span>
-                </div>
-              </td>
-              <td className="py-4 px-6">
-                <span
-                  className={`px-2 md:px-3 py-1 md:py-1.5 rounded-full text-xs ${getStatusColor(
-                    bet.status
-                  )}`}
-                >
-                  {bet?.status?.charAt(0).toUpperCase() + bet?.status?.slice(1)}
-                </span>
-              </td>
-              <td className="py-4 px-6">
-                <span
-                  className={
-                    bet.status === "won" ? "text-green-400" : "text-red-400"
-                  }
-                >
-                  ₹{bet.amountReceived}
-                </span>
-              </td>
-              <td className="py-4 px-6 text-gray-400">{bet.date}</td>
-            </tr>
+              </div>
+              
+                             <div className="grid grid-cols-2 gap-3 text-sm">
+                 <div className="flex items-center">
+                   <span className="text-gray-400">Amount: </span>
+                   <span className="text-white ml-1">₹{bet.amount || 0}</span>
+                 </div>
+                 <div className="flex items-center">
+                   <span className="text-gray-400">Bet Type: </span>
+                   <div className="flex items-center gap-1 ml-1">
+                     <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                     <span className="text-white">{bet.betType || bet.betValue || bet.color || bet.big_small || 'N/A'}</span>
+                   </div>
+                 </div>
+                 <div className="flex items-center">
+                   <span className="text-gray-400">Period: </span>
+                   <div className="flex items-center gap-1 ml-1">
+                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                     <span className="text-white">{bet.period || bet.periodNumber || 'N/A'}</span>
+                   </div>
+                 </div>
+                 <div className="flex items-center">
+                   <span className="text-gray-400">Status: </span>
+                   <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                     bet.status === 'won' ? 'bg-green-500/20 text-green-400' : 
+                     bet.status === 'lost' ? 'bg-red-500/20 text-red-400' : 
+                     'bg-gray-500/20 text-gray-400'
+                   }`}>
+                     {bet.status ? bet.status.charAt(0).toUpperCase() + bet.status.slice(1) : 'N/A'}
+                   </span>
+                 </div>
+               </div>
+               
+               <div className="flex justify-between items-center mt-3 pt-3 border-t border-purple-500/10">
+                 <span className="text-gray-400 text-sm">
+                   {bet.date || bet.createdAt ? 
+                     new Date(bet.date || bet.createdAt).toLocaleString('en-CA', {
+                       year: 'numeric',
+                       month: '2-digit',
+                       day: '2-digit',
+                       hour: '2-digit',
+                       minute: '2-digit',
+                       second: '2-digit',
+                       hour12: false
+                     }).replace(',', '') : 'N/A'
+                   }
+                 </span>
+                 <span className={`font-semibold ${
+                   bet.status === 'won' ? 'text-green-400' : 'text-red-400'
+                 }`}>
+                   ₹{bet.amountReceived || bet.payout || 0}
+                 </span>
+               </div>
+            </div>
           ))}
-          {currentRecords.length === 0 && (
-            <tr>
-              <td colSpan={9} className="py-8 text-center text-gray-400">
-                No records found
-              </td>
-            </tr>
+          
+          {finalRecords.length === 0 && (
+            <div className="text-center py-8 text-gray-400">
+              No records found
+            </div>
           )}
-        </tbody>
-      </table>
+        </div>
+
+        {/* Mobile Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex flex-col gap-3">
+            {/* Page Info */}
+            <div className="text-center text-gray-400 text-sm">
+              Page {currentPage} of {totalPages}
+            </div>
+            
+            {/* Pagination Buttons */}
+            <div className="flex justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  currentPage === 1
+                    ? 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
+                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                }`}
+              >
+                Previous
+              </button>
+              
+              {/* Page Numbers */}
+              <div className="flex gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageToShow;
+                  if (totalPages <= 5) {
+                    pageToShow = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageToShow = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageToShow = totalPages - 4 + i;
+                  } else {
+                    pageToShow = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(pageToShow)}
+                      className={`w-8 h-8 rounded-lg text-sm ${
+                        currentPage === pageToShow
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-600/50 text-gray-400 hover:bg-gray-600'
+                      }`}
+                    >
+                      {pageToShow}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  currentPage === totalPages
+                    ? 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
+                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table Layout */}
+      <div className="hidden md:block">
+        {/* Desktop Pagination Info */}
+        <div className="flex justify-between items-center mb-4 p-3 bg-[#1A1A2E] rounded-lg border border-purple-500/20">
+          <span className="text-gray-400 text-sm">
+            Showing {startIndex + 1}-{Math.min(endIndex, currentBets.length)} of {currentBets.length} records
+          </span>
+          <span className="text-purple-400 text-sm">
+            Page {currentPage} of {totalPages}
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[800px]">
+            <thead>
+              <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
+                <th className="py-4 px-4 font-medium">No.</th>
+                <th className="py-4 px-4 font-medium">ID</th>
+                <th className="py-4 px-4 font-medium">Game</th>
+                <th className="py-4 px-4 font-medium">Amount</th>
+                <th className="py-4 px-4 font-medium">Bet Type</th>
+                <th className="py-4 px-4 font-medium">Result</th>
+                <th className="py-4 px-4 font-medium">Status</th>
+                <th className="py-4 px-4 font-medium">Payout</th>
+                <th className="py-4 px-4 font-medium">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {finalRecords.map((bet, index) => (
+                <tr
+                  key={index}
+                  className="border-b border-purple-500/10 text-white hover:bg-purple-500/5"
+                >
+                  <td className="py-4 px-4 text-gray-400">
+                    {startIndex + index + 1}
+                  </td>
+                  <td className="py-4 px-4 text-purple-400">BET-{bet.id || bet.betId || index + 1}</td>
+                  <td className="py-4 px-4">
+                    <span className="px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs">
+                      WinGo
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">₹{bet.amount || 0}</td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                      <span className="text-sm">{bet.betType || bet.betValue || bet.color || bet.big_small || 'N/A'}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="text-sm">{bet.period || bet.periodNumber || 'N/A'}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      bet.status === 'won' ? 'bg-green-500/20 text-green-400' : 
+                      bet.status === 'lost' ? 'bg-red-500/20 text-red-400' : 
+                      'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {bet.status ? bet.status.charAt(0).toUpperCase() + bet.status.slice(1) : 'N/A'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className={bet.status === 'won' ? 'text-green-400' : 'text-red-400'}>
+                      ₹{bet.amountReceived || bet.payout || 0}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-gray-400 text-sm">{bet.date || bet.createdAt || 'N/A'}</td>
+                </tr>
+              ))}
+              {finalRecords.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="py-8 text-center text-gray-400">
+                    No records found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Desktop Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex justify-between items-center">
+            <div className="text-gray-400 text-sm">
+              Showing {startIndex + 1}-{Math.min(endIndex, currentBets.length)} of {currentBets.length} records
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                  currentPage === 1
+                    ? 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
+                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                }`}
+              >
+                Previous
+              </button>
+              
+              {/* Page Numbers */}
+              <div className="flex gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageToShow;
+                  if (totalPages <= 5) {
+                    pageToShow = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageToShow = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageToShow = totalPages - 4 + i;
+                  } else {
+                    pageToShow = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(pageToShow)}
+                      className={`w-8 h-8 rounded-lg text-sm ${
+                        currentPage === pageToShow
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-600/50 text-gray-400 hover:bg-gray-600'
+                      }`}
+                    >
+                      {pageToShow}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                  currentPage === totalPages
+                    ? 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
+                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -1009,7 +1190,7 @@ const BigSmall = () => {
         </div>
 
         {/* Transaction Section */}
-        <div className="mt-6 overflow-y-scroll bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl sm:rounded-2xl border border-purple-500/20">
+        <div className="mt-6 bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl sm:rounded-2xl border border-purple-500/20 p-4">
           <WinGoTable />
         </div>
       </div>

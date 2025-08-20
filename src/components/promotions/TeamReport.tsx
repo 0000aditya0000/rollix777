@@ -322,10 +322,10 @@ const TeamReport: React.FC = () => {
                             </div>
                             <div>
                               <h3 className="text-white font-medium">
-                                {member.name || "N/A"}
+                                {"User ID"}
                               </h3>
                               <p className="text-gray-400 text-xs">
-                                @{member.username || "N/A"}
+                                {member.id || "N/A"}
                               </p>
                             </div>
                           </div>
@@ -387,11 +387,11 @@ const TeamReport: React.FC = () => {
                           <User className="w-5 h-5 text-purple-400" />
                         </div>
                         <div>
-                          <h3 className="text-white font-medium">
-                            {member.name || "N/A"}
-                          </h3>
+                          <p className="text-white text-xs">
+                            {"User ID"}
+                          </p>
                           <p className="text-gray-400 text-xs">
-                            @{member.username || "N/A"}
+                            {member.id || "N/A"}
                           </p>
                         </div>
                       </div>
