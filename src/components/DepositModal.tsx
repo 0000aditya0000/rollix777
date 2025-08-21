@@ -477,7 +477,7 @@ const DepositPage: React.FC = () => {
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">Sunpay (High Limit)</span>
+                    <span className="font-medium">Sunpay (UPI Instant)</span>
                     <span className="text-xs">Recommended</span>
                     <span className="text-xs">₹200 - ₹100K</span>
                     <span className="text-xs text-green-400">
@@ -496,7 +496,7 @@ const DepositPage: React.FC = () => {
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                     <span className="font-medium">UPI (Instant)</span>
-                    <span className="text-xs">Recommended</span>
+                    {/* <span className="text-xs">Recommended</span> */}
                     <span className="text-xs text-green-400">
                       Deposit - ₹300-20K
                     </span>
@@ -532,7 +532,7 @@ const DepositPage: React.FC = () => {
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                     <span className="font-medium">IMPS</span>
-                    <span className="text-xs">Fast Transfer</span>
+                    <span className="text-xs">Instant Processing</span>
                     <span className="text-xs text-green-400">
                       Deposit - ₹300-20K
                     </span>
