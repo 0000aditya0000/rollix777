@@ -285,9 +285,9 @@ const DepositPage: React.FC = () => {
         }
 
         const amt = parseFloat(amount1);
-        if (amt <= 200 || amt > 100000) {
+        if (amt < 200 || amt > 100000) {
           toast.error(
-            "Amount must be between ₹100,000 and ₹200,000 for Sunpay."
+            "Amount must be between ₹200 and ₹100,000 for Sunpay."
           );
           return;
         }
@@ -481,7 +481,7 @@ const DepositPage: React.FC = () => {
                     <span className="text-xs">Recommended</span>
                     <span className="text-xs">₹200 - ₹100K</span>
                     <span className="text-xs text-green-400">
-                      Fast processing
+                      Instant processing
                     </span>
                   </div>
                 </button>
@@ -495,7 +495,7 @@ const DepositPage: React.FC = () => {
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">UPI (Instant)</span>
+                    <span className="font-medium">UPI (Standard)</span>
                     {/* <span className="text-xs">Recommended</span> */}
                     <span className="text-xs text-green-400">
                       Deposit - ₹300-20K
