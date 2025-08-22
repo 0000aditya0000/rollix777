@@ -485,59 +485,7 @@ const DepositPage: React.FC = () => {
                     </span>
                   </div>
                 </button>
-                <button
-                  onClick={() => setSelectedServer("upi_instant")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "upi_instant"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">UPI (Standard)</span>
-                    {/* <span className="text-xs">Recommended</span> */}
-                    <span className="text-xs text-green-400">
-                      Deposit - ₹300-20K
-                    </span>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setSelectedServer("upi")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "upi"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">UPI</span>
-                    <span className="text-xs">Standard Transfer</span>
-                    <span className="text-xs text-green-400">
-                      Deposit - ₹300-20K
-                    </span>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setSelectedServer("imps")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "imps"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">IMPS</span>
-                    <span className="text-xs">Instant Processing</span>
-                    <span className="text-xs text-green-400">
-                      Deposit - ₹300-20K
-                    </span>
-                  </div>
-                </button>
+                
               </div>
 
               {/* Existing crypto selection */}
