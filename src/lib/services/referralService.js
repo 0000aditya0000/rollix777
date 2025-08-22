@@ -1,8 +1,11 @@
 import axiosInstance from "../utils/axiosInstance";
 
-const getReferrals = async (userId) => {
+const getReferrals = async (userId, page = 1, limit = 10) => {
   try {
-    const response = await axiosInstance.get(`/api/user/referrals/${userId}`);
+    const response = await axiosInstance.get(`/api/user/referrals/${userId}`, {
+      params: { page, limit },
+    });
+
     return response.data;
   } catch (error) {
     console.error(
@@ -43,10 +46,30 @@ const getReferralsByDate = async (userId, dateType) => {
   }
 };
 
+const getReferralsSorted = async (userId, sortBy) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/user/referrals/sort/${userId}`,
+      {
+        params: { sortBy, page, limit },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching sorted referrals:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
 export const referralService = {
   getReferrals,
   getReferralsByDate,
   getTodaySummary,
+  getReferralsSorted,
 };
 
 export default referralService;
