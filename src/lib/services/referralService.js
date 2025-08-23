@@ -65,11 +65,23 @@ const getReferralsSorted = async (userId, sortBy) => {
   }
 };
 
+const getReferralSummary = async (userId) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/user/referrals-summary/${userId}`
+    );
+    return response.data;
+  } catch (error) {
+    "Error fetching referral summary:", error.response?.data || error.message;
+  }
+};
+
 export const referralService = {
   getReferrals,
   getReferralsByDate,
   getTodaySummary,
   getReferralsSorted,
+  getReferralSummary,
 };
 
 export default referralService;
