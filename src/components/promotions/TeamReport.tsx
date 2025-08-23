@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, User, ChevronDown, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { referralService } from "../../lib/services/referralService";
-import { filter } from "framer-motion/client";
+import { filter, label } from "framer-motion/client";
 
 interface ReferralMember {
   id: number;
@@ -31,12 +31,17 @@ interface ReferralResponse {
 
 const TeamReport: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState("all");
+  const [activeSort, setActiveSort] = useState<string | null>(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [referralData, setReferralData] = useState<ReferralResponse | null>(
     null
   );
   const [loading, setLoading] = useState(true);
   const [referralView, setReferralView] = useState("direct");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const recordsPerPage = 15;
 
   const formatDate = (dateString?: string): string => {
     if (!dateString) return "N/A";
@@ -48,6 +53,8 @@ const TeamReport: React.FC = () => {
     });
   };
 
+  console.log(activeSort, "sort");
+
   useEffect(() => {
     const fetchReferrals = async () => {
       try {
@@ -57,14 +64,22 @@ const TeamReport: React.FC = () => {
         let data;
 
         if (activeFilter === "all") {
-          // Load all data initially
-          data = await referralService.getReferrals(userId);
+          if (activeSort) {
+            data = await referralService.getReferralsSorted(userId, activeSort);
+          } else {
+            console.log("all refferal");
+            data = await referralService.getReferrals(
+              userId,
+              currentPage,
+              recordsPerPage
+            );
+          }
         } else {
-          // Load filtered data
           data = await referralService.getReferralsByDate(userId, activeFilter);
         }
 
         setReferralData(data);
+        setTotalPages(data.totalPages || 0);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching referrals:", error);
@@ -73,7 +88,7 @@ const TeamReport: React.FC = () => {
     };
 
     fetchReferrals();
-  }, [activeFilter]);
+  }, [activeFilter, activeSort, currentPage]);
 
   // Helper function to generate mock members
   const generateMockMembers = (
@@ -152,10 +167,22 @@ const TeamReport: React.FC = () => {
     { value: "month", label: "This Month" },
   ];
 
+  const sortByOptions = [
+    { value: "first_deposit", label: "Sort by Deposit" },
+    { value: "total_bets", label: "Sort by Total Bet" },
+  ];
+
   const getActiveFilterLabel = () => {
     return (
       filterOptions.find((option) => option.value === activeFilter)?.label ||
       "Filter"
+    );
+  };
+
+  const getSortByLabel = () => {
+    return (
+      sortByOptions.find((option) => option.value === activeSort)?.label ||
+      "Sort By"
     );
   };
 
@@ -176,47 +203,92 @@ const TeamReport: React.FC = () => {
               <h1 className="text-2xl font-bold text-white">Team Report</h1>
             </div>
 
-            {/* Filter Button */}
-            <div className="relative">
-              <button
-                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                className="flex items-center gap-2 bg-[#252547] hover:bg-[#2f2f5a] text-white py-2 px-4 rounded-lg transition-colors"
-                aria-haspopup="true"
-                aria-expanded={showFilterDropdown}
-              >
-                <Calendar size={18} />
-                <span className="text-sm">{getActiveFilterLabel()}</span>
-                <ChevronDown
-                  size={18}
-                  className={`transition-transform ${
-                    showFilterDropdown ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {showFilterDropdown && (
-                <div
-                  className="absolute right-0 mt-2 w-48 bg-[#252547] rounded-lg shadow-lg z-20 border border-purple-500/20"
-                  onClick={(e) => e.stopPropagation()}
+            <div className="flex">
+              {/* Sort By Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  className="flex items-center gap-2 bg-[#252547] hover:bg-[#2f2f5a] text-white py-2 px-4 rounded-lg transition-colors"
+                  aria-haspopup="true"
+                  aria-expanded={showFilterDropdown}
                 >
-                  {filterOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => {
-                        setActiveFilter(option.value);
-                        setShowFilterDropdown(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-sm ${
-                        activeFilter === option.value
-                          ? "bg-purple-600 text-white"
-                          : "text-gray-300 hover:bg-[#2f2f5a]"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
+                  {/* <Calendar size={18} /> */}
+                  <span className="text-sm">{getSortByLabel()}</span>
+                  <ChevronDown
+                    size={18}
+                    className={`transition-transform ${
+                      showSortDropdown ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {showSortDropdown && (
+                  <div
+                    className="absolute right-0 mt-2 w-48 bg-[#252547] rounded-lg shadow-lg z-20 border border-purple-500/20"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {sortByOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setActiveSort(option.value);
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          activeSort === option.value
+                            ? "bg-purple-600 text-white"
+                            : "text-gray-300 hover:bg-[#2f2f5a]"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Filter Button */}
+              <div className="relative ml-8">
+                <button
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="flex items-center gap-2 bg-[#252547] hover:bg-[#2f2f5a] text-white py-2 px-4 rounded-lg transition-colors"
+                  aria-haspopup="true"
+                  aria-expanded={showFilterDropdown}
+                >
+                  <Calendar size={18} />
+                  <span className="text-sm">{getActiveFilterLabel()}</span>
+                  <ChevronDown
+                    size={18}
+                    className={`transition-transform ${
+                      showFilterDropdown ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {showFilterDropdown && (
+                  <div
+                    className="absolute right-0 mt-2 w-48 bg-[#252547] rounded-lg shadow-lg z-20 border border-purple-500/20"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {filterOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setActiveFilter(option.value);
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          activeFilter === option.value
+                            ? "bg-purple-600 text-white"
+                            : "text-gray-300 hover:bg-[#2f2f5a]"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -387,9 +459,7 @@ const TeamReport: React.FC = () => {
                           <User className="w-5 h-5 text-purple-400" />
                         </div>
                         <div>
-                          <p className="text-white text-xs">
-                            {"User ID"}
-                          </p>
+                          <p className="text-white text-xs">{"User ID"}</p>
                           <p className="text-gray-400 text-xs">
                             {member.id || "N/A"}
                           </p>
@@ -423,7 +493,7 @@ const TeamReport: React.FC = () => {
                       </div>
 
                       {/* Desktop View - Join Date */}
-                      <div className="hidden md:flex items-center justify-end col-span-1 text-gray-300 text-sm">
+                      <div className="hidden md:flex items-center justify-end col-span-1 text-gray-300 text-sm ml-4">
                         {formatDate(member.join_date) || "N/A"}
                       </div>
                     </div>
@@ -443,6 +513,126 @@ const TeamReport: React.FC = () => {
                   </p>
                 </div>
               )}
+              <div className="p-4 md:p-6 border-t border-purple-500/10">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                  <p className="text-gray-400 text-sm">
+                    Showing{" "}
+                    <span className="text-white font-medium">
+                      {members.length > 0
+                        ? (currentPage - 1) * recordsPerPage + 1
+                        : 0}
+                    </span>{" "}
+                    to{" "}
+                    <span className="text-white font-medium">
+                      {(currentPage - 1) * recordsPerPage + members.length}
+                    </span>{" "}
+                    of{" "}
+                    <span className="text-white font-medium">
+                      {referralData?.totalReferrals || 0}
+                    </span>{" "}
+                    members
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className={`hidden md:flex items-center px-3 py-2 rounded-lg border ${
+                        currentPage === 1
+                          ? "border-purple-500/10 text-gray-500 cursor-not-allowed"
+                          : "border-purple-500/20 text-purple-400 hover:bg-purple-500/10"
+                      } transition-colors`}
+                    >
+                      First
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
+                      disabled={currentPage === 1}
+                      className={`flex items-center px-3 py-2 rounded-lg border ${
+                        currentPage === 1
+                          ? "border-purple-500/10 text-gray-500 cursor-not-allowed"
+                          : "border-purple-500/20 text-purple-400 hover:bg-purple-500/10"
+                      } transition-colors`}
+                    >
+                      Previous
+                    </button>
+
+                    <div className="flex gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((num) => {
+                          if (totalPages <= 5) return true;
+                          if (num === 1 || num === totalPages) return true;
+                          return Math.abs(currentPage - num) <= 1;
+                        })
+                        .map((number, index, array) => {
+                          if (index > 0 && array[index - 1] !== number - 1) {
+                            return [
+                              <span
+                                key={`ellipsis-${number}`}
+                                className="px-3 py-2 text-gray-400"
+                              >
+                                ...
+                              </span>,
+                              <button
+                                key={number}
+                                onClick={() => setCurrentPage(number)}
+                                className={`px-3 py-2 rounded-lg border ${
+                                  currentPage === number
+                                    ? "bg-purple-500/20 border-purple-500/40 text-white font-medium"
+                                    : "border-purple-500/20 text-gray-400 hover:text-white hover:border-purple-500/40"
+                                } transition-colors min-w-[40px]`}
+                              >
+                                {number}
+                              </button>,
+                            ];
+                          }
+                          return (
+                            <button
+                              key={number}
+                              onClick={() => setCurrentPage(number)}
+                              className={`px-3 py-2 rounded-lg border ${
+                                currentPage === number
+                                  ? "bg-purple-500/20 border-purple-500/40 text-white font-medium"
+                                  : "border-purple-500/20 text-gray-400 hover:text-white hover:border-purple-500/40"
+                              } transition-colors min-w-[40px]`}
+                            >
+                              {number}
+                            </button>
+                          );
+                        })}
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className={`flex items-center px-3 py-2 rounded-lg border ${
+                        currentPage === totalPages || totalPages === 0
+                          ? "border-purple-500/10 text-gray-500 cursor-not-allowed"
+                          : "border-purple-500/20 text-purple-400 hover:bg-purple-500/10"
+                      } transition-colors`}
+                    >
+                      Next
+                    </button>
+
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className={`hidden md:flex items-center px-3 py-2 rounded-lg border ${
+                        currentPage === totalPages || totalPages === 0
+                          ? "border-purple-500/10 text-gray-500 cursor-not-allowed"
+                          : "border-purple-500/20 text-purple-400 hover:bg-purple-500/10"
+                      } transition-colors`}
+                    >
+                      Last
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </main>
         </div>
