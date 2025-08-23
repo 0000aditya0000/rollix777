@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Copy, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -7,6 +7,7 @@ import InvitationRulesModal from "./InvitationRulesModal";
 import { referralService } from "../../lib/services/referralService";
 import axiosInstance from "../../lib/utils/axiosInstance";
 import { values } from "lodash";
+import toast from "react-hot-toast";
 
 interface Referral {
   id: number;
@@ -37,6 +38,13 @@ interface ReferralsResponse {
   };
 }
 
+interface ReferralSummary {
+  totalReferrals: number;
+  directSubordinates: number;
+  teamSubordinates: number;
+  totalCommission: string;
+}
+
 const AgentProgram: React.FC = () => {
   const [referralCode, setReferralCode] = React.useState("");
   const [isHovered, setIsHovered] = React.useState("");
@@ -49,6 +57,8 @@ const AgentProgram: React.FC = () => {
   const [referrals, setReferrals] = React.useState<ReferralsResponse | null>(
     null
   );
+  const [referralSummaryData, setReferralSummaryData] =
+    useState<ReferralSummary | null>(null);
   const navigate = useNavigate();
 
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -93,8 +103,20 @@ const AgentProgram: React.FC = () => {
     }
   };
 
+  const fetchReferralSummary = async () => {
+    try {
+      const data = await referralService.getReferralSummary(userId);
+      // console.log(data, "summary");
+      setReferralSummaryData(data);
+    } catch (err) {
+      console.log("error fetching summary", err);
+      toast.error("Error fetching summary data");
+    }
+  };
+
   useEffect(() => {
     fetchReferrals();
+    fetchReferralSummary();
   }, [userId]);
 
   // Calculate direct subordinates stats (level 1)
@@ -633,11 +655,12 @@ const AgentProgram: React.FC = () => {
                   {/* Total Referrals */}
                   <div>
                     <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
-                      {(referrals?.referralsByLevel.level1.length || 0) +
+                      {/* {(referrals?.referralsByLevel.level1.length || 0) +
                         (referrals?.referralsByLevel.level2.length || 0) +
                         (referrals?.referralsByLevel.level3.length || 0) +
                         (referrals?.referralsByLevel.level4.length || 0) +
-                        (referrals?.referralsByLevel.level5.length || 0)}
+                        (referrals?.referralsByLevel.level5.length || 0)} */}
+                      {referralSummaryData?.totalReferrals}
                     </div>
                     <div className="text-sm md:text-lg text-white/70">
                       Total Referrals
@@ -647,9 +670,10 @@ const AgentProgram: React.FC = () => {
                   <div>
                     <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
                       ₹
-                      {pendingCommissions
+                      {/* {pendingCommissions
                         .find((p) => p.cryptoname === "INR")
-                        ?.pending_amount?.toLocaleString() || "0"}
+                        ?.pending_amount?.toLocaleString() || "0"} */}
+                      {referralSummaryData?.totalCommission}
                     </div>
                     <div className="text-sm md:text-lg text-white/70">
                       Total Commission
@@ -658,7 +682,8 @@ const AgentProgram: React.FC = () => {
                   {/* Direct Subordinates */}
                   <div>
                     <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
-                      {referrals?.referralsByLevel.level1.length || 0}
+                      {/* {referrals?.referralsByLevel.level1.length || 0} */}
+                      {referralSummaryData?.directSubordinates}
                     </div>
                     <div className="text-sm md:text-lg text-white/70">
                       Direct Subordinates
@@ -667,10 +692,11 @@ const AgentProgram: React.FC = () => {
                   {/* Team Subordinates */}
                   <div>
                     <div className="text-2xl md:text-4xl font-bold text-purple-300 mb-1">
-                      {(referrals?.referralsByLevel.level2.length || 0) +
+                      {/* {(referrals?.referralsByLevel.level2.length || 0) +
                         (referrals?.referralsByLevel.level3.length || 0) +
                         (referrals?.referralsByLevel.level4.length || 0) +
-                        (referrals?.referralsByLevel.level5.length || 0)}
+                        (referrals?.referralsByLevel.level5.length || 0)} */}
+                      {referralSummaryData?.teamSubordinates}
                     </div>
                     <div className="text-sm md:text-lg text-white/70">
                       Team Subordinates
