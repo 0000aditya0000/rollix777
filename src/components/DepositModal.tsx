@@ -42,7 +42,7 @@ const DepositPage: React.FC = () => {
   >("btc");
   // Update the state type to handle 4 distinct options (removed ipay_qr)
   const [selectedServer, setSelectedServer] = useState<
-    "upi_instant" | "upi" | "imps" | "novapay_qr" | "sunpay"
+    "upi_instant" | "upi" | "imps" | "novapay_qr" | "sunpay" | "watchpay"
   >("sunpay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
@@ -100,6 +100,9 @@ const DepositPage: React.FC = () => {
   };
 
   const currencySymbols = {
+    btc: "₿",
+    eth: "Ξ",
+    usdt: "$",
     inr: "₹",
   };
 
@@ -147,6 +150,12 @@ const DepositPage: React.FC = () => {
     if (server === "sunpay" && amount < 100) {
       return "Minimum deposit amount is 100 INR";
     }
+    if (server === "watchpay" && amount < 100) {
+      return "Minimum deposit amount is 100 INR";
+    }
+    if (server === "watchpay" && amount > 50000) {
+      return "Maximum deposit amount is 50,000 INR for Watchpay";
+    }
     if (
       (server === "upi_instant" || server === "upi" || server === "imps") &&
       amount < 300
@@ -190,7 +199,7 @@ const DepositPage: React.FC = () => {
   };
 
   const handleDeposit = async () => {
-    if (!amount || isNaN(Number(amount))) {
+    if (!amount1 || isNaN(Number(amount1))) {
       toast.error("Please enter a valid amount");
       return;
     }
@@ -199,7 +208,7 @@ const DepositPage: React.FC = () => {
       setLoading(true);
 
       // Convert amount to number and ensure it's a valid number
-      const numericAmount = parseFloat(amount);
+      const numericAmount = parseFloat(amount1);
       if (isNaN(numericAmount)) {
         toast.error("Invalid amount");
         return;
@@ -303,11 +312,38 @@ const DepositPage: React.FC = () => {
         return;
       }
 
+      if (selectedServer === "watchpay") {
+        const validationError = validateAmount(amount1, "watchpay");
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+
+        const amt = parseFloat(amount1);
+        if (amt < 100 || amt > 50000) {
+          toast.error(
+            "Amount must be between ₹100 and ₹50,000 for Watchpay."
+          );
+          return;
+        }
+
+        const uid = localStorage.getItem("userId");
+        if (!uid) {
+          toast.error("Please Login First");
+          return;
+        }
+
+        const phone = "9876543210"; // static phone number for watchpay
+        window.location.href = `https://sunpay.rollix777.com/watch.php?uid=${uid}&phone=${phone}&amount=${amt}`;
+        return;
+      }
+
       // For UPI and IMPS options, make API call
       const paymentSystemMap = {
         upi_instant: "inr_p2c",
         upi: "inr_p2p",
         imps: "imps",
+        watchpay: "watchpay",
       };
 
       // Prepare the data and stringify it using qs
@@ -466,7 +502,7 @@ const DepositPage: React.FC = () => {
           {activeTab === "crypto" ? (
             <div className="space-y-4 ">
               {/* Server Selection */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <button
                   onClick={() => setSelectedServer("sunpay")}
                   className={`p-4 rounded-lg border transition-all ${
@@ -486,6 +522,24 @@ const DepositPage: React.FC = () => {
                   </div>
                 </button>
                 
+                {/* <button
+                  onClick={() => setSelectedServer("watchpay")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "watchpay"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Watchpay (UPI)</span>
+                   
+                    <span className="text-xs">₹100 - ₹50K</span>
+                    <span className="text-xs text-green-400">
+                    Fast processing
+                    </span>
+                  </div>
+                </button> */}
               </div>
 
               {/* Existing crypto selection */}
@@ -516,7 +570,7 @@ const DepositPage: React.FC = () => {
                         ?.color
                     }-500 flex items-center justify-center text-white font-bold text-xs`}
                   >
-                    {currencySymbols[selectedCrypto]}
+                   
                   </div>
                 </div>
               </div>
@@ -534,7 +588,7 @@ const DepositPage: React.FC = () => {
                     <input
                       type="text"
                       value={amount1}
-                      onChange={(e) => handleAmountChange(e, "upi")}
+                      onChange={handleAmountChange}
                       className={`w-full py-3 pl-8 pr-4 bg-[#252547] border ${
                         error ? "border-red-500" : "border-green-500/20"
                       } rounded-lg text-white focus:outline-none focus:border-green-500`}
@@ -614,6 +668,15 @@ const DepositPage: React.FC = () => {
                       <li>Maximum deposit: ₹100,000</li>
                       <li>Deposits are credited instantly</li>
                       <li>Ensure your bank supports large transactions</li>
+                    </>
+                  )}
+                  {selectedServer === "watchpay" && (
+                    <>
+                      <li>Use Watchpay for secure deposits</li>
+                      <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹50,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Secure payment gateway</li>
                     </>
                   )}
                 </ul>
