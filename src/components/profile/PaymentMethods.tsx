@@ -16,6 +16,7 @@ import debounce from "lodash/debounce";
 import axiosInstance from "../../lib/utils/axiosInstance";
 
 interface FormData {
+  accountHolder: string;
   accountname: string;
   accountnumber: string;
   ifsccode: string;
@@ -24,6 +25,7 @@ interface FormData {
 }
 
 interface FormErrors {
+  accountHolder: string;
   accountname: string;
   accountnumber: string;
   ifsccode: string;
@@ -34,6 +36,7 @@ interface FormErrors {
 interface BankAccount {
   id: number;
   userId: number;
+  accountHolder: string | null;
   accountname: string | null;
   accountnumber: string | null;
   ifsccode: string | null;
@@ -919,6 +922,12 @@ const PaymentMethods: React.FC = () => {
                   </button>
                 </div>
                 <div className="space-y-4">
+                  {renderInput(
+                    "Account Holder",
+                    "accountHolder",
+                    "Enter Account Holder",
+                    50
+                  )}
                   {renderInput(
                     "Bank Name",
                     "accountname",
