@@ -522,7 +522,7 @@ const DepositPage: React.FC = () => {
                   </div>
                 </button>
                 
-                {/* <button
+                <button
                   onClick={() => setSelectedServer("watchpay")}
                   className={`p-4 rounded-lg border transition-all ${
                     selectedServer === "watchpay"
@@ -539,7 +539,7 @@ const DepositPage: React.FC = () => {
                     Fast processing
                     </span>
                   </div>
-                </button> */}
+                </button>
               </div>
 
               {/* Existing crypto selection */}
