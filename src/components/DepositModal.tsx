@@ -42,7 +42,13 @@ const DepositPage: React.FC = () => {
   >("btc");
   // Update the state type to handle 4 distinct options (removed ipay_qr)
   const [selectedServer, setSelectedServer] = useState<
-    "upi_instant" | "upi" | "imps" | "novapay_qr" | "sunpay" | "watchpay"
+    | "upi_instant"
+    | "upi"
+    | "imps"
+    | "novapay_qr"
+    | "sunpay"
+    | "watchpay"
+    | "tatapay"
   >("sunpay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
@@ -149,6 +155,9 @@ const DepositPage: React.FC = () => {
     // Different minimum amounts based on server
     if (server === "sunpay" && amount < 100) {
       return "Minimum deposit amount is 100 INR";
+    }
+    if (server === "tatapay" && amount < 200) {
+      return "Minimum deposit amount is 200 INR";
     }
     if (server === "watchpay" && amount < 100) {
       return "Minimum deposit amount is 100 INR";
@@ -295,9 +304,7 @@ const DepositPage: React.FC = () => {
 
         const amt = parseFloat(amount1);
         if (amt < 100 || amt > 100000) {
-          toast.error(
-            "Amount must be between ₹100 and ₹100,000 for Sunpay."
-          );
+          toast.error("Amount must be between ₹100 and ₹100,000 for Sunpay.");
           return;
         }
 
@@ -312,6 +319,30 @@ const DepositPage: React.FC = () => {
         return;
       }
 
+      if (selectedServer === "tatapay") {
+        const validationError = validateAmount(amount1, "tatapay");
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+
+        const amt = parseFloat(amount1);
+        if (amt < 200 || amt > 50000) {
+          toast.error("Amount must be between ₹100 and ₹50,000 for TataPay.");
+          return;
+        }
+
+        const uid = localStorage.getItem("userId");
+        if (!uid) {
+          toast.error("Please Login First");
+          return;
+        }
+
+        const phone = "8574657463"; // static or from user profile
+        window.location.href = `https://payapy.rollix777.com/tatapay.php?uid=${uid}&phone=${phone}&amount=${amt}`;
+        return;
+      }
+
       if (selectedServer === "watchpay") {
         const validationError = validateAmount(amount1, "watchpay");
         if (validationError) {
@@ -321,9 +352,7 @@ const DepositPage: React.FC = () => {
 
         const amt = parseFloat(amount1);
         if (amt < 100 || amt > 50000) {
-          toast.error(
-            "Amount must be between ₹100 and ₹50,000 for Watchpay."
-          );
+          toast.error("Amount must be between ₹100 and ₹50,000 for Watchpay.");
           return;
         }
 
@@ -521,7 +550,7 @@ const DepositPage: React.FC = () => {
                     </span>
                   </div>
                 </button>
-                
+
                 <button
                   onClick={() => setSelectedServer("watchpay")}
                   className={`p-4 rounded-lg border transition-all ${
@@ -533,10 +562,29 @@ const DepositPage: React.FC = () => {
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                     <span className="font-medium">Watchpay (UPI)</span>
-                   
+
                     <span className="text-xs">₹100 - ₹50K</span>
                     <span className="text-xs text-green-400">
-                    Fast processing
+                      Fast processing
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSelectedServer("tatapay")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "tatapay"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">TataPay (UPI))</span>
+
+                    <span className="text-xs">₹200 - ₹50K</span>
+                    <span className="text-xs text-green-400">
+                      Fast processing
                     </span>
                   </div>
                 </button>
@@ -569,9 +617,7 @@ const DepositPage: React.FC = () => {
                       cryptoOptions.find((opt) => opt.value === selectedCrypto)
                         ?.color
                     }-500 flex items-center justify-center text-white font-bold text-xs`}
-                  >
-                   
-                  </div>
+                  ></div>
                 </div>
               </div>
 
@@ -677,6 +723,15 @@ const DepositPage: React.FC = () => {
                       <li>Maximum deposit: ₹50,000</li>
                       <li>Deposits are credited instantly</li>
                       <li>Secure payment gateway</li>
+                    </>
+                  )}
+                  {selectedServer === "tatapay" && (
+                    <>
+                      <li>Use TataPay for quick UPI deposits</li>
+                      <li>Minimum deposit: ₹200</li>
+                      <li>Maximum deposit: ₹50,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Reliable UPI payment option</li>
                     </>
                   )}
                 </ul>
