@@ -8,7 +8,8 @@ import React, { useState, useEffect } from "react";
 // import image7 from "../assets/7.png"; // Updated import
 // ... import other images as needed
 
-import slider1 from "../assets/slider/slider1.jpg";
+// import slider1 from "../assets/slider/slider1.jpg";
+import slider1 from "../assets/sliderImg1.png";
 import slider2 from "../assets/slider/slider2.jpg";
 import slider3 from "../assets/slider/slider3.jpg";
 import slider4 from "../assets/slider/slider4.jpg";
@@ -55,7 +56,9 @@ const ImageSlider = () => {
           <img
             src={images[currentImageIndex]}
             alt={`Slide ${currentImageIndex + 1}`}
-            className="w-full h-full object-cover"
+            className={`w-full h-full ${
+              currentImageIndex === 0 ? "object-fill bg-black" : "object-cover"
+            }`}
           />
           <button
             onClick={prevSlide}
