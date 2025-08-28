@@ -923,9 +923,9 @@ const PaymentMethods: React.FC = () => {
                 </div>
                 <div className="space-y-4">
                   {renderInput(
-                    "Account Holder",
+                    "Account Holder Name",
                     "accountHolder",
-                    "Enter Account Holder",
+                    "Enter Account Holder Name",
                     50
                   )}
                   {renderInput(
