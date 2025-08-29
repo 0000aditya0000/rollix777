@@ -43,6 +43,7 @@ import DepositPage from "./components/DepositModal";
 import AuthModal from "./components/AuthModal"; // Add this import
 import Wingo5dGame from "./components/Wingo5dGame";
 import TRXGame from "./components/TrxGame";
+import ScrollToTop from "./components/ScrollToTop";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -104,6 +105,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Toaster position="top-right" />
       <Routes>
         {/* Add the referral route before other routes */}
