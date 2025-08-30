@@ -231,9 +231,9 @@ const AgentProgram: React.FC = () => {
                            bg-gradient-to-r from-purple-400 to-pink-400 mb-3"
               >
                 ₹
-                {pendingCommissions
-                  .find((p) => p.cryptoname === "INR")
-                  ?.pending_amount?.toLocaleString() || "0"}
+               {pendingCommissions[0]?.total_amount
+  ? Number(pendingCommissions[0].total_amount).toLocaleString()
+  : "0"}
               </h2>
               <div
                 className="inline-block bg-purple-500/10 rounded-full px-4 md:px-6 py-1.5 md:py-2 mb-2
