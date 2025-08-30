@@ -476,7 +476,7 @@ const Wallet: React.FC = () => {
                 </h2>
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-                ₹{mainBalance}
+                ₹{Number(mainBalance).toFixed(2)}
               </h2>
               <p className="text-sm text-gray-400">Last updated: 2 mins ago</p>
             </div>

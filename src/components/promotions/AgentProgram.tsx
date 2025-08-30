@@ -131,7 +131,7 @@ const AgentProgram: React.FC = () => {
 
     const level1Referrals = referralsData.referralsByLevel.level1;
     return {
-      registered: level1Referrals.length,
+      registered: referralsData.totalReferrals,
       depositAmount: level1Referrals.reduce(
         (sum, ref) => sum + parseFloat(ref.total_deposit?.toString() || "0"),
         0
