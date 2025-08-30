@@ -161,6 +161,12 @@ export const HelpCenter: React.FC = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [newComment, setNewComment] = useState<{ [key: string]: string }>({});
+  const [commentPreview, setCommentPreview] = useState<{
+    [key: string]: string | null;
+  }>({});
+  const [commentImage, setCommentImage] = useState<{
+    [key: string]: string | null;
+  }>({});
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -405,6 +411,39 @@ export const HelpCenter: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
+  // Handle image selection for comments
+  const handleCommentImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // ✅ Validate size
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size should be less than 5MB");
+      return;
+    }
+
+    // ✅ Validate type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload only image files");
+      return;
+    }
+
+    // ✅ Preview
+    const reader = new FileReader();
+    reader.onloadend = () => setCommentPreview(reader.result as string);
+    reader.readAsDataURL(file);
+
+    // ✅ Upload to Cloudinary
+    const uploadedUrl = await uploadToCloudinary(file);
+    if (uploadedUrl) {
+      setCommentImage(uploadedUrl);
+    } else {
+      toast.error("Image upload failed");
+    }
+  };
+
   const handleAddComment = async (e: React.FormEvent, queryId: string) => {
     e.preventDefault();
 
@@ -413,6 +452,7 @@ export const HelpCenter: React.FC = () => {
     try {
       await addQueryComment(queryId, {
         comment: newComment[queryId],
+        image: commentImage || null,
         is_admin: false,
       });
 
@@ -421,12 +461,11 @@ export const HelpCenter: React.FC = () => {
 
       // Clear input
       setNewComment((prev) => ({ ...prev, [queryId]: "" }));
-
-      // Clear input
-      setNewComment((prev) => ({ ...prev, [queryId]: "" }));
+      setCommentPreview((prev) => ({ ...prev, [queryId]: null }));
+      setCommentImage((prev) => ({ ...prev, [queryId]: null }));
     } catch (error) {
       console.error(error);
-      alert("Error posting comment. Please try again.");
+      toast.error("Error posting comment. Please try again.");
     }
   };
 
@@ -591,6 +630,24 @@ export const HelpCenter: React.FC = () => {
                         placeholder="Write a comment..."
                         className="flex-1 px-3 py-2 bg-[#252547]/50 border border-purple-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
                       />
+                      <div className="flex flex-col sm:flex-row gap-2 items-center">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCommentImageChange}
+                          className="text-sm text-gray-400 file:mr-2 file:py-1 file:px-3 
+                          file:rounded-md file:border-0 file:text-sm file:font-medium 
+                          file:bg-purple-600 file:text-white hover:file:bg-purple-700"
+                        />
+                        {commentPreview && (
+                          <img
+                            src={commentPreview}
+                            alt="Preview"
+                            className="w-14 h-14 object-cover rounded-lg border border-purple-500/30"
+                          />
+                        )}
+                      </div>
+
                       <button
                         type="submit"
                         className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-all"
