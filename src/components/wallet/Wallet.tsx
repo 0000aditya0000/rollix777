@@ -22,7 +22,10 @@ import { fetchUserWallets } from "../../lib/services/WalletServices.js";
 import { depositService } from "../../services/api.js";
 import { toast } from "react-hot-toast";
 import { fetchUserAllData } from "../../lib/services/userService";
-import { getAllTransactions } from "../../lib/services/transactionService";
+import {
+  getAllTransactions,
+  transferBonusToWallet,
+} from "../../lib/services/transactionService";
 import axiosInstance from "../../lib/utils/axiosInstance";
 import WithdrawModal from "../WithdrawModal.js";
 
@@ -62,8 +65,12 @@ const Wallet: React.FC = () => {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [transferAmount, setTransferAmount] = useState(0);
+  const [transferLoading, setTransferLoading] = useState(false);
 
   console.log(wallets, "wallets");
+
+  const inrWallet = wallets.find((wallet) => wallet.cryptoname === "INR");
 
   async function fetchData() {
     if (userId) {
@@ -362,6 +369,29 @@ const Wallet: React.FC = () => {
     setSelectedTransaction(null);
   };
 
+  const handleTransferToWallet = async () => {
+    if (!transferAmount || transferAmount <= 0) return;
+
+    try {
+      setTransferLoading(true);
+
+      const res = await transferBonusToWallet(userId, Number(transferAmount));
+
+      console.log("Transfer Success:", res);
+
+      const updatedWalletData = await fetchUserWallets(user?.id);
+      if (updatedWalletData) {
+        setWallets(updatedWalletData);
+      }
+
+      setTransferAmount(0);
+    } catch (error) {
+      console.error("Transfer Failed:", error);
+    } finally {
+      setTransferLoading(false);
+    }
+  };
+
   // Add the rejection modal component
   const renderRejectionModal = () => {
     if (!showRejectionModal || !selectedTransaction) return null;
@@ -491,10 +521,30 @@ const Wallet: React.FC = () => {
                   Bonus Balance
                 </h2>
               </div>
+
+              {/* Current Bonus Balance */}
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-                ₹{bonusBalance}
+                ₹{inrWallet?.bonus_balance || "0"}
               </h2>
-              <p className="text-sm text-gray-400">Available for use</p>
+              <p className="text-sm text-gray-400 mb-4">Available for use</p>
+
+              {/* Input + Transfer Button */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  placeholder="Enter amount"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-lg bg-[#2A2A4A] text-white border border-purple-500/20 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                />
+                <button
+                  onClick={handleTransferToWallet}
+                  disabled={!transferAmount || transferLoading}
+                  className="px-4 py-2 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {transferLoading ? "Transferring..." : "Transfer"}
+                </button>
+              </div>
             </div>
           </div>
 

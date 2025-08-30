@@ -132,7 +132,7 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Floating Wallet (no width set) */}
-          <div className="absolute left-1/2 -translate-x-1/2 -top-6 z-40 flex flex-col items-center">
+          <div className="absolute left-1/2 -translate-x-1/2 -top-6 z-40 flex flex-col items-center border-transparent">
             <Link to="/wallet" className="flex flex-col items-center">
               <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center shadow-lg border-4 border-[#0F0F19] transition-transform duration-300 hover:scale-105">
                 <Wallet className="w-6 h-6 text-white" />
