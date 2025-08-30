@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
+import CryptoJS from "crypto-js";
 import AuthModal from "./AuthModal";
 import ChickenRoadImg from "../assets/chickenRoad2.png";
 
@@ -11,18 +12,28 @@ const ChickenRoad2 = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handlePlayNow = () => {
-    if (!auth) {
-      setAuthModalOpen(true);
-    } else {
-      setIsLoading(true); // ✅ show loader
-
-      setTimeout(() => {
-        window.location.href =
-          "https://chicken-road-two.inout.games/api/modes/game?gameMode=chicken-road-two&operatorId=d0d83e95-ac7e-470e-930f-3bd3af37a645&authToken=b4d5823f-2112-49b4-a698-dd702409862c&currency=INR&lang=en&theme=&gameCustomizationId=&lobbyUrl=https://rollix777.com";
-      }, 800); // ✅ small delay so loader is visible
-    }
-  };
+  const launchGame = () => {
+      const gameId = "562b299961b0ec40f252a832453c67b0";
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          setAuthModalOpen(true);
+          return;
+        }
+    
+        const mobile = userId;
+        const signRaw = mobile + gameId;
+        const sign = CryptoJS.MD5(signRaw).toString().toUpperCase();
+    
+        const url = `https://inout.rollix777.com/?mobile=${mobile}&gameId=${gameId}&sign=${sign}`;
+    
+        // ✅ Show loader immediately
+        setIsLoading(true);
+    
+        // small delay so loader is visible before navigation
+        setTimeout(() => {
+          window.location.href = url;
+        }, 800);
+      };
 
   return (
     <>
@@ -91,7 +102,7 @@ const ChickenRoad2 = () => {
           {/* Overlay with Play button - shown on hover */}
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
             <button
-              onClick={handlePlayNow}
+              onClick={launchGame}
               className="px-5 py-1 text-sm text-white rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 transition-opacity"
             >
               Play
@@ -112,7 +123,7 @@ const ChickenRoad2 = () => {
           {/* Overlay with Play Now button */}
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl flex items-center justify-center">
             <button
-              onClick={handlePlayNow}
+              onClick={launchGame}
               className="px-8 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:opacity-90 transition-opacity text-lg"
             >
               Play Now
