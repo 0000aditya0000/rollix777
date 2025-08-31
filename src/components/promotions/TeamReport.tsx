@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, User, ChevronDown, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { referralService } from "../../lib/services/referralService";
-import { filter, label } from "framer-motion/client";
 
 interface ReferralMember {
   id: number;
@@ -27,6 +26,33 @@ interface ReferralResponse {
     level4: ReferralMember[];
     level5: ReferralMember[];
   };
+  totalPages?: number;
+  directSubordinates?: number;
+  teamSubordinates?: number;
+}
+
+interface FilteredReferralResponse {
+  date: string;
+  userId: string;
+  dateType: string;
+  dateRange: {
+    startDate: string;
+    endDate: string;
+  };
+  totalReferrals: number;
+  totalFirstDeposit: string;
+  totalDeposit: string;
+  totalBets: string;
+  firstDepositorsCount: number;
+  directSubordinates: number;
+  teamSubordinates: number;
+  referralsByLevel: {
+    level1: ReferralMember[];
+    level2: ReferralMember[];
+    level3: ReferralMember[];
+    level4: ReferralMember[];
+    level5: ReferralMember[];
+  };
 }
 
 const TeamReport: React.FC = () => {
@@ -34,14 +60,14 @@ const TeamReport: React.FC = () => {
   const [activeSort, setActiveSort] = useState<string | null>(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [referralData, setReferralData] = useState<ReferralResponse | null>(
+  const [referralData, setReferralData] = useState<ReferralResponse | FilteredReferralResponse | null>(
     null
   );
   const [loading, setLoading] = useState(true);
   const [referralView, setReferralView] = useState("direct");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const recordsPerPage = 15;
+  const recordsPerPage = 30; // Changed to 30 records per page
 
   const formatDate = (dateString?: string): string => {
     if (!dateString) return "N/A";
@@ -53,8 +79,6 @@ const TeamReport: React.FC = () => {
     });
   };
 
-  console.log(activeSort, "sort");
-
   useEffect(() => {
     const fetchReferrals = async () => {
       try {
@@ -65,9 +89,14 @@ const TeamReport: React.FC = () => {
 
         if (activeFilter === "all") {
           if (activeSort) {
-            data = await referralService.getReferralsSorted(userId, activeSort);
+            // For sorting, always fetch with pagination
+            data = await referralService.getReferralsSorted(
+              userId, 
+              activeSort, 
+              currentPage, 
+              recordsPerPage
+            );
           } else {
-            console.log("all refferal");
             data = await referralService.getReferrals(
               userId,
               currentPage,
@@ -75,11 +104,55 @@ const TeamReport: React.FC = () => {
             );
           }
         } else {
+          // For filtered responses, get all data first, then apply sorting locally
           data = await referralService.getReferralsByDate(userId, activeFilter);
+          
+          // Apply local sorting if needed
+          if (activeSort && data.referralsByLevel) {
+            const allMembers = getAllMembersFromData(data);
+            const sortedMembers = sortMembers(allMembers, activeSort);
+            
+            // Reorganize sorted members back into levels
+            data.referralsByLevel = reorganizeMembersByLevel(sortedMembers);
+          }
         }
 
         setReferralData(data);
-        setTotalPages(data.totalPages || 0);
+        
+        // Debug: Log the data structure to understand what we're receiving
+        console.log("Received data:", {
+          filter: activeFilter,
+          totalPages: data.totalPages,
+          totalReferrals: data.totalReferrals,
+          membersCount: getAllMembersFromData(data).length,
+          currentPage
+        });
+        
+        // Handle different response structures
+        if (activeFilter === "all") {
+          // For "All" filter, ensure we have totalPages
+          if (data.totalPages && data.totalPages > 0) {
+            setTotalPages(data.totalPages);
+            console.log("Using API totalPages:", data.totalPages);
+          } else if (data.totalReferrals && data.totalReferrals > 0) {
+            // Calculate total pages based on total referrals if totalPages is not provided
+            const calculatedPages = Math.ceil(data.totalReferrals / recordsPerPage);
+            setTotalPages(Math.max(1, calculatedPages)); // Ensure at least 1 page
+            console.log("Calculated totalPages from totalReferrals:", calculatedPages);
+          } else {
+            // Fallback: calculate from actual data received
+            const totalMembers = getAllMembersFromData(data).length;
+            const calculatedPages = Math.ceil(totalMembers / recordsPerPage);
+            setTotalPages(Math.max(1, calculatedPages)); // Ensure at least 1 page
+            console.log("Fallback calculated totalPages:", calculatedPages);
+          }
+        } else {
+          // For filtered responses, calculate total pages based on total referrals
+          const totalMembers = getAllMembersFromData(data).length;
+          const calculatedPages = Math.ceil(totalMembers / recordsPerPage);
+          setTotalPages(Math.max(1, calculatedPages)); // Ensure at least 1 page
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching referrals:", error);
@@ -89,6 +162,68 @@ const TeamReport: React.FC = () => {
 
     fetchReferrals();
   }, [activeFilter, activeSort, currentPage]);
+
+  // Helper function to sort members locally
+  const sortMembers = (members: ReferralMember[], sortBy: string): ReferralMember[] => {
+    return [...members].sort((a, b) => {
+      if (sortBy === "first_deposit") {
+        const aValue = parseNumber(a.first_deposit);
+        const bValue = parseNumber(b.first_deposit);
+        return bValue - aValue; // Descending order
+      } else if (sortBy === "total_bets") {
+        const aValue = parseNumber(a.total_bets);
+        const bValue = parseNumber(b.total_bets);
+        return bValue - aValue; // Descending order
+      }
+      return 0;
+    });
+  };
+
+  // Helper function to reorganize sorted members back into levels
+  const reorganizeMembersByLevel = (sortedMembers: ReferralMember[]) => {
+    const levels = {
+      level1: [] as ReferralMember[],
+      level2: [] as ReferralMember[],
+      level3: [] as ReferralMember[],
+      level4: [] as ReferralMember[],
+      level5: [] as ReferralMember[],
+    };
+
+    sortedMembers.forEach(member => {
+      switch (member.level) {
+        case 1:
+          levels.level1.push(member);
+          break;
+        case 2:
+          levels.level2.push(member);
+          break;
+        case 3:
+          levels.level3.push(member);
+          break;
+        case 4:
+          levels.level4.push(member);
+          break;
+        case 5:
+          levels.level5.push(member);
+          break;
+      }
+    });
+
+    return levels;
+  };
+
+  // Helper function to get all members from either data structure
+  const getAllMembersFromData = (data: ReferralResponse | FilteredReferralResponse | null): ReferralMember[] => {
+    if (!data) return [];
+
+    return [
+      ...(data.referralsByLevel.level1 || []),
+      ...(data.referralsByLevel.level2 || []),
+      ...(data.referralsByLevel.level3 || []),
+      ...(data.referralsByLevel.level4 || []),
+      ...(data.referralsByLevel.level5 || []),
+    ];
+  };
 
   // Helper function to generate mock members
   const generateMockMembers = (
@@ -111,15 +246,15 @@ const TeamReport: React.FC = () => {
   };
 
   const getAllMembers = (): ReferralMember[] => {
-    if (!referralData) return [];
+    return getAllMembersFromData(referralData);
+  };
 
-    return [
-      ...(referralData.referralsByLevel.level1 || []),
-      ...(referralData.referralsByLevel.level2 || []),
-      ...(referralData.referralsByLevel.level3 || []),
-      ...(referralData.referralsByLevel.level4 || []),
-      ...(referralData.referralsByLevel.level5 || []),
-    ];
+  // Get paginated members for current page
+  const getPaginatedMembers = (): ReferralMember[] => {
+    const allMembers = getAllMembers();
+    const startIndex = (currentPage - 1) * recordsPerPage;
+    const endIndex = startIndex + recordsPerPage;
+    return allMembers.slice(startIndex, endIndex);
   };
 
   // Helper function to safely parse number values
@@ -133,6 +268,17 @@ const TeamReport: React.FC = () => {
   };
 
   const calculateTotalStats = () => {
+    // If we have filtered data, use the specific totals from the API
+    if (activeFilter !== "all" && referralData && 'totalFirstDeposit' in referralData) {
+      const filteredData = referralData as FilteredReferralResponse;
+      return {
+        depositAmount: parseNumber(filteredData.totalDeposit),
+        totalBet: parseNumber(filteredData.totalBets),
+        firstDeposit: parseNumber(filteredData.totalFirstDeposit),
+      };
+    }
+
+    // Otherwise calculate from member data
     const members = getAllMembers();
     return {
       depositAmount: members.reduce(
@@ -158,8 +304,69 @@ const TeamReport: React.FC = () => {
     });
   };
 
-  const members = getAllMembers();
+  const members = getPaginatedMembers(); // Use paginated members for display
   const totals = calculateTotalStats();
+
+  // Get the correct values for the stats cards
+  const getStatsData = () => {
+    if (activeFilter !== "all" && referralData && 'totalFirstDeposit' in referralData) {
+      const filteredData = referralData as FilteredReferralResponse;
+      return [
+        {
+          title: "Total Deposit",
+          value: `₹${formatCurrency(parseNumber(filteredData.totalDeposit))}`,
+        },
+        {
+          title: "Total Bet Amount",
+          value: `₹${formatCurrency(parseNumber(filteredData.totalBets))}`,
+        },
+        {
+          title: "First Deposit",
+          value: `₹${formatCurrency(parseNumber(filteredData.totalFirstDeposit))}`,
+        },
+        {
+          title: "Total Referrals",
+          value: filteredData.totalReferrals || 0,
+        },
+        {
+          title: "Direct Subordinates",
+          value: filteredData.directSubordinates || 0,
+        },
+        {
+          title: "Team Subordinates",
+          value: filteredData.teamSubordinates || 0
+        },
+      ];
+    }
+
+    // Default stats for "all" filter
+    return [
+      {
+        title: "Total Deposit",
+        value: `₹${formatCurrency(totals.depositAmount)}`,
+      },
+      {
+        title: "Total Bet Amount",
+        value: `₹${formatCurrency(totals.totalBet)}`,
+      },
+      {
+        title: "First Deposit",
+        value: `₹${formatCurrency(totals.firstDeposit)}`,
+      },
+      {
+        title: "Total Referrals",
+        value: referralData?.totalReferrals || 0,
+      },
+      {
+        title: "Direct Subordinates",
+        value: referralData?.directSubordinates || 0,
+      },
+      {
+        title: "Team Subordinates",
+        value: referralData?.teamSubordinates || 0
+      },
+    ];
+  };
 
   const filterOptions = [
     { value: "today", label: "Today" },
@@ -205,14 +412,17 @@ const TeamReport: React.FC = () => {
 
             <div className="flex">
               {/* Sort By Button */}
-              <div className="relative">
+              <div className="relative flex items-center gap-2">
                 <button
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  className="flex items-center gap-2 bg-[#252547] hover:bg-[#2f2f5a] text-white py-2 px-4 rounded-lg transition-colors"
+                  className={`flex items-center gap-2 py-2 px-4 rounded-lg transition-colors ${
+                    activeSort 
+                      ? "bg-purple-600 hover:bg-purple-700 text-white" 
+                      : "bg-[#252547] hover:bg-[#2f2f5a] text-white"
+                  }`}
                   aria-haspopup="true"
                   aria-expanded={showFilterDropdown}
                 >
-                  {/* <Calendar size={18} /> */}
                   <span className="text-sm">{getSortByLabel()}</span>
                   <ChevronDown
                     size={18}
@@ -221,6 +431,20 @@ const TeamReport: React.FC = () => {
                     }`}
                   />
                 </button>
+                
+                {/* Clear Sort Button */}
+                {activeSort && (
+                  <button
+                    onClick={() => {
+                      setActiveSort(null);
+                      setCurrentPage(1);
+                    }}
+                    className="p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+                    title="Clear sorting"
+                  >
+                    <span className="text-xs">×</span>
+                  </button>
+                )}
 
                 {showSortDropdown && (
                   <div
@@ -231,8 +455,14 @@ const TeamReport: React.FC = () => {
                       <button
                         key={option.value}
                         onClick={() => {
-                          setActiveSort(option.value);
+                          // Toggle sorting - if same option is clicked, clear it
+                          if (activeSort === option.value) {
+                            setActiveSort(null);
+                          } else {
+                            setActiveSort(option.value);
+                          }
                           setShowSortDropdown(false);
+                          setCurrentPage(1); // Reset to first page when sorting changes
                         }}
                         className={`w-full text-left px-4 py-2 text-sm ${
                           activeSort === option.value
@@ -276,6 +506,8 @@ const TeamReport: React.FC = () => {
                         onClick={() => {
                           setActiveFilter(option.value);
                           setShowFilterDropdown(false);
+                          setCurrentPage(1); // Reset to first page when filter changes
+                          setActiveSort(null); // Clear sorting when filter changes
                         }}
                         className={`w-full text-left px-4 py-2 text-sm ${
                           activeFilter === option.value
@@ -296,44 +528,7 @@ const TeamReport: React.FC = () => {
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {[
-                {
-                  title: "Total Deposit",
-                  value: `₹${formatCurrency(totals.depositAmount)}`,
-                  trend: "up",
-                },
-                {
-                  title: "Total Bet Amount",
-                  value: `₹${formatCurrency(totals.totalBet)}`,
-                  trend: "up",
-                },
-                {
-                  title: "First Deposit",
-                  value: `₹${formatCurrency(totals.firstDeposit)}`,
-                  trend: "down",
-                },
-                {
-                  title: "Total Referrals",
-                  value:
-                    (referralData?.referralsByLevel.level1.length || 0) +
-                    (referralData?.referralsByLevel.level2.length || 0) +
-                    (referralData?.referralsByLevel.level3.length || 0) +
-                    (referralData?.referralsByLevel.level4.length || 0) +
-                    (referralData?.referralsByLevel.level5.length || 0),
-                },
-                {
-                  title: "Direct Subordinates",
-                  value: referralData?.referralsByLevel.level1.length || 0,
-                },
-                {
-                  title: "Team Subordinates",
-                  value:
-                    (referralData?.referralsByLevel.level2.length || 0) +
-                    (referralData?.referralsByLevel.level3.length || 0) +
-                    (referralData?.referralsByLevel.level4.length || 0) +
-                    (referralData?.referralsByLevel.level5.length || 0),
-                },
-              ].map((stat, index) => (
+              {getStatsData().map((stat, index) => (
                 <div
                   key={index}
                   className="bg-gradient-to-br from-[#252547] to-[#1A1A2E] rounded-xl border border-purple-500/20 p-6 hover:border-purple-500/40 transition-colors"
@@ -345,17 +540,6 @@ const TeamReport: React.FC = () => {
                         {stat.value}
                       </p>
                     </div>
-                    {stat.trend && (
-                      <div
-                        className={`px-2 py-1 rounded-md text-xs ${
-                          stat.trend === "up"
-                            ? "bg-green-900/30 text-green-400"
-                            : "bg-red-900/30 text-red-400"
-                        }`}
-                      >
-                        {stat.trend === "up" ? "↑ 12%" : "↓ 5%"}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
@@ -446,7 +630,7 @@ const TeamReport: React.FC = () => {
                             <div className="flex justify-between items-center">
                               <p className="text-gray-400 text-xs">Joined</p>
                               <p className="text-white font-medium text-sm">
-                                {formatDate(member.join_date) || "N/A"}
+                                {formatDate(member.join_date)}
                               </p>
                             </div>
                           </div>
@@ -494,7 +678,7 @@ const TeamReport: React.FC = () => {
 
                       {/* Desktop View - Join Date */}
                       <div className="hidden md:flex items-center justify-end col-span-1 text-gray-300 text-sm ml-4">
-                        {formatDate(member.join_date) || "N/A"}
+                        {formatDate(member.join_date)}
                       </div>
                     </div>
                   ))}
