@@ -19,6 +19,12 @@ interface ReferralMember {
 interface ReferralResponse {
   userId: string;
   totalReferrals: number;
+  totalBets?: {
+    bets_table: string;
+    api_turnover_table: string;
+    huidu_txn_table: string;
+    grand_total: string;
+  } | string | number;
   referralsByLevel: {
     level1: ReferralMember[];
     level2: ReferralMember[];
@@ -280,19 +286,52 @@ const TeamReport: React.FC = () => {
 
     // Otherwise calculate from member data
     const members = getAllMembers();
+    
+    // Handle new totalBets structure from API response
+    let totalBetValue = 0;
+    if (referralData && 'totalBets' in referralData && referralData.totalBets) {
+      if (typeof referralData.totalBets === 'object' && 'grand_total' in referralData.totalBets) {
+        totalBetValue = parseNumber(referralData.totalBets.grand_total);
+      } else {
+        totalBetValue = parseNumber(referralData.totalBets);
+      }
+    } else {
+      // Fallback to calculating from member data
+      totalBetValue = members.reduce(
+        (sum, member) => sum + parseNumber(member.total_bets),
+        0
+      );
+    }
+    
+    // Calculate Direct Subordinates (level 1) and Team Subordinates (levels 2-5)
+    let directSubordinates = 0;
+    let teamSubordinates = 0;
+    
+    if (referralData && referralData.referralsByLevel) {
+      // Direct Subordinates = count of level 1 users
+      directSubordinates = (referralData.referralsByLevel.level1 || []).length;
+      
+      // Team Subordinates = count of all levels excluding level 1
+      teamSubordinates = [
+        ...(referralData.referralsByLevel.level2 || []),
+        ...(referralData.referralsByLevel.level3 || []),
+        ...(referralData.referralsByLevel.level4 || []),
+        ...(referralData.referralsByLevel.level5 || [])
+      ].length;
+    }
+    
     return {
       depositAmount: members.reduce(
         (sum, member) => sum + parseNumber(member.total_deposit),
         0
       ),
-      totalBet: members.reduce(
-        (sum, member) => sum + parseNumber(member.total_bets),
-        0
-      ),
+      totalBet: totalBetValue,
       firstDeposit: members.reduce(
         (sum, member) => sum + parseNumber(member.first_deposit),
         0
       ),
+      directSubordinates,
+      teamSubordinates,
     };
   };
 
@@ -359,11 +398,11 @@ const TeamReport: React.FC = () => {
       },
       {
         title: "Direct Subordinates",
-        value: referralData?.directSubordinates || 0,
+        value: totals.directSubordinates || 0,
       },
       {
         title: "Team Subordinates",
-        value: referralData?.teamSubordinates || 0
+        value: totals.teamSubordinates || 0
       },
     ];
   };
