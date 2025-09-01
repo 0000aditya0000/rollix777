@@ -4,14 +4,19 @@ import { Link } from "react-router-dom";
 import { referralService } from "../../lib/services/referralService";
 
 interface ReferralMember {
-  id: number;
+  referral_id?: number;
+  user_id?: number;
+  id?: number; // Keep for backward compatibility
   name: string | null;
   username: string | null;
   email: string | null;
   level: number;
   first_deposit: number | null;
+  overall_first_deposit?: string | number;
   total_deposit: number | null;
   total_bets: string | number | null;
+  total_api_bets?: string | number;
+  total_huidu_bets?: string | number;
   pending_commission?: string;
   join_date?: string;
 }
@@ -46,9 +51,13 @@ interface FilteredReferralResponse {
     endDate: string;
   };
   totalReferrals: number;
+  note?: string;
   totalFirstDeposit: string;
   totalDeposit: string;
   totalBets: string;
+  totalApiBets: string;
+  totalHuiduBets: string;
+  grandTotalBets: string;
   firstDepositorsCount: number;
   directSubordinates: number;
   teamSubordinates: number;
@@ -277,11 +286,13 @@ const TeamReport: React.FC = () => {
     // If we have filtered data, use the specific totals from the API
     if (activeFilter !== "all" && referralData && 'totalFirstDeposit' in referralData) {
       const filteredData = referralData as FilteredReferralResponse;
-      return {
-        depositAmount: parseNumber(filteredData.totalDeposit),
-        totalBet: parseNumber(filteredData.totalBets),
-        firstDeposit: parseNumber(filteredData.totalFirstDeposit),
-      };
+              return {
+          depositAmount: parseNumber(filteredData.totalDeposit),
+          totalBet: parseNumber(filteredData.grandTotalBets),
+          firstDeposit: parseNumber(filteredData.totalFirstDeposit),
+          directSubordinates: filteredData.directSubordinates || 0,
+          teamSubordinates: filteredData.teamSubordinates || 0,
+        };
     }
 
     // Otherwise calculate from member data
@@ -357,7 +368,7 @@ const TeamReport: React.FC = () => {
         },
         {
           title: "Total Bet Amount",
-          value: `₹${formatCurrency(parseNumber(filteredData.totalBets))}`,
+          value: `₹${formatCurrency(parseNumber(filteredData.grandTotalBets))}`,
         },
         {
           title: "First Deposit",
@@ -584,6 +595,23 @@ const TeamReport: React.FC = () => {
               ))}
             </div>
 
+            {/* Note for Date Filters */}
+            {activeFilter !== "all" && referralData && 'note' in referralData && (referralData as FilteredReferralResponse).note && (
+              <div className="mb-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center mt-0.5">
+                    <span className="text-blue-400 text-xs">ℹ</span>
+                  </div>
+                  <div>
+                    <p className="text-blue-300 text-sm font-medium">Important Note</p>
+                    <p className="text-blue-200 text-sm mt-1">
+                      {(referralData as FilteredReferralResponse).note}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Team Members Table */}
             <div className="bg-[#1A1A2E] rounded-xl border border-purple-500/20 overflow-hidden">
               {/* Table Header */}
@@ -620,7 +648,7 @@ const TeamReport: React.FC = () => {
                                 {"User ID"}
                               </h3>
                               <p className="text-gray-400 text-xs">
-                                {member.id || "N/A"}
+                                {member.user_id || member.referral_id || member.id || "N/A"}
                               </p>
                             </div>
                           </div>
@@ -681,12 +709,14 @@ const TeamReport: React.FC = () => {
                         <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mr-3">
                           <User className="w-5 h-5 text-purple-400" />
                         </div>
-                        <div>
-                          <p className="text-white text-xs">{"User ID"}</p>
-                          <p className="text-gray-400 text-xs">
-                            {member.id || "N/A"}
-                          </p>
-                        </div>
+                                                  <div>
+                            <p className="text-white text-xs">
+                              {"User ID"}
+                            </p>
+                            <p className="text-gray-400 text-xs">
+                              {member.user_id || member.referral_id || member.id || "N/A"}
+                            </p>
+                          </div>
                       </div>
 
                       {/* Level */}
