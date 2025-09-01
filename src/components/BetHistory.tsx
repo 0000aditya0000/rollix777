@@ -5,6 +5,43 @@ import { data, Link } from "react-router-dom";
 import { getBetHistoryByGameType } from "../lib/services/betService";
 import { isArray } from "lodash";
 
+// Import all game data files
+import exclusiveGames from "../gamesData/exclusive.json";
+import amaticGames from "../gamesData/amatic.json";
+import apexGames from "../gamesData/apex.json";
+import apolloGames from "../gamesData/apollo.json";
+import aristocratGames from "../gamesData/aristocrat.json";
+import bingoGames from "../gamesData/bingo.json";
+import boomingGames from "../gamesData/booming.json";
+import egtGames from "../gamesData/egt.json";
+import firekirinGames from "../gamesData/firekirin.json";
+import fishGames from "../gamesData/fish.json";
+import gclubGames from "../gamesData/gclub.json";
+import habenaroGames from "../gamesData/habenaro.json";
+import holibetGames from "../gamesData/holibet.json";
+import igrosoftGames from "../gamesData/igrosoft.json";
+import igtGames from "../gamesData/igt.json";
+import jiliGames from "../gamesData/jili.json";
+import kenoGames from "../gamesData/keno.json";
+import kjotGames from "../gamesData/kjot.json";
+import merkurGames from "../gamesData/merkur.json";
+import microgamingGames from "../gamesData/microgaming.json";
+import netentGames from "../gamesData/netent.json";
+import novomaticGames from "../gamesData/novomatic.json";
+import pgsoftGames from "../gamesData/pgsoft.json";
+import playngoGames from "../gamesData/playngo.json";
+import pragmaticGames from "../gamesData/pragmatic.json";
+import quickspinGames from "../gamesData/quickspin.json";
+import rouletteGames from "../gamesData/roulette.json";
+import rubyplayGames from "../gamesData/rubyplay.json";
+import scientificgamesGames from "../gamesData/scientificgames.json";
+import sportbettingGames from "../gamesData/sportbetting.json";
+import spribeGames from "../gamesData/spribe.json";
+import vegasGames from "../gamesData/vegas.json";
+import wazdanGames from "../gamesData/wazdan.json";
+import zitroGames from "../gamesData/zitro.json";
+import ainsworthGames from "../gamesData/ainsworth.json";
+
 interface Bet {
   gameId: any;
   bet_amount: any;
@@ -32,6 +69,65 @@ const BetHistory = () => {
   const recordsPerPage = 10;
   const userId = localStorage.getItem("userId");
   const [gameTypeFilter, setGameTypeFilter] = useState("wingo");
+
+  // Helper function to normalize game data from different file structures
+  const normalizeGameData = (games: any): any[] => {
+    if (Array.isArray(games)) {
+      return games;
+    } else if (games && games.data && games.data.gameLists) {
+      // Handle jili.json structure
+      return games.data.gameLists.map((game: any) => ({
+        id: game.gameID,
+        name: game.gameNameEn
+      }));
+    }
+    return [];
+  };
+
+  // Combine all game data into a single array for searching
+  const allGames = [
+    ...normalizeGameData(exclusiveGames),
+    ...normalizeGameData(amaticGames),
+    ...normalizeGameData(apexGames),
+    ...normalizeGameData(apolloGames),
+    ...normalizeGameData(aristocratGames),
+    ...normalizeGameData(bingoGames),
+    ...normalizeGameData(boomingGames),
+    ...normalizeGameData(egtGames),
+    ...normalizeGameData(firekirinGames),
+    ...normalizeGameData(fishGames),
+    ...normalizeGameData(gclubGames),
+    ...normalizeGameData(habenaroGames),
+    ...normalizeGameData(holibetGames),
+    ...normalizeGameData(igrosoftGames),
+    ...normalizeGameData(igtGames),
+    ...normalizeGameData(jiliGames),
+    ...normalizeGameData(kenoGames),
+    ...normalizeGameData(kjotGames),
+    ...normalizeGameData(merkurGames),
+    ...normalizeGameData(microgamingGames),
+    ...normalizeGameData(netentGames),
+    ...normalizeGameData(novomaticGames),
+    ...normalizeGameData(pgsoftGames),
+    ...normalizeGameData(playngoGames),
+    ...normalizeGameData(pragmaticGames),
+    ...normalizeGameData(quickspinGames),
+    ...normalizeGameData(rouletteGames),
+    ...normalizeGameData(rubyplayGames),
+    ...normalizeGameData(scientificgamesGames),
+    ...normalizeGameData(sportbettingGames),
+    ...normalizeGameData(spribeGames),
+    ...normalizeGameData(vegasGames),
+    ...normalizeGameData(wazdanGames),
+    ...normalizeGameData(zitroGames),
+    ...normalizeGameData(ainsworthGames)
+  ];
+
+  // Function to get game name by game ID - searches across all game files
+  const getGameNameById = (gameId: string): string => {
+    const game = allGames.find((game: any) => game.id === gameId);
+    return game ? game.name : gameId; // Return game name if found, otherwise return the original ID
+  };
 
   useEffect(() => {
     const fetchBetHistory = async () => {
@@ -225,7 +321,7 @@ const BetHistory = () => {
           <tr className="text-left text-gray-400 text-sm border-b border-purple-500/10">
             <th className="py-4 md:py-5 px-6 font-medium">No.</th>
             <th className="py-4 md:py-5 px-6 font-medium">Transaction ID</th>
-            <th className="py-4 md:py-5 px-6 font-medium">Game ID</th>
+            <th className="py-4 md:py-5 px-6 font-medium">Game Name</th>
             <th className="py-4 md:py-5 px-6 font-medium">Amount</th>
             <th className="py-4 md:py-5 px-6 font-medium">Winning Ammount</th>
             <th className="py-4 md:py-5 px-6 font-medium">Status</th>
@@ -246,7 +342,7 @@ const BetHistory = () => {
               </td>
               <td className="py-4 px-6">
                 <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400">
-                  {transaction.gameId}
+                  {getGameNameById(transaction.gameId)}
                 </span>
               </td>
               <td className="py-4 px-6">₹{transaction.bet_amount}</td>
