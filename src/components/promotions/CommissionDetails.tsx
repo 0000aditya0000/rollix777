@@ -138,6 +138,8 @@ const CommissionDetails: React.FC = () => {
     );
   }
 
+  // console.log(pendingCommissions, "com");
+
   return (
     <div className="pt-16 pb-24">
       <div className="px-4 py-6 space-y-6">
@@ -231,7 +233,7 @@ const CommissionDetails: React.FC = () => {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             }).format(amount)
-                          : `${amount.toFixed(8)} ${commission.cryptoname}`;
+                          : `${amount?.toFixed(8)} ${commission.cryptoname}`;
 
                       return (
                         <div
@@ -245,15 +247,23 @@ const CommissionDetails: React.FC = () => {
                               </p>
                               <p className="text-sm text-fuchsia-300/70">
                                 Pending Transactions:{" "}
-                                {commission.commission_count}
+                                {commission?.commission_count
+                                  ? commission?.commission_count
+                                  : "N/A"}
                               </p>
                             </div>
                             <div className="text-right">
                               <p className="text-xl font-bold text-fuchsia-400">
-                                {formattedAmount}
+                                {formattedAmount &&
+                                formattedAmount !== "undefined" &&
+                                formattedAmount !== "undefined undefined" &&
+                                formattedAmount !== "NaN" &&
+                                formattedAmount.trim() !== ""
+                                  ? formattedAmount
+                                  : ""}
                               </p>
                               <p className="text-sm text-fuchsia-400">
-                                {commission.cryptoname}
+                                {commission?.cryptoname}
                               </p>
                             </div>
                           </div>
