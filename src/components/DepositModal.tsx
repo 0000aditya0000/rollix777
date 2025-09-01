@@ -49,7 +49,7 @@ const DepositPage: React.FC = () => {
     | "sunpay"
     | "watchpay"
     | "tatapay"
-  >("sunpay");
+  >("watchpay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
