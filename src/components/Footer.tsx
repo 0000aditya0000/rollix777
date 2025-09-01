@@ -89,7 +89,38 @@ const Footer: React.FC = () => {
   return (
     <>
       {/* Mobile Footer */}
-      <footer className="md:hidden fixed bottom-0 w-full max-w-[430px] bg-[#0F0F19]/90 backdrop-blur-lg border-t border-gray-800 z-30 rounded-t-2xl">
+      <footer className="md:hidden fixed bottom-0 w-full max-w-[430px] bg-[#0F0F19]/90 backdrop-blur-lg border-t border-gray-800 z-30 rounded-full mb-2">
+        <svg
+          className="absolute bottom-0 left-0 w-[calc(100%-1rem)] h-20 mx-2"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 100 25"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="
+              M5 0 
+              Q0 0, 0 5 
+              V20 
+              Q0 25, 5 25 
+              H95 
+              Q100 25, 100 20 
+              V5 
+              Q100 0, 95 0 
+              H65 
+              C60 0, 55 18, 50 18 
+              C45 18, 40 0, 35 0 
+              H5 Z
+            "
+            fill="url(#footerGrad)"
+          />
+          <defs>
+            <linearGradient id="footerGrad" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#1e1b2e" />
+              <stop offset="100%" stopColor="#0f0f19" />
+            </linearGradient>
+          </defs>
+        </svg>
+
         <nav className="relative flex justify-between items-end py-3 px-4">
           {/* Left Items */}
           <div className="flex w-2/5 justify-evenly">
