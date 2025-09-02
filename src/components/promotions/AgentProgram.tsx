@@ -51,9 +51,7 @@ const AgentProgram: React.FC = () => {
   const [isRulesModalOpen, setIsRulesModalOpen] = React.useState(false);
   const [referralsData, setReferralsData] =
     React.useState<ReferralsResponse | null>(null);
-  const [pendingCommissions, setPendingCommissions] = React.useState<
-    PendingCommission[]
-  >([]);
+  const [pendingCommissions, setPendingCommissions] = React.useState<number>(0);
   const [referrals, setReferrals] = React.useState<ReferralsResponse | null>(
     null
   );
@@ -81,10 +79,12 @@ const AgentProgram: React.FC = () => {
 
         // Fetch pending commissions
         const response = await axiosInstance.get(
-          `/api/user/pending-commissions/${userId}`
+          `/api/user/commissions/${userId}`
         );
         const pendingData = response.data;
-        setPendingCommissions(pendingData.pendingCommissions || []);
+       
+        
+        setPendingCommissions(pendingData.yesterdayCommissions?.total_amount == null ? 0 : pendingData.yesterdayCommissions?.total_amount);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -231,9 +231,7 @@ const AgentProgram: React.FC = () => {
                            bg-gradient-to-r from-purple-400 to-pink-400 mb-3"
               >
                 ₹
-               {pendingCommissions[0]?.total_amount
-  ? Number(pendingCommissions[0].total_amount).toLocaleString()
-  : "0"}
+               {pendingCommissions}
               </h2>
               <div
                 className="inline-block bg-purple-500/10 rounded-full px-4 md:px-6 py-1.5 md:py-2 mb-2
