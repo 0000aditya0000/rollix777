@@ -66,6 +66,7 @@ const AgentProgram: React.FC = () => {
     console.log(referralCode);
     setReferralCode(referralCode || "");
   }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -82,9 +83,12 @@ const AgentProgram: React.FC = () => {
           `/api/user/commissions/${userId}`
         );
         const pendingData = response.data;
-       
-        
-        setPendingCommissions(pendingData.yesterdayCommissions?.total_amount == null ? 0 : pendingData.yesterdayCommissions?.total_amount);
+
+        setPendingCommissions(
+          pendingData.yesterdayCommissions?.total_amount == null
+            ? 0
+            : pendingData.yesterdayCommissions?.total_amount
+        );
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -230,8 +234,7 @@ const AgentProgram: React.FC = () => {
                 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
                            bg-gradient-to-r from-purple-400 to-pink-400 mb-3"
               >
-                ₹
-               {pendingCommissions}
+                ₹{pendingCommissions}
               </h2>
               <div
                 className="inline-block bg-purple-500/10 rounded-full px-4 md:px-6 py-1.5 md:py-2 mb-2
@@ -336,7 +339,8 @@ const AgentProgram: React.FC = () => {
                   {[
                     {
                       label: "Number of register",
-                      value: teamSubordinatesStats.registered,
+                      // value: teamSubordinatesStats.registered,
+                      value: referralsData?.teamSubordinat,
                       valueColor: "text-blue-400",
                     },
                     {
