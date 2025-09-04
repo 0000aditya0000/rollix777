@@ -139,12 +139,16 @@ const Footer: React.FC = () => {
             <Link to="/" className="flex flex-col items-center gap-1">
               <Blinds
                 className={`w-7 h-7 ${
-                  location.pathname === "/" ? "text-purple-500" : "text-white"
+                  location.pathname === "/"
+                    ? "text-purple-500"
+                    : "text-gray-500"
                 }`}
               />
               <span
                 className={`text-sm font-bold ${
-                  location.pathname === "/" ? "text-purple-500" : "text-white"
+                  location.pathname === "/"
+                    ? "text-purple-500"
+                    : "text-gray-500"
                 }`}
               >
                 Home
@@ -155,14 +159,14 @@ const Footer: React.FC = () => {
                 className={`w-7 h-7 font-bold ${
                   location.pathname === "/games"
                     ? "text-purple-500"
-                    : "text-white"
+                    : "text-gray-500"
                 }`}
               />
               <span
                 className={`text-sm font-bold ${
                   location.pathname === "/games"
                     ? "text-purple-500"
-                    : "text-white"
+                    : "text-gray-500"
                 }`}
               >
                 Games
@@ -195,14 +199,14 @@ const Footer: React.FC = () => {
                 className={`w-7 h-7 ${
                   location.pathname === "/promotions"
                     ? "text-purple-500"
-                    : "text-white"
+                    : "text-gray-500"
                 }`}
               />
               <span
                 className={`text-sm font-bold ${
                   location.pathname === "/promotions"
                     ? "text-purple-500"
-                    : "text-white"
+                    : "text-gray-500"
                 }`}
               >
                 Promotions
@@ -213,14 +217,14 @@ const Footer: React.FC = () => {
                 className={`w-7 h-7 ${
                   location.pathname === "/account"
                     ? "text-purple-500"
-                    : "text-white"
+                    : "text-gray-500"
                 }`}
               />
               <span
                 className={`text-sm font-bold ${
                   location.pathname === "/account"
                     ? "text-purple-500"
-                    : "text-white"
+                    : "text-gray-500"
                 }`}
               >
                 {isLoggedIn ? "Account" : "Login"}
