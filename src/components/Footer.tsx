@@ -18,6 +18,14 @@ import {
   Phone,
   Mail,
   Wallet,
+  Dice5,
+  UserCircle,
+  UserRound,
+  BadgePercent,
+  BadgePercentIcon,
+  HomeIcon,
+  Wallet2Icon,
+  Blinds,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -89,23 +97,58 @@ const Footer: React.FC = () => {
   return (
     <>
       {/* Mobile Footer */}
-      <footer className="md:hidden fixed bottom-0 w-full max-w-[430px] bg-[#0F0F19]/90 backdrop-blur-lg border-t border-gray-800 z-30 rounded-t-2xl">
+
+      <footer className="md:hidden fixed bottom-0 w-full max-w-[4200px] bg-[#0F0F19]/60 backdrop-blur-lg z-30">
+        <svg
+          className="absolute bottom-0 left-0 w-[calc(100%-1rem)] h-20 mx-2 drop-shadow-lg"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 100 30"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="
+      M5 0
+      Q0 0, 0 5
+      V30
+      H100
+      V5
+      Q100 0, 95 0
+      H60
+      Q58 0, 56 4
+      Q53 10, 50 12
+      Q47 10, 44 4
+      Q42 0, 40 0
+      H5 Z
+    "
+            fill="url(#footerGrad)"
+          />
+          <defs>
+            <linearGradient id="footerGrad" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#1e1b2e" />
+              <stop offset="25%" stopColor="#2d1b69" />
+              <stop offset="50%" stopColor="#7c3aed" />
+              <stop offset="75%" stopColor="#2d1b69" />
+              <stop offset="100%" stopColor="#0f0f19" />
+            </linearGradient>
+          </defs>
+        </svg>
+
         <nav className="relative flex justify-between items-end py-3 px-4">
           {/* Left Items */}
           <div className="flex w-2/5 justify-evenly">
             <Link to="/" className="flex flex-col items-center gap-1">
-              <Home
-                className={`w-6 h-6 ${
+              <Blinds
+                className={`w-7 h-7 ${
                   location.pathname === "/"
                     ? "text-purple-500"
-                    : "text-gray-400"
+                    : "text-gray-500"
                 }`}
               />
               <span
-                className={`text-xs ${
+                className={`text-sm font-bold ${
                   location.pathname === "/"
                     ? "text-purple-500"
-                    : "text-gray-400"
+                    : "text-gray-500"
                 }`}
               >
                 Home
@@ -113,17 +156,17 @@ const Footer: React.FC = () => {
             </Link>
             <Link to="/games" className="flex flex-col items-center gap-1">
               <Gamepad2
-                className={`w-6 h-6 ${
+                className={`w-7 h-7 font-bold ${
                   location.pathname === "/games"
                     ? "text-purple-500"
-                    : "text-gray-400"
+                    : "text-gray-500"
                 }`}
               />
               <span
-                className={`text-xs ${
+                className={`text-sm font-bold ${
                   location.pathname === "/games"
                     ? "text-purple-500"
-                    : "text-gray-400"
+                    : "text-gray-500"
                 }`}
               >
                 Games
@@ -131,17 +174,17 @@ const Footer: React.FC = () => {
             </Link>
           </div>
 
-          {/* Floating Wallet (no width set) */}
-          <div className="absolute left-1/2 -translate-x-1/2 -top-6 z-40 flex flex-col items-center border-transparent">
+          {/* Floating Wallet */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-9 z-40 flex flex-col items-center border-transparent">
             <Link to="/wallet" className="flex flex-col items-center">
               <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center shadow-lg border-4 border-[#0F0F19] transition-transform duration-300 hover:scale-105">
-                <Wallet className="w-6 h-6 text-white" />
+                <Wallet2Icon className="w-8 h-8 text-white" />
               </div>
               <span
-                className={`text-xs ${
+                className={`text-sm mt-5 font-bold ${
                   location.pathname === "/wallet"
-                    ? "text-purple-500 mb-2"
-                    : "text-gray-300 mb-2"
+                    ? "text-white mb-2 drop-shadow-[0_0_12px_rgba(124,58,237,0.8)]"
+                    : "text-white/80 mb-2"
                 }`}
               >
                 Wallet
@@ -152,36 +195,36 @@ const Footer: React.FC = () => {
           {/* Right Items */}
           <div className="flex w-2/5 justify-evenly">
             <Link to="/promotions" className="flex flex-col items-center gap-1">
-              <Gift
-                className={`w-6 h-6 ${
+              <BadgePercentIcon
+                className={`w-7 h-7 ${
                   location.pathname === "/promotions"
                     ? "text-purple-500"
-                    : "text-gray-400"
+                    : "text-gray-500"
                 }`}
               />
               <span
-                className={`text-xs ${
+                className={`text-sm font-bold ${
                   location.pathname === "/promotions"
                     ? "text-purple-500"
-                    : "text-gray-400"
+                    : "text-gray-500"
                 }`}
               >
                 Promotions
               </span>
             </Link>
             <Link to="/account" className="flex flex-col items-center gap-1">
-              <User
-                className={`w-6 h-6 ${
+              <UserRound
+                className={`w-7 h-7 ${
                   location.pathname === "/account"
                     ? "text-purple-500"
-                    : "text-gray-400"
+                    : "text-gray-500"
                 }`}
               />
               <span
-                className={`text-xs ${
+                className={`text-sm font-bold ${
                   location.pathname === "/account"
                     ? "text-purple-500"
-                    : "text-gray-400"
+                    : "text-gray-500"
                 }`}
               >
                 {isLoggedIn ? "Account" : "Login"}
