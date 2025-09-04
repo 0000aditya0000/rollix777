@@ -10,7 +10,7 @@ import React, { useState, useEffect } from "react";
 
 // import slider1 from "../assets/slider/slider1.jpg";
 import slider1 from "../assets/sliderImg1.png";
-import slider2 from "../assets/slider/slider2.jpg";
+import slider2 from "../assets/sliderImg2.jpg";
 import slider3 from "../assets/slider/slider3.jpg";
 import slider4 from "../assets/slider/slider4.jpg";
 
@@ -57,7 +57,9 @@ const ImageSlider = () => {
             src={images[currentImageIndex]}
             alt={`Slide ${currentImageIndex + 1}`}
             className={`w-full h-full ${
-              currentImageIndex === 0 ? "object-fill bg-black" : "object-cover"
+              currentImageIndex === 0 || currentImageIndex === 1
+                ? "object-fill bg-black"
+                : "object-cover"
             }`}
           />
           <button
