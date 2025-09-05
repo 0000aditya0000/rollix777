@@ -464,7 +464,8 @@ const AgentProgram: React.FC = () => {
                   {[
                     {
                       label: "Number of register",
-                      value: teamSubordinatesStats.registered,
+                      // value: teamSubordinatesStats.registered,
+                      value: referralsData?.teamSubordinat,
                       valueColor: "text-blue-400",
                     },
                     {
