@@ -98,75 +98,67 @@ const Footer: React.FC = () => {
     <>
       {/* Mobile Footer */}
 
-      <footer className="md:hidden fixed bottom-0 w-full max-w-[4200px] bg-[#0F0F19]/60 backdrop-blur-lg z-30">
-        <svg
-          className="absolute bottom-0 left-0 w-[calc(100%-1rem)] h-20 mx-2 drop-shadow-lg"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 100 30"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="
-      M5 0
-      Q0 0, 0 5
-      V30
-      H100
-      V5
-      Q100 0, 95 0
-      H60
-      Q58 0, 56 4
-      Q53 10, 50 12
-      Q47 10, 44 4
-      Q42 0, 40 0
-      H5 Z
-    "
-            fill="url(#footerGrad)"
-          />
-          <defs>
-            <linearGradient id="footerGrad" x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0%" stopColor="#1e1b2e" />
-              <stop offset="25%" stopColor="#2d1b69" />
-              <stop offset="50%" stopColor="#7c3aed" />
-              <stop offset="75%" stopColor="#2d1b69" />
-              <stop offset="100%" stopColor="#0f0f19" />
-            </linearGradient>
-          </defs>
-        </svg>
-
-        <nav className="relative flex justify-between items-end py-3 px-4">
+      <footer className="md:hidden fixed bottom-0 w-full bg-[#0F0F19]/95 backdrop-blur-xl z-30 rounded-t-3xl bg-gradient-to-r from-[#1e1b2e] via-[#2d1b69] to-[#0f0f19] border-t border-purple-500/20 shadow-2xl shadow-purple-500/10">
+        <nav className="relative flex justify-between items-center h-20 px-6">
           {/* Left Items */}
           <div className="flex w-2/5 justify-evenly">
-            <Link to="/" className="flex flex-col items-center gap-1">
-              <Blinds
-                className={`w-7 h-7 ${
+            <Link to="/" className="flex flex-col items-center gap-1 group">
+              <div
+                className={`relative p-2 rounded-xl transition-all duration-300 ${
                   location.pathname === "/"
-                    ? "text-purple-500"
-                    : "text-gray-500"
+                    ? "bg-purple-500/20 shadow-lg shadow-purple-500/30"
+                    : "group-hover:bg-purple-500/10"
                 }`}
-              />
+              >
+                <Blinds
+                  className={`w-6 h-6 transition-all duration-300 ${
+                    location.pathname === "/"
+                      ? "text-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,0.6)]"
+                      : "text-gray-400 group-hover:text-purple-300"
+                  }`}
+                />
+                {location.pathname === "/" && (
+                  <div className="absolute -inset-1 bg-purple-500/30 rounded-xl blur-sm -z-10 animate-pulse"></div>
+                )}
+              </div>
               <span
-                className={`text-sm font-bold ${
+                className={`text-xs font-bold transition-all duration-300 ${
                   location.pathname === "/"
-                    ? "text-purple-500"
-                    : "text-gray-500"
+                    ? "text-purple-400 drop-shadow-[0_0_6px_rgba(147,51,234,0.8)]"
+                    : "text-gray-400 group-hover:text-purple-300"
                 }`}
               >
                 Home
               </span>
             </Link>
-            <Link to="/games" className="flex flex-col items-center gap-1">
-              <Gamepad2
-                className={`w-7 h-7 font-bold ${
+
+            <Link
+              to="/games"
+              className="flex flex-col items-center gap-1 group"
+            >
+              <div
+                className={`relative p-2 rounded-xl transition-all duration-300 ${
                   location.pathname === "/games"
-                    ? "text-purple-500"
-                    : "text-gray-500"
+                    ? "bg-purple-500/20 shadow-lg shadow-purple-500/30"
+                    : "group-hover:bg-purple-500/10"
                 }`}
-              />
+              >
+                <Gamepad2
+                  className={`w-6 h-6 transition-all duration-300 ${
+                    location.pathname === "/games"
+                      ? "text-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,0.6)]"
+                      : "text-gray-400 group-hover:text-purple-300"
+                  }`}
+                />
+                {location.pathname === "/games" && (
+                  <div className="absolute -inset-1 bg-purple-500/30 rounded-xl blur-sm -z-10 animate-pulse"></div>
+                )}
+              </div>
               <span
-                className={`text-sm font-bold ${
+                className={`text-xs font-bold transition-all duration-300 ${
                   location.pathname === "/games"
-                    ? "text-purple-500"
-                    : "text-gray-500"
+                    ? "text-purple-400 drop-shadow-[0_0_6px_rgba(147,51,234,0.8)]"
+                    : "text-gray-400 group-hover:text-purple-300"
                 }`}
               >
                 Games
@@ -174,17 +166,26 @@ const Footer: React.FC = () => {
             </Link>
           </div>
 
-          {/* Floating Wallet */}
-          <div className="absolute left-1/2 -translate-x-1/2 -top-9 z-40 flex flex-col items-center border-transparent">
-            <Link to="/wallet" className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center shadow-lg border-4 border-[#0F0F19] transition-transform duration-300 hover:scale-105">
-                <Wallet2Icon className="w-8 h-8 text-white" />
+          {/* Floating Center Button */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-10">
+            <Link to="/wallet" className="flex flex-col items-center group">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl border-4 border-[#0F0F19] transition-all duration-300 group-hover:scale-110 group-hover:shadow-purple-500/50 group-hover:shadow-2xl">
+                  <Wallet2Icon className="w-9 h-9 text-white drop-shadow-lg" />
+                  <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+                {/* Floating glow effect */}
+                <div className="absolute -inset-2 bg-gradient-to-tr from-purple-600/30 to-pink-500/30 rounded-full blur-xl opacity-75 animate-pulse"></div>
+                {/* Ring animation on active */}
+                {location.pathname === "/wallet" && (
+                  <div className="absolute -inset-1 border-2 border-purple-400/60 rounded-full animate-ping"></div>
+                )}
               </div>
               <span
-                className={`text-sm mt-5 font-bold ${
+                className={`text-sm mt-3 font-bold transition-all duration-300 ${
                   location.pathname === "/wallet"
-                    ? "text-white mb-2 drop-shadow-[0_0_12px_rgba(124,58,237,0.8)]"
-                    : "text-white/80 mb-2"
+                    ? "text-purple-300 drop-shadow-[0_0_10px_rgba(124,58,237,0.9)] animate-pulse"
+                    : "text-gray-300 group-hover:text-purple-200 group-hover:drop-shadow-[0_0_6px_rgba(124,58,237,0.6)]"
                 }`}
               >
                 Wallet
@@ -194,37 +195,66 @@ const Footer: React.FC = () => {
 
           {/* Right Items */}
           <div className="flex w-2/5 justify-evenly">
-            <Link to="/promotions" className="flex flex-col items-center gap-1">
-              <BadgePercentIcon
-                className={`w-7 h-7 ${
+            <Link
+              to="/promotions"
+              className="flex flex-col items-center gap-1 group"
+            >
+              <div
+                className={`relative p-2 rounded-xl transition-all duration-300 ${
                   location.pathname === "/promotions"
-                    ? "text-purple-500"
-                    : "text-gray-500"
-                }`}
-              />
-              <span
-                className={`text-sm font-bold ${
-                  location.pathname === "/promotions"
-                    ? "text-purple-500"
-                    : "text-gray-500"
+                    ? "bg-purple-500/20 shadow-lg shadow-purple-500/30"
+                    : "group-hover:bg-purple-500/10"
                 }`}
               >
-                Promotions
+                <BadgePercentIcon
+                  className={`w-6 h-6 transition-all duration-300 ${
+                    location.pathname === "/promotions"
+                      ? "text-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,0.6)]"
+                      : "text-gray-400 group-hover:text-purple-300"
+                  }`}
+                />
+                {location.pathname === "/promotions" && (
+                  <div className="absolute -inset-1 bg-purple-500/30 rounded-xl blur-sm -z-10 animate-pulse"></div>
+                )}
+              </div>
+              <span
+                className={`text-xs font-bold transition-all duration-300 ${
+                  location.pathname === "/promotions"
+                    ? "text-purple-400 drop-shadow-[0_0_6px_rgba(147,51,234,0.8)]"
+                    : "text-gray-400 group-hover:text-purple-300"
+                }`}
+              >
+                Promo
               </span>
             </Link>
-            <Link to="/account" className="flex flex-col items-center gap-1">
-              <UserRound
-                className={`w-7 h-7 ${
+
+            <Link
+              to="/account"
+              className="flex flex-col items-center gap-1 group"
+            >
+              <div
+                className={`relative p-2 rounded-xl transition-all duration-300 ${
                   location.pathname === "/account"
-                    ? "text-purple-500"
-                    : "text-gray-500"
+                    ? "bg-purple-500/20 shadow-lg shadow-purple-500/30"
+                    : "group-hover:bg-purple-500/10"
                 }`}
-              />
+              >
+                <UserRound
+                  className={`w-6 h-6 transition-all duration-300 ${
+                    location.pathname === "/account"
+                      ? "text-purple-400 drop-shadow-[0_0_8px_rgba(147,51,234,0.6)]"
+                      : "text-gray-400 group-hover:text-purple-300"
+                  }`}
+                />
+                {location.pathname === "/account" && (
+                  <div className="absolute -inset-1 bg-purple-500/30 rounded-xl blur-sm -z-10 animate-pulse"></div>
+                )}
+              </div>
               <span
-                className={`text-sm font-bold ${
+                className={`text-xs font-bold transition-all duration-300 ${
                   location.pathname === "/account"
-                    ? "text-purple-500"
-                    : "text-gray-500"
+                    ? "text-purple-400 drop-shadow-[0_0_6px_rgba(147,51,234,0.8)]"
+                    : "text-gray-400 group-hover:text-purple-300"
                 }`}
               >
                 {isLoggedIn ? "Account" : "Login"}
