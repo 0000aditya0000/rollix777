@@ -49,7 +49,7 @@ const DepositPage: React.FC = () => {
     | "sunpay"
     | "watchpay"
     | "tatapay"
-  >("sunpay");
+  >("tatapay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -533,18 +533,18 @@ const DepositPage: React.FC = () => {
               {/* Server Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <button
-                  onClick={() => setSelectedServer("sunpay")}
+                  onClick={() => setSelectedServer("tatapay")}
                   className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "sunpay"
+                    selectedServer === "tatapay"
                       ? "bg-green-500/20 border-green-500 text-white"
                       : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">Sunpay (UPI Instant)</span>
+                    <span className="font-medium">TataPay (UPI Instant)</span>
                     <span className="text-xs">Recommended</span>
-                    <span className="text-xs">₹100 - ₹100K</span>
+                    <span className="text-xs">₹200 - ₹50K</span>
                     <span className="text-xs text-green-400">
                       Fast Processing
                     </span>
@@ -571,18 +571,18 @@ const DepositPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setSelectedServer("tatapay")}
+                  onClick={() => setSelectedServer("sunpay")}
                   className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "tatapay"
+                    selectedServer === "sunpay"
                       ? "bg-green-500/20 border-green-500 text-white"
                       : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">TataPay (UPI)</span>
-
-                    <span className="text-xs">₹200 - ₹50K</span>
+                    <span className="font-medium">Sunpay (UPI)</span>
+                    {/* <span className="text-xs">Recommended</span> */}
+                    <span className="text-xs">₹100 - ₹100K</span>
                     <span className="text-xs text-green-400">
                       Fast Processing
                     </span>
