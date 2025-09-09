@@ -90,6 +90,22 @@ const Footer: React.FC = () => {
     <>
       {/* Mobile Footer */}
       <footer className="md:hidden fixed bottom-0 w-full max-w-[430px] bg-[#0F0F19]/90 backdrop-blur-lg border-t border-gray-800 z-30 rounded-t-2xl">
+        {/* Telegram Button */}
+        <button
+          onClick={() =>
+            window.open("https://t.me/rollix777_support", "_blank")
+          }
+          className="fixed right-4 -top-20 -translate-y-1/2 z-50 w-16 h-16 rounded-full bg-gradient-to-br from-[#0088cc] to-[#005f8a] flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
+        >
+          <svg
+            className="w-8 h-8 text-white"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-.962 6.502-.613 1.938-1.425 2.278-2.313 1.467l-1.86-1.373-1.017.979c-.112.112-.207.207-.422.207-.272 0-.221-.126-.31-.437l-.697-2.292L6.85 11.88c-.57-.159-.578-.57.126-.854l9.386-3.62c.46-.188.882.11.752.818z" />
+          </svg>
+        </button>
+
         <nav className="relative flex justify-between items-end py-3 px-4">
           {/* Left Items */}
           <div className="flex w-2/5 justify-evenly">
