@@ -234,7 +234,7 @@ const AgentProgram: React.FC = () => {
                 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text 
                            bg-gradient-to-r from-purple-400 to-pink-400 mb-3"
               >
-                ₹{pendingCommissions}
+               ₹{pendingCommissions}
               </h2>
               <div
                 className="inline-block bg-purple-500/10 rounded-full px-4 md:px-6 py-1.5 md:py-2 mb-2

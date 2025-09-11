@@ -49,7 +49,8 @@ const DepositPage: React.FC = () => {
     | "sunpay"
     | "watchpay"
     | "tatapay"
-  >("sunpay");
+    | "QR-TXPay"
+  >("watchpay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -158,6 +159,12 @@ const DepositPage: React.FC = () => {
     }
     if (server === "tatapay" && amount < 200) {
       return "Minimum deposit amount is 200 INR";
+    }
+    if (server === "QR-TXPay" && amount < 200) {
+      return "Minimum deposit amount is 200 INR";
+    }
+    if (server === "QR-TXPay" && amount > 50000) {
+      return "Maximum deposit amount is 50,000 INR for QR-TXPay";
     }
     if (server === "watchpay" && amount < 100) {
       return "Minimum deposit amount is 100 INR";
@@ -343,7 +350,7 @@ const DepositPage: React.FC = () => {
         return;
       }
 
-      if (selectedServer === "watchpay") {
+      if (selectedServer === "watchpay" || selectedServer === "QR-TXPay") {
         const validationError = validateAmount(amount1, "watchpay");
         if (validationError) {
           setError(validationError);
@@ -532,7 +539,7 @@ const DepositPage: React.FC = () => {
             <div className="space-y-4 ">
               {/* Server Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <button
+                {/* <button
                   onClick={() => setSelectedServer("sunpay")}
                   className={`p-4 rounded-lg border transition-all ${
                     selectedServer === "sunpay"
@@ -549,8 +556,8 @@ const DepositPage: React.FC = () => {
                       Fast Processing
                     </span>
                   </div>
-                </button>
-
+                </button> */}
+                
                 <button
                   onClick={() => setSelectedServer("watchpay")}
                   className={`p-4 rounded-lg border transition-all ${
@@ -562,14 +569,31 @@ const DepositPage: React.FC = () => {
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                     <span className="font-medium">Watchpay (UPI)</span>
-                    {/* <span className="text-xs">Recommended</span> */}
+                    <span className="text-xs">Recommended</span>
                     <span className="text-xs">₹100 - ₹50K</span>
+                    <span className="text-xs text-green-400">
+                      Fast Processing
+                    </span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setSelectedServer("QR-TXPay")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "QR-TXPay"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">QR-TXPay</span>
+                    <span className="text-xs">Recommended</span>
+                    <span className="text-xs">₹200 - ₹50K</span>
                     <span className="text-xs text-green-400">
                       Instant Processing
                     </span>
                   </div>
                 </button>
-
                 <button
                   onClick={() => setSelectedServer("tatapay")}
                   className={`p-4 rounded-lg border transition-all ${
@@ -720,6 +744,15 @@ const DepositPage: React.FC = () => {
                     <>
                       <li>Use Watchpay for secure deposits</li>
                       <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹50,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Secure payment gateway</li>
+                    </>
+                  )}
+                  {selectedServer === "QR-TXPay" && (
+                    <>
+                      <li>Use QR-TXPay for secure deposits</li>
+                      <li>Minimum deposit: ₹200</li>
                       <li>Maximum deposit: ₹50,000</li>
                       <li>Deposits are credited instantly</li>
                       <li>Secure payment gateway</li>
