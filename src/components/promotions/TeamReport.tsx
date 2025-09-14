@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, User, ChevronDown, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
+// @ts-ignore
 import { referralService } from "../../lib/services/referralService";
 
 interface ReferralMember {
@@ -22,27 +23,6 @@ interface ReferralMember {
 }
 
 interface ReferralResponse {
-  userId: string;
-  totalReferrals: number;
-  totalBets?: {
-    bets_table: string;
-    api_turnover_table: string;
-    huidu_txn_table: string;
-    grand_total: string;
-  } | string | number;
-  referralsByLevel: {
-    level1: ReferralMember[];
-    level2: ReferralMember[];
-    level3: ReferralMember[];
-    level4: ReferralMember[];
-    level5: ReferralMember[];
-  };
-  totalPages?: number;
-  directSubordinates?: number;
-  teamSubordinates?: number;
-}
-
-interface FilteredReferralResponse {
   date: string;
   userId: string;
   dateType: string;
@@ -68,18 +48,17 @@ interface FilteredReferralResponse {
     level4: ReferralMember[];
     level5: ReferralMember[];
   };
+  totalPages?: number;
 }
+
 
 const TeamReport: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [activeSort, setActiveSort] = useState<string | null>(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [referralData, setReferralData] = useState<ReferralResponse | FilteredReferralResponse | null>(
-    null
-  );
+  const [referralData, setReferralData] = useState<ReferralResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [referralView, setReferralView] = useState("direct");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const recordsPerPage = 30; // Changed to 30 records per page
@@ -102,70 +81,59 @@ const TeamReport: React.FC = () => {
 
         let data;
 
-        if (activeFilter === "all") {
-          if (activeSort) {
-            // For sorting, always fetch with pagination
-            data = await referralService.getReferralsSorted(
-              userId, 
-              activeSort, 
-              currentPage, 
-              recordsPerPage
-            );
-          } else {
-            data = await referralService.getReferrals(
-              userId,
-              currentPage,
-              recordsPerPage
-            );
-          }
+        // Use pagination for all filters including "all time"
+        if (activeSort) {
+          // For sorting, use the sorted API with pagination
+          data = await referralService.getReferralsSorted(
+            userId, 
+            activeSort, 
+            currentPage, 
+            recordsPerPage
+          );
         } else {
-          // For filtered responses, get all data first, then apply sorting locally
-          data = await referralService.getReferralsByDate(userId, activeFilter);
-          
-          // Apply local sorting if needed
-          if (activeSort && data.referralsByLevel) {
-            const allMembers = getAllMembersFromData(data);
-            const sortedMembers = sortMembers(allMembers, activeSort);
-            
-            // Reorganize sorted members back into levels
-            data.referralsByLevel = reorganizeMembersByLevel(sortedMembers);
-          }
+          // For all filters (including "all time"), use the date filter API with pagination
+          // Send dateType as "all" for "All time" filter
+          const dateType = activeFilter === "all" ? "all" : activeFilter;
+          data = await referralService.getReferralsByDate(
+            userId, 
+            dateType, 
+            currentPage, 
+            recordsPerPage
+          );
         }
 
         setReferralData(data);
         
         // Debug: Log the data structure to understand what we're receiving
+        const dateType = activeFilter === "all" ? "all" : activeFilter;
         console.log("Received data:", {
           filter: activeFilter,
+          dateType: dateType,
+          sort: activeSort,
           totalPages: data.totalPages,
           totalReferrals: data.totalReferrals,
           membersCount: getAllMembersFromData(data).length,
-          currentPage
+          currentPage,
+          recordsPerPage,
+          apiResponse: data
         });
         
-        // Handle different response structures
-        if (activeFilter === "all") {
-          // For "All" filter, ensure we have totalPages
-          if (data.totalPages && data.totalPages > 0) {
-            setTotalPages(data.totalPages);
-            console.log("Using API totalPages:", data.totalPages);
-          } else if (data.totalReferrals && data.totalReferrals > 0) {
-            // Calculate total pages based on total referrals if totalPages is not provided
-            const calculatedPages = Math.ceil(data.totalReferrals / recordsPerPage);
-            setTotalPages(Math.max(1, calculatedPages)); // Ensure at least 1 page
-            console.log("Calculated totalPages from totalReferrals:", calculatedPages);
-          } else {
-            // Fallback: calculate from actual data received
-            const totalMembers = getAllMembersFromData(data).length;
-            const calculatedPages = Math.ceil(totalMembers / recordsPerPage);
-            setTotalPages(Math.max(1, calculatedPages)); // Ensure at least 1 page
-            console.log("Fallback calculated totalPages:", calculatedPages);
-          }
+        // Handle pagination for both filtered and non-filtered data
+        if (data.totalPages && data.totalPages > 0) {
+          // Use API-provided totalPages if available
+          setTotalPages(data.totalPages);
+          console.log("Using API totalPages:", data.totalPages);
+        } else if (data.totalReferrals && data.totalReferrals > 0) {
+          // Calculate total pages based on total referrals if totalPages is not provided
+          const calculatedPages = Math.ceil(data.totalReferrals / recordsPerPage);
+          setTotalPages(Math.max(1, calculatedPages)); // Ensure at least 1 page
+          console.log("Calculated totalPages from totalReferrals:", calculatedPages);
         } else {
-          // For filtered responses, calculate total pages based on total referrals
+          // Fallback: calculate from actual data received (for cases where API doesn't provide totals)
           const totalMembers = getAllMembersFromData(data).length;
           const calculatedPages = Math.ceil(totalMembers / recordsPerPage);
           setTotalPages(Math.max(1, calculatedPages)); // Ensure at least 1 page
+          console.log("Fallback calculated totalPages:", calculatedPages);
         }
         
         setLoading(false);
@@ -178,59 +146,12 @@ const TeamReport: React.FC = () => {
     fetchReferrals();
   }, [activeFilter, activeSort, currentPage]);
 
-  // Helper function to sort members locally
-  const sortMembers = (members: ReferralMember[], sortBy: string): ReferralMember[] => {
-    return [...members].sort((a, b) => {
-      if (sortBy === "first_deposit") {
-        const aValue = parseNumber(a.first_deposit);
-        const bValue = parseNumber(b.first_deposit);
-        return bValue - aValue; // Descending order
-      } else if (sortBy === "total_bets") {
-        const aValue = parseNumber(a.total_bets);
-        const bValue = parseNumber(b.total_bets);
-        return bValue - aValue; // Descending order
-      }
-      return 0;
-    });
-  };
 
-  // Helper function to reorganize sorted members back into levels
-  const reorganizeMembersByLevel = (sortedMembers: ReferralMember[]) => {
-    const levels = {
-      level1: [] as ReferralMember[],
-      level2: [] as ReferralMember[],
-      level3: [] as ReferralMember[],
-      level4: [] as ReferralMember[],
-      level5: [] as ReferralMember[],
-    };
+  // Helper function to get all members from the new unified data structure
+  const getAllMembersFromData = (data: ReferralResponse | null): ReferralMember[] => {
+    if (!data || !data.referralsByLevel) return [];
 
-    sortedMembers.forEach(member => {
-      switch (member.level) {
-        case 1:
-          levels.level1.push(member);
-          break;
-        case 2:
-          levels.level2.push(member);
-          break;
-        case 3:
-          levels.level3.push(member);
-          break;
-        case 4:
-          levels.level4.push(member);
-          break;
-        case 5:
-          levels.level5.push(member);
-          break;
-      }
-    });
-
-    return levels;
-  };
-
-  // Helper function to get all members from either data structure
-  const getAllMembersFromData = (data: ReferralResponse | FilteredReferralResponse | null): ReferralMember[] => {
-    if (!data) return [];
-
+    // For paginated responses, the API should return only the current page's data
     return [
       ...(data.referralsByLevel.level1 || []),
       ...(data.referralsByLevel.level2 || []),
@@ -240,36 +161,26 @@ const TeamReport: React.FC = () => {
     ];
   };
 
-  // Helper function to generate mock members
-  const generateMockMembers = (
-    count: number,
-    level: number
-  ): ReferralMember[] => {
-    return Array.from({ length: count }, (_, i) => ({
-      id: level * 100 + i + 1,
-      name: `User ${level * 100 + i + 1}`,
-      username: `user${level * 100 + i + 1}`,
-      email: `user${level * 100 + i + 1}@example.com`,
-      level,
-      first_deposit: Math.floor(Math.random() * 1000) + 500,
-      total_deposit: Math.floor(Math.random() * 10000) + 5000,
-      total_bets: Math.floor(Math.random() * 30000) + 5000,
-      join_date: new Date(Date.now() - Math.floor(Math.random() * 10000000000))
-        .toISOString()
-        .split("T")[0],
-    }));
-  };
 
   const getAllMembers = (): ReferralMember[] => {
     return getAllMembersFromData(referralData);
   };
 
-  // Get paginated members for current page
+  // Get members for current page (now handled by server-side pagination)
   const getPaginatedMembers = (): ReferralMember[] => {
-    const allMembers = getAllMembers();
-    const startIndex = (currentPage - 1) * recordsPerPage;
-    const endIndex = startIndex + recordsPerPage;
-    return allMembers.slice(startIndex, endIndex);
+    // For server-side pagination, return all members from the current page response
+    // The API should only return the current page's data, so we don't need additional pagination
+    const members = getAllMembers();
+    
+    // Debug: Log the number of members being displayed
+    console.log(`Displaying ${members.length} members for page ${currentPage}`);
+    
+    // Check if we're getting more than expected records (indicates pagination issue)
+    if (members.length > recordsPerPage) {
+      console.warn(`Warning: Received ${members.length} members but expected max ${recordsPerPage} for page ${currentPage}. This suggests pagination might not be working correctly.`);
+    }
+    
+    return members;
   };
 
   // Helper function to safely parse number values
@@ -283,66 +194,24 @@ const TeamReport: React.FC = () => {
   };
 
   const calculateTotalStats = () => {
-    // If we have filtered data, use the specific totals from the API
-    if (activeFilter !== "all" && referralData && 'totalFirstDeposit' in referralData) {
-      const filteredData = referralData as FilteredReferralResponse;
-              return {
-          depositAmount: parseNumber(filteredData.totalDeposit),
-          totalBet: parseNumber(filteredData.grandTotalBets),
-          firstDeposit: parseNumber(filteredData.totalFirstDeposit),
-          directSubordinates: filteredData.directSubordinates || 0,
-          teamSubordinates: filteredData.teamSubordinates || 0,
-        };
+    // Use pre-calculated totals from the new API response structure
+    if (referralData) {
+      return {
+        depositAmount: parseNumber(referralData.totalDeposit),
+        totalBet: parseNumber(referralData.grandTotalBets),
+        firstDeposit: parseNumber(referralData.totalFirstDeposit),
+        directSubordinates: referralData.directSubordinates || 0,
+        teamSubordinates: referralData.teamSubordinates || 0,
+      };
     }
 
-    // Otherwise calculate from member data
-    const members = getAllMembers();
-    
-    // Handle new totalBets structure from API response
-    let totalBetValue = 0;
-    if (referralData && 'totalBets' in referralData && referralData.totalBets) {
-      if (typeof referralData.totalBets === 'object' && 'grand_total' in referralData.totalBets) {
-        totalBetValue = parseNumber(referralData.totalBets.grand_total);
-      } else {
-        totalBetValue = parseNumber(referralData.totalBets);
-      }
-    } else {
-      // Fallback to calculating from member data
-      totalBetValue = members.reduce(
-        (sum, member) => sum + parseNumber(member.total_bets),
-        0
-      );
-    }
-    
-    // Calculate Direct Subordinates (level 1) and Team Subordinates (levels 2-5)
-    let directSubordinates = 0;
-    let teamSubordinates = 0;
-    
-    if (referralData && referralData.referralsByLevel) {
-      // Direct Subordinates = count of level 1 users
-      directSubordinates = (referralData.referralsByLevel.level1 || []).length;
-      
-      // Team Subordinates = count of all levels excluding level 1
-      teamSubordinates = [
-        ...(referralData.referralsByLevel.level2 || []),
-        ...(referralData.referralsByLevel.level3 || []),
-        ...(referralData.referralsByLevel.level4 || []),
-        ...(referralData.referralsByLevel.level5 || [])
-      ].length;
-    }
-    
+    // Fallback: return zeros if no data
     return {
-      depositAmount: members.reduce(
-        (sum, member) => sum + parseNumber(member.total_deposit),
-        0
-      ),
-      totalBet: totalBetValue,
-      firstDeposit: members.reduce(
-        (sum, member) => sum + parseNumber(member.first_deposit),
-        0
-      ),
-      directSubordinates,
-      teamSubordinates,
+      depositAmount: 0,
+      totalBet: 0,
+      firstDeposit: 0,
+      directSubordinates: 0,
+      teamSubordinates: 0,
     };
   };
 
@@ -355,70 +224,69 @@ const TeamReport: React.FC = () => {
   };
 
   const members = getPaginatedMembers(); // Use paginated members for display
-  const totals = calculateTotalStats();
 
-  // Get the correct values for the stats cards
+  // Get the correct values for the stats cards using the new unified response structure
   const getStatsData = () => {
-    if (activeFilter !== "all" && referralData && 'totalFirstDeposit' in referralData) {
-      const filteredData = referralData as FilteredReferralResponse;
+    if (referralData) {
       return [
         {
           title: "Total Deposit",
-          value: `₹${formatCurrency(parseNumber(filteredData.totalDeposit))}`,
+          value: `₹${formatCurrency(parseNumber(referralData.totalDeposit))}`,
         },
         {
           title: "Total Bet Amount",
-          value: `₹${formatCurrency(parseNumber(filteredData.grandTotalBets))}`,
+          value: `₹${formatCurrency(parseNumber(referralData.grandTotalBets))}`,
         },
         {
           title: "First Deposit",
-          value: `₹${formatCurrency(parseNumber(filteredData.totalFirstDeposit))}`,
+          value: `₹${formatCurrency(parseNumber(referralData.totalFirstDeposit))}`,
         },
         {
           title: "Total Referrals",
-          value: filteredData.totalReferrals || 0,
+          value: referralData.totalReferrals || 0,
         },
         {
           title: "Direct Subordinates",
-          value: filteredData.directSubordinates || 0,
+          value: referralData.directSubordinates || 0,
         },
         {
           title: "Team Subordinates",
-          value: filteredData.teamSubordinates || 0
+          value: referralData.teamSubordinates || 0
         },
       ];
     }
 
-    // Default stats for "all" filter
+    // Fallback: return zeros if no data
     return [
       {
         title: "Total Deposit",
-        value: `₹${formatCurrency(totals.depositAmount)}`,
+        value: "₹0.00",
       },
       {
         title: "Total Bet Amount",
-        value: `₹${formatCurrency(totals.totalBet)}`,
+        value: "₹0.00",
       },
       {
         title: "First Deposit",
-        value: `₹${formatCurrency(totals.firstDeposit)}`,
+        value: "₹0.00",
       },
       {
         title: "Total Referrals",
-        value: referralData?.totalReferrals || 0,
+        value: 0,
       },
       {
         title: "Direct Subordinates",
-        value: totals.directSubordinates || 0,
+        value: 0,
       },
       {
         title: "Team Subordinates",
-        value: totals.teamSubordinates || 0
+        value: 0
       },
     ];
   };
 
   const filterOptions = [
+    { value: "all", label: "All Time" },
     { value: "today", label: "Today" },
     { value: "yesterday", label: "Yesterday" },
     { value: "month", label: "This Month" },
@@ -596,7 +464,7 @@ const TeamReport: React.FC = () => {
             </div>
 
             {/* Note for Date Filters */}
-            {activeFilter !== "all" && referralData && 'note' in referralData && (referralData as FilteredReferralResponse).note && (
+            {referralData && referralData.note && (
               <div className="mb-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
                 <div className="flex items-start gap-3">
                   <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center mt-0.5">
@@ -605,7 +473,7 @@ const TeamReport: React.FC = () => {
                   <div>
                     <p className="text-blue-300 text-sm font-medium">Important Note</p>
                     <p className="text-blue-200 text-sm mt-1">
-                      {(referralData as FilteredReferralResponse).note}
+                      {referralData.note}
                     </p>
                   </div>
                 </div>

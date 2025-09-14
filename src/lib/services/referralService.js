@@ -31,10 +31,13 @@ const getTodaySummary = async (userId) => {
   }
 };
 
-const getReferralsByDate = async (userId, dateType) => {
+const getReferralsByDate = async (userId, dateType, page = 1, limit = 30) => {
   try {
     const response = await axiosInstance.get(
-      `/api/user/referralsbydate/${userId}?dateType=${dateType}`
+      `/api/user/referralsbydate/${userId}`,
+      {
+        params: { dateType, page, limit },
+      }
     );
     return response.data;
   } catch (error) {
@@ -46,7 +49,7 @@ const getReferralsByDate = async (userId, dateType) => {
   }
 };
 
-const getReferralsSorted = async (userId, sortBy) => {
+const getReferralsSorted = async (userId, sortBy, page = 1, limit = 30) => {
   try {
     const response = await axiosInstance.get(
       `/api/user/referrals/sort/${userId}`,

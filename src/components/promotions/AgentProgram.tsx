@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Copy, ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Copy } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import InvitationRulesModal from "./InvitationRulesModal";
+// @ts-ignore
 import { referralService } from "../../lib/services/referralService";
 import axiosInstance from "../../lib/utils/axiosInstance";
-import { values } from "lodash";
 import toast from "react-hot-toast";
 
 interface Referral {
@@ -20,21 +20,22 @@ interface Referral {
   total_bets: number | null;
 }
 
-interface PendingCommission {
-  cryptoname: string;
-  pending_amount: number;
-  commission_count: number;
-}
 
-interface ReferralsResponse {
+
+interface TodaySummaryResponse {
+  date: string;
   userId: string;
-  totalReferrals: number;
-  referralsByLevel: {
-    level1: Referral[];
-    level2: Referral[];
-    level3: Referral[];
-    level4: Referral[];
-    level5: Referral[];
+  directSubordinateData: {
+    totalReferrals: number;
+    depositAmount: string;
+    firstDeposit: string;
+    firstDepositCount: number;
+  };
+  teamSubordinateData: {
+    totalReferrals: number;
+    depositAmount: string;
+    firstDeposit: string;
+    firstDepositCount: number;
   };
 }
 
@@ -49,12 +50,9 @@ const AgentProgram: React.FC = () => {
   const [referralCode, setReferralCode] = React.useState("");
   const [isHovered, setIsHovered] = React.useState("");
   const [isRulesModalOpen, setIsRulesModalOpen] = React.useState(false);
-  const [referralsData, setReferralsData] =
-    React.useState<ReferralsResponse | null>(null);
+  const [todaySummaryData, setTodaySummaryData] =
+    React.useState<TodaySummaryResponse | null>(null);
   const [pendingCommissions, setPendingCommissions] = React.useState<number>(0);
-  const [referrals, setReferrals] = React.useState<ReferralsResponse | null>(
-    null
-  );
   const [referralSummaryData, setReferralSummaryData] =
     useState<ReferralSummary | null>(null);
   const navigate = useNavigate();
@@ -74,9 +72,9 @@ const AgentProgram: React.FC = () => {
           throw new Error("User ID not found");
         }
 
-        // Fetch referrals data
+        // Fetch today's summary data
         const data = await referralService.getTodaySummary(userId);
-        setReferralsData(data);
+        setTodaySummaryData(data);
 
         // Fetch pending commissions
         const response = await axiosInstance.get(
@@ -97,15 +95,6 @@ const AgentProgram: React.FC = () => {
     fetchData();
   }, [userId]);
 
-  const fetchReferrals = async () => {
-    try {
-      const data = await referralService.getReferrals(userId);
-      setReferrals(data);
-    } catch (err) {
-      console.error("Error fetching referrals:", err);
-      setReferrals([]);
-    }
-  };
 
   const fetchReferralSummary = async () => {
     try {
@@ -119,13 +108,12 @@ const AgentProgram: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchReferrals();
     fetchReferralSummary();
   }, [userId]);
 
   // Calculate direct subordinates stats (level 1)
   const directSubordinatesStats = React.useMemo(() => {
-    if (!referralsData)
+    if (!todaySummaryData)
       return {
         registered: 0,
         depositAmount: 0,
@@ -133,26 +121,17 @@ const AgentProgram: React.FC = () => {
         totalFirstDepositAmount: 0,
       };
 
-    const level1Referrals = referralsData.referralsByLevel.level1;
     return {
-      registered: referralsData.totalReferrals,
-      depositAmount: level1Referrals.reduce(
-        (sum, ref) => sum + parseFloat(ref.total_deposit?.toString() || "0"),
-        0
-      ),
-      firstDepositUsers: level1Referrals.filter(
-        (ref) => parseFloat(ref.first_deposit) > 0
-      ).length,
-      totalFirstDepositAmount: level1Referrals.reduce(
-        (sum, ref) => sum + parseFloat(ref.first_deposit?.toString() || "0"),
-        0
-      ),
+      registered: todaySummaryData.directSubordinateData.totalReferrals,
+      depositAmount: parseFloat(todaySummaryData.directSubordinateData.depositAmount),
+      firstDepositUsers: todaySummaryData.directSubordinateData.firstDepositCount,
+      totalFirstDepositAmount: parseFloat(todaySummaryData.directSubordinateData.firstDeposit),
     };
-  }, [referralsData]);
+  }, [todaySummaryData]);
 
   // Calculate team subordinates stats (all levels)
   const teamSubordinatesStats = React.useMemo(() => {
-    if (!referralsData)
+    if (!todaySummaryData)
       return {
         registered: 0,
         depositAmount: 0,
@@ -160,29 +139,13 @@ const AgentProgram: React.FC = () => {
         totalFirstDepositAmount: 0,
       };
 
-    const allReferrals = [
-      // ...referralsData.referralsByLevel.level1,
-      ...referralsData.referralsByLevel.level2,
-      ...referralsData.referralsByLevel.level3,
-      ...referralsData.referralsByLevel.level4,
-      ...referralsData.referralsByLevel.level5,
-    ];
-
     return {
-      registered: allReferrals.length,
-      depositAmount: allReferrals.reduce(
-        (sum, ref) => sum + parseFloat(ref.total_deposit?.toString() || "0"),
-        0
-      ),
-      firstDepositUsers: allReferrals.filter(
-        (ref) => parseFloat(ref.first_deposit) > 0
-      ).length,
-      totalFirstDepositAmount: allReferrals.reduce(
-        (sum, ref) => sum + parseFloat(ref.first_deposit?.toString() || "0"),
-        0
-      ),
+      registered: todaySummaryData.teamSubordinateData.totalReferrals,
+      depositAmount: parseFloat(todaySummaryData.teamSubordinateData.depositAmount),
+      firstDepositUsers: todaySummaryData.teamSubordinateData.firstDepositCount,
+      totalFirstDepositAmount: parseFloat(todaySummaryData.teamSubordinateData.firstDeposit),
     };
-  }, [referralsData]);
+  }, [todaySummaryData]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(referralCode);
@@ -340,7 +303,7 @@ const AgentProgram: React.FC = () => {
                     {
                       label: "Number of register",
                       // value: teamSubordinatesStats.registered,
-                      value: referralsData?.teamSubordinat,
+                      value: teamSubordinatesStats.registered,
                       valueColor: "text-blue-400",
                     },
                     {
@@ -465,7 +428,7 @@ const AgentProgram: React.FC = () => {
                     {
                       label: "Number of register",
                       // value: teamSubordinatesStats.registered,
-                      value: referralsData?.teamSubordinat,
+                      value: teamSubordinatesStats.registered,
                       valueColor: "text-blue-400",
                     },
                     {
