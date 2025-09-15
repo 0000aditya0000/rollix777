@@ -564,7 +564,7 @@ const DepositPage: React.FC = () => {
                     </span>
                   </div>
                 </button> */}
-                <button
+                {/* <button
                   onClick={() => setSelectedServer("trustypay")}
                   className={`p-4 rounded-lg border transition-all ${
                     selectedServer === "trustypay"
@@ -581,7 +581,7 @@ const DepositPage: React.FC = () => {
                       Instant Processing
                     </span>
                   </div>
-                </button>
+                </button> */}
 
                 <button
                   onClick={() => setSelectedServer("watchpay")}
