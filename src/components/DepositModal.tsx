@@ -51,7 +51,7 @@ const DepositPage: React.FC = () => {
     | "tatapay"
     | "QR-TXPay"
     | "trustypay"
-  >("sunpay");
+  >("trustypay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -546,7 +546,7 @@ const DepositPage: React.FC = () => {
             <div className="space-y-4 ">
               {/* Server Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <button
+                {/* <button
                   onClick={() => setSelectedServer("sunpay")}
                   className={`p-4 rounded-lg border transition-all ${
                     selectedServer === "sunpay"
@@ -563,7 +563,7 @@ const DepositPage: React.FC = () => {
                       Fast Processing
                     </span>
                   </div>
-                </button>
+                </button> */}
                 <button
                   onClick={() => setSelectedServer("trustypay")}
                   className={`p-4 rounded-lg border transition-all ${
@@ -582,7 +582,7 @@ const DepositPage: React.FC = () => {
                     </span>
                   </div>
                 </button>
-                
+
                 <button
                   onClick={() => setSelectedServer("watchpay")}
                   className={`p-4 rounded-lg border transition-all ${
