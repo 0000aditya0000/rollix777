@@ -25,12 +25,21 @@ import { button } from "framer-motion/client";
 import { getAllTransactions } from "../lib/services/transactionService";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../store";
-import axios from "axios";
+import { getAllGateways } from "../lib/services/paymentGatewayservice";
 
 interface DepositRequest {
   userId: number;
   amount: number;
   cryptoname: string;
+}
+
+interface Gateway {
+  id: number;
+  name: string;
+  label: string;
+  min_amount: number;
+  max_amount: number;
+  status: "active" | "inactive";
 }
 
 const DepositPage: React.FC = () => {
@@ -62,6 +71,8 @@ const DepositPage: React.FC = () => {
     "all" | "approved" | "pending" | "rejected"
   >("all");
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [gateways, setGateways] = useState<Gateway[]>([]);
+
   const [sunpayError, setSunpayError] = useState("");
 
   const navigate = useNavigate();
@@ -93,6 +104,36 @@ const DepositPage: React.FC = () => {
   const [selectedNetwork, setSelectedNetwork] = useState<"trc20" | "erc20">(
     "trc20"
   );
+
+  const fetchGateways = async () => {
+    try {
+      setLoading(true);
+      const res = await getAllGateways();
+      setGateways(res.data);
+
+      // auto-select first active
+      const active = res.data.find((g: any) => g.status === "active");
+      setSelectedServer(active ? active.name : null);
+    } catch (error) {
+      console.error("Error fetching gateways:", error);
+      toast.error("Failed to load gateways");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGateways();
+  }, []);
+
+  const isGatewayActive = (name: string) => {
+    const gateway = gateways.find(
+      (g) => g.name.toLowerCase() === name.toLowerCase()
+    );
+
+    console.log("Checking gateway:", name, gateway);
+    return gateway?.status === "active";
+  };
 
   // if (!isOpen) return null;
 
@@ -546,97 +587,31 @@ const DepositPage: React.FC = () => {
             <div className="space-y-4 ">
               {/* Server Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                {/* <button
-                  onClick={() => setSelectedServer("sunpay")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "sunpay"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">Sunpay (UPI Instant)</span>
-                    <span className="text-xs">Recommended</span>
-                    <span className="text-xs">₹100 - ₹100K</span>
-                    <span className="text-xs text-green-400">
-                      Fast Processing
-                    </span>
-                  </div>
-                </button> */}
-                {/* <button
-                  onClick={() => setSelectedServer("trustypay")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "trustypay"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">Trusty Pay</span>
-                    <span className="text-xs">Recommended</span>
-                    <span className="text-xs">₹300 - ₹50K</span>
-                    <span className="text-xs text-green-400">
-                      Instant Processing
-                    </span>
-                  </div>
-                </button> */}
-
-                <button
-                  onClick={() => setSelectedServer("watchpay")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "watchpay"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">Watchpay (UPI)</span>
-                    <span className="text-xs">Recommended</span>
-                    <span className="text-xs">₹100 - ₹50K</span>
-                    <span className="text-xs text-green-400">
-                      Fast Processing
-                    </span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setSelectedServer("QR-TXPay")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "QR-TXPay"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">QR-TXPay</span>
-                    <span className="text-xs">Recommended</span>
-                    <span className="text-xs">₹200 - ₹50K</span>
-                    <span className="text-xs text-green-400">
-                      Instant Processing
-                    </span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setSelectedServer("tatapay")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "tatapay"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">TataPay (UPI)</span>
-                    {/* <span className="text-xs">Recommended</span> */}
-                    <span className="text-xs">₹200 - ₹50K</span>
-                    <span className="text-xs text-green-400">
-                      Instant Processing
-                    </span>
-                  </div>
-                </button>
+                {gateways
+                  .filter((g) => g.status === "active")
+                  .map((gateway) => (
+                    <button
+                      key={gateway.id}
+                      onClick={() => setSelectedServer(gateway.name)}
+                      className={`p-4 rounded-lg border transition-all ${
+                        selectedServer === gateway.name
+                          ? "bg-green-500/20 border-green-500 text-white"
+                          : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                        <span className="font-medium">{gateway.label}</span>
+                        <span className="text-xs">Recommended</span>
+                        <span className="text-xs">
+                          ₹{gateway.min_amount} - ₹{gateway.max_amount}
+                        </span>
+                        <span className="text-xs text-green-400">
+                          Fast Processing
+                        </span>
+                      </div>
+                    </button>
+                  ))}
               </div>
 
               {/* Existing crypto selection */}
