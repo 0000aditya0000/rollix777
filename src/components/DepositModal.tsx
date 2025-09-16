@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  X,
-  CreditCard,
-  Wallet,
-  Bitcoin,
   DollarSign,
-  Copy,
-  Check,
   IndianRupee,
   AlertCircle,
   ArrowLeft,
@@ -21,7 +15,6 @@ import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { setWallets } from "../slices/walletSlice";
 import { fetchUserWallets } from "../lib/services/WalletServices";
-import { button } from "framer-motion/client";
 import { getAllTransactions } from "../lib/services/transactionService";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../store";
@@ -60,7 +53,8 @@ const DepositPage: React.FC = () => {
     | "tatapay"
     | "QR-TXPay"
     | "trustypay"
-  >("watchpay");
+    | "timipay"
+  >("sunpay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -211,8 +205,8 @@ const DepositPage: React.FC = () => {
     if (server === "trustypay" && amount < 300) {
       return "Minimum deposit amount is 300 INR";
     }
-    if (server === "trustypay" && amount > 50000) {
-      return "Maximum deposit amount is 50,000 INR for Trusty Pay";
+    if (server === "trustypay" && amount > 100000) {
+      return "Maximum deposit amount is 100,000 INR for Trusty Pay";
     }
     if (server === "watchpay" && amount < 100) {
       return "Minimum deposit amount is 100 INR";
@@ -228,6 +222,12 @@ const DepositPage: React.FC = () => {
     }
     if (server === "novapay_qr" && amount <= 100) {
       return "Minimum deposit amount is 100 INR";
+    }
+    if (server === "timipay" && amount < 100) {
+      return "Minimum deposit amount is 100 INR";
+    }
+    if (server === "timipay" && amount > 100000) {
+      return "Maximum deposit amount is 100,000 INR for TimiPay";
     }
 
     return "";
@@ -419,6 +419,53 @@ const DepositPage: React.FC = () => {
 
         const phone = "9876543210"; // static phone number for watchpay
         window.location.href = `https://sunpay.rollix777.com/watch.php?uid=${uid}&phone=${phone}&amount=${amt}`;
+        return;
+      }
+
+      if (selectedServer === "timipay") {
+        const validationError = validateAmount(amount1, "timipay");
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+
+        const amt = parseFloat(amount1);
+        if (amt < 100 || amt > 100000) {
+          toast.error("Amount must be between ₹100 and ₹100,000 for TimiPay.");
+          return;
+        }
+
+        const uid = localStorage.getItem("userId");
+        if (!uid) {
+          toast.error("Please Login First");
+          return;
+        }
+
+        try {
+          // Make API call to TimiPay
+          const response = await axios.get(
+            `https://payapy.rollix777.com/timipay/?userId=${uid}&amount=${amt}`
+          );
+
+          console.log("TimiPay API Response:", response.data);
+
+          if (
+            response.data.status === "success" &&
+            response.data.gateway_response?.payUrl
+          ) {
+            // Redirect to the payment URL
+            window.location.href = response.data.gateway_response.payUrl;
+          } else {
+            toast.error(
+              "Failed to generate TimiPay payment link. Please try again."
+            );
+          }
+        } catch (error) {
+          console.error("Error calling TimiPay API:", error);
+          toast.error(
+            "Failed to process TimiPay payment request. Please try again."
+          );
+        }
         return;
       }
 
@@ -695,6 +742,60 @@ const DepositPage: React.FC = () => {
               <div className="p-4 bg-[#1A1A2E] rounded-lg border border-green-500/20 text-sm text-gray-400">
                 <p className="mb-2">Important:</p>
                 <ul className="list-disc pl-5 space-y-1">
+                  {selectedServer === "sunpay" && (
+                    <>
+                      <li>Use Sunpay for high-value deposits only</li>
+                      <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹100,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Ensure your bank supports large transactions</li>
+                    </>
+                  )}
+                  {selectedServer === "watchpay" && (
+                    <>
+                      <li>Use Watchpay for secure deposits</li>
+                      <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹50,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Secure payment gateway</li>
+                    </>
+                  )}
+                  {selectedServer === "timipay" && (
+                    <>
+                      <li>Use TimiPay for secure UPI deposits</li>
+                      <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹100,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>High-value transaction support</li>
+                    </>
+                  )}
+                  {selectedServer === "tatapay" && (
+                    <>
+                      <li>Use TataPay for quick UPI deposits</li>
+                      <li>Minimum deposit: ₹200</li>
+                      <li>Maximum deposit: ₹50,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Reliable UPI payment option</li>
+                    </>
+                  )}
+                  {selectedServer === "QR-TXPay" && (
+                    <>
+                      <li>Use QR-TXPay for secure deposits</li>
+                      <li>Minimum deposit: ₹200</li>
+                      <li>Maximum deposit: ₹50,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Secure payment gateway</li>
+                    </>
+                  )}
+                  {selectedServer === "trustypay" && (
+                    <>
+                      <li>Use Trusty Pay for secure deposits</li>
+                      <li>Minimum deposit: ₹300</li>
+                      <li>Maximum deposit: ₹100,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Secure payment gateway</li>
+                    </>
+                  )}
                   {selectedServer === "upi_instant" && (
                     <>
                       <li>Send only via UPI Instant Method</li>
@@ -729,51 +830,6 @@ const DepositPage: React.FC = () => {
                       <li>Maximum deposit: ₹20,000 INR</li>
                       <li>Deposits are credited instantly</li>
                       <li>QR payment method</li>
-                    </>
-                  )}
-                  {selectedServer === "sunpay" && (
-                    <>
-                      <li>Use Sunpay for high-value deposits only</li>
-                      <li>Minimum deposit: ₹100</li>
-                      <li>Maximum deposit: ₹100,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Ensure your bank supports large transactions</li>
-                    </>
-                  )}
-                  {selectedServer === "watchpay" && (
-                    <>
-                      <li>Use Watchpay for secure deposits</li>
-                      <li>Minimum deposit: ₹100</li>
-                      <li>Maximum deposit: ₹50,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Secure payment gateway</li>
-                    </>
-                  )}
-                  {selectedServer === "QR-TXPay" && (
-                    <>
-                      <li>Use QR-TXPay for secure deposits</li>
-                      <li>Minimum deposit: ₹200</li>
-                      <li>Maximum deposit: ₹50,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Secure payment gateway</li>
-                    </>
-                  )}
-                  {selectedServer === "trustypay" && (
-                    <>
-                      <li>Use Trusty Pay for secure deposits</li>
-                      <li>Minimum deposit: ₹300</li>
-                      <li>Maximum deposit: ₹50,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Secure payment gateway</li>
-                    </>
-                  )}
-                  {selectedServer === "tatapay" && (
-                    <>
-                      <li>Use TataPay for quick UPI deposits</li>
-                      <li>Minimum deposit: ₹200</li>
-                      <li>Maximum deposit: ₹50,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Reliable UPI payment option</li>
                     </>
                   )}
                 </ul>
