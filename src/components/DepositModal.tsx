@@ -651,7 +651,8 @@ const DepositPage: React.FC = () => {
                         <span className="font-medium">{gateway.label}</span>
                         <span className="text-xs">Recommended</span>
                         <span className="text-xs">
-                          ₹{gateway.min_amount} - ₹{gateway.max_amount}
+                          ₹{Number(gateway.min_amount).toFixed(0)} - ₹
+                          {gateway.max_amount}
                         </span>
                         <span className="text-xs text-green-400">
                           Fast Processing
