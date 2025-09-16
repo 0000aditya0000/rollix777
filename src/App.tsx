@@ -44,6 +44,9 @@ import AuthModal from "./components/AuthModal"; // Add this import
 import Wingo5dGame from "./components/Wingo5dGame";
 import TRXGame from "./components/TrxGame";
 import ScrollToTop from "./components/ScrollToTop";
+import Account from "./components/NewUI/Account";
+import HomePage from "./components/NewUI/HomePage";
+import WalletNew from "./components/NewUI/Wallet";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -60,7 +63,7 @@ const ReferralRedirect: React.FC = () => {
 // Add this new component for conditional routing
 const ConditionalHome: React.FC = () => {
   const userId = localStorage.getItem("userId");
-  return userId ? <Dashboard /> : <Home />;
+  return userId ? <HomePage /> : <Home />;
 };
 
 // Create a ProtectedRoute component that opens login modal
@@ -121,7 +124,7 @@ function App() {
               {/* Container with responsive padding and width */}
               <div className="mx-auto w-full relative bg-gradient-to-b from-[#0F0F19] to-[#1A1A2E] min-h-screen">
                 <div className="w-full md:px-6 lg:px-0 ">
-                  <Header />
+                  {/* <Header /> */}
                   <main className="min-h-screen">
                     <Routes>
                       {/* Public Routes - Always accessible */}
@@ -241,11 +244,19 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
-                      <Route
+                      {/* <Route
                         path="/account"
                         element={
                           <ProtectedRoute onLoginRequired={handleLoginRequired}>
                             <MyAccount />
+                          </ProtectedRoute>
+                        }
+                      /> */}
+                      <Route
+                        path="/account"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Account />
                           </ProtectedRoute>
                         }
                       />
@@ -254,6 +265,14 @@ function App() {
                         element={
                           <ProtectedRoute onLoginRequired={handleLoginRequired}>
                             <Wallet />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/wallet-new"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <WalletNew />
                           </ProtectedRoute>
                         }
                       />

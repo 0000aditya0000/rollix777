@@ -14,8 +14,8 @@ body {
 }
 
 /* Ensure the root elements take full width */
-html, 
-body, 
+html,
+body,
 #root {
   width: 100%;
   min-height: 100vh;
@@ -76,7 +76,7 @@ html {
     overscroll-behavior-x: contain;
     scroll-behavior: auto;
   }
-  
+
   .overflow-x-scroll {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: none;
