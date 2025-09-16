@@ -19,6 +19,7 @@ import { getAllTransactions } from "../lib/services/transactionService";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../store";
 import { getAllGateways } from "../lib/services/paymentGatewayservice";
+import axios from "axios";
 
 interface DepositRequest {
   userId: number;
@@ -442,9 +443,20 @@ const DepositPage: React.FC = () => {
         }
 
         try {
-          // Make API call to TimiPay
-          const response = await axios.get(
-            `https://payapy.rollix777.com/timipay/?userId=${uid}&amount=${amt}`
+          // Make POST API call to TimiPay with payload
+          const payload = {
+            userId: uid,
+            amount: amt
+          };
+
+          const response = await axios.post(
+            "https://payapy.rollix777.com/timipay/",
+            payload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
           );
 
           console.log("TimiPay API Response:", response.data);
