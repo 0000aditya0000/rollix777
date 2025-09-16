@@ -230,6 +230,12 @@ const DepositPage: React.FC = () => {
     if (server === "timipay" && amount > 100000) {
       return "Maximum deposit amount is 100,000 INR for TimiPay";
     }
+    if (server === "vibrapay" && amount < 300) {
+      return "Minimum deposit amount is 300 INR";
+    }
+    if (server === "vibrapay" && amount > 30000) {
+      return "Maximum deposit amount is 30,000 INR for Vibrapay";
+    }
 
     return "";
   };
@@ -323,6 +329,7 @@ const DepositPage: React.FC = () => {
 
   // Update the launchGateway function to handle different payment systems
   const launchGateway = async () => {
+    console.log("Launching gateway for:", selectedServer);
     const validationError = validateAmount(amount1, selectedServer);
     if (validationError) {
       setError(validationError);
@@ -481,6 +488,65 @@ const DepositPage: React.FC = () => {
         return;
       }
 
+      if (selectedServer === "vibrapay") {
+        console.log("Processing Vibrapay gateway");
+        const validationError = validateAmount(amount1, "vibrapay");
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+
+        const amt = parseFloat(amount1);
+        if (amt < 300 || amt > 30000) {
+          toast.error("Amount must be between ₹300 and ₹30,000 for Vibrapay.");
+          return;
+        }
+
+        const uid = localStorage.getItem("userId");
+        if (!uid) {
+          toast.error("Please Login First");
+          return;
+        }
+
+        try {
+          // Make POST API call to Virbapay with payload
+          const payload = {
+            userId: uid,
+            amount: amt
+          };
+
+          const response = await axios.post(
+            "https://payapy.rollix777.com/vibra/",
+            payload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          console.log("Vibrapay API Response:", response.data);
+
+          if (
+            response.data.status === "success" &&
+            response.data.navigate_url
+          ) {
+            // Redirect to the payment URL
+            window.location.href = response.data.navigate_url;
+          } else {
+            toast.error(
+              "Failed to generate Vibrapay payment link. Please try again."
+            );
+          }
+        } catch (error) {
+          console.error("Error calling Vibrapay API:", error);
+          toast.error(
+            "Failed to process Vibrapay payment request. Please try again."
+          );
+        }
+        return;
+      }
+
       // For UPI and IMPS options, make API call
       const paymentSystemMap = {
         upi_instant: "inr_p2c",
@@ -488,6 +554,11 @@ const DepositPage: React.FC = () => {
         imps: "imps",
         watchpay: "watchpay",
       };
+
+      // Only proceed if selectedServer is in the paymentSystemMap
+      if (!paymentSystemMap[selectedServer]) {
+        return;
+      }
 
       // Prepare the data and stringify it using qs
       const data = {
@@ -780,6 +851,15 @@ const DepositPage: React.FC = () => {
                       <li>Maximum deposit: ₹100,000</li>
                       <li>Deposits are credited instantly</li>
                       <li>High-value transaction support</li>
+                    </>
+                  )}
+                  {selectedServer === "vibrapay" && (
+                    <>
+                      <li>Use Vibrapay for secure UPI deposits</li>
+                      <li>Minimum deposit: ₹300</li>
+                      <li>Maximum deposit: ₹30,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Reliable payment gateway</li>
                     </>
                   )}
                   {selectedServer === "tatapay" && (
