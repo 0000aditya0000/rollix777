@@ -45,7 +45,7 @@ const DepositPage: React.FC = () => {
     | "QR-TXPay"
     | "trustypay"
     | "timipay"
-  >("trustypay");
+  >("sunpay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -164,8 +164,8 @@ const DepositPage: React.FC = () => {
     if (server === "trustypay" && amount < 300) {
       return "Minimum deposit amount is 300 INR";
     }
-    if (server === "trustypay" && amount > 50000) {
-      return "Maximum deposit amount is 50,000 INR for Trusty Pay";
+    if (server === "trustypay" && amount > 100000) {
+      return "Maximum deposit amount is 100,000 INR for Trusty Pay";
     }
     if (server === "watchpay" && amount < 100) {
       return "Minimum deposit amount is 100 INR";
@@ -586,7 +586,7 @@ const DepositPage: React.FC = () => {
             <div className="space-y-4 ">
               {/* Server Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                {/* <button
+                <button
                   onClick={() => setSelectedServer("sunpay")}
                   className={`p-4 rounded-lg border transition-all ${
                     selectedServer === "sunpay"
@@ -603,25 +603,7 @@ const DepositPage: React.FC = () => {
                       Fast Processing
                     </span>
                   </div>
-                </button> */}
-                {/* <button
-                  onClick={() => setSelectedServer("trustypay")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "trustypay"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">Trusty Pay</span>
-                    <span className="text-xs">Recommended</span>
-                    <span className="text-xs">₹300 - ₹50K</span>
-                    <span className="text-xs text-green-400">
-                      Instant Processing
-                    </span>
-                  </div>
-                </button> */}
+                </button>
 
                 <button
                   onClick={() => setSelectedServer("watchpay")}
@@ -641,42 +623,7 @@ const DepositPage: React.FC = () => {
                     </span>
                   </div>
                 </button>
-                <button
-                  onClick={() => setSelectedServer("QR-TXPay")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "QR-TXPay"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">QR-TXPay</span>
-                    <span className="text-xs">Recommended</span>
-                    <span className="text-xs">₹200 - ₹50K</span>
-                    <span className="text-xs text-green-400">
-                      Instant Processing
-                    </span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setSelectedServer("tatapay")}
-                  className={`p-4 rounded-lg border transition-all ${
-                    selectedServer === "tatapay"
-                      ? "bg-green-500/20 border-green-500 text-white"
-                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-medium">TataPay (UPI)</span>
-                    {/* <span className="text-xs">Recommended</span> */}
-                    <span className="text-xs">₹200 - ₹50K</span>
-                    <span className="text-xs text-green-400">
-                      Instant Processing
-                    </span>
-                  </div>
-                </button>
+
                 <button
                   onClick={() => setSelectedServer("timipay")}
                   className={`p-4 rounded-lg border transition-all ${
@@ -692,6 +639,60 @@ const DepositPage: React.FC = () => {
                     <span className="text-xs">₹100 - ₹100K</span>
                     <span className="text-xs text-green-400">
                       Fast Processing
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSelectedServer("tatapay")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "tatapay"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">TataPay (UPI)</span>
+                    <span className="text-xs">₹200 - ₹50K</span>
+                    <span className="text-xs text-green-400">
+                      Instant Processing
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSelectedServer("QR-TXPay")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "QR-TXPay"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">QR-TXPay</span>
+                    <span className="text-xs">₹200 - ₹50K</span>
+                    <span className="text-xs text-green-400">
+                      Instant Processing
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setSelectedServer("trustypay")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "trustypay"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Trusty Pay</span>
+                    <span className="text-xs">₹300 - ₹100K</span>
+                    <span className="text-xs text-green-400">
+                      Instant Processing
                     </span>
                   </div>
                 </button>
@@ -778,6 +779,60 @@ const DepositPage: React.FC = () => {
               <div className="p-4 bg-[#1A1A2E] rounded-lg border border-green-500/20 text-sm text-gray-400">
                 <p className="mb-2">Important:</p>
                 <ul className="list-disc pl-5 space-y-1">
+                  {selectedServer === "sunpay" && (
+                    <>
+                      <li>Use Sunpay for high-value deposits only</li>
+                      <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹100,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Ensure your bank supports large transactions</li>
+                    </>
+                  )}
+                  {selectedServer === "watchpay" && (
+                    <>
+                      <li>Use Watchpay for secure deposits</li>
+                      <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹50,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Secure payment gateway</li>
+                    </>
+                  )}
+                  {selectedServer === "timipay" && (
+                    <>
+                      <li>Use TimiPay for secure UPI deposits</li>
+                      <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹100,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>High-value transaction support</li>
+                    </>
+                  )}
+                  {selectedServer === "tatapay" && (
+                    <>
+                      <li>Use TataPay for quick UPI deposits</li>
+                      <li>Minimum deposit: ₹200</li>
+                      <li>Maximum deposit: ₹50,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Reliable UPI payment option</li>
+                    </>
+                  )}
+                  {selectedServer === "QR-TXPay" && (
+                    <>
+                      <li>Use QR-TXPay for secure deposits</li>
+                      <li>Minimum deposit: ₹200</li>
+                      <li>Maximum deposit: ₹50,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Secure payment gateway</li>
+                    </>
+                  )}
+                  {selectedServer === "trustypay" && (
+                    <>
+                      <li>Use Trusty Pay for secure deposits</li>
+                      <li>Minimum deposit: ₹300</li>
+                      <li>Maximum deposit: ₹100,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>Secure payment gateway</li>
+                    </>
+                  )}
                   {selectedServer === "upi_instant" && (
                     <>
                       <li>Send only via UPI Instant Method</li>
@@ -812,60 +867,6 @@ const DepositPage: React.FC = () => {
                       <li>Maximum deposit: ₹20,000 INR</li>
                       <li>Deposits are credited instantly</li>
                       <li>QR payment method</li>
-                    </>
-                  )}
-                  {selectedServer === "sunpay" && (
-                    <>
-                      <li>Use Sunpay for high-value deposits only</li>
-                      <li>Minimum deposit: ₹100</li>
-                      <li>Maximum deposit: ₹100,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Ensure your bank supports large transactions</li>
-                    </>
-                  )}
-                  {selectedServer === "watchpay" && (
-                    <>
-                      <li>Use Watchpay for secure deposits</li>
-                      <li>Minimum deposit: ₹100</li>
-                      <li>Maximum deposit: ₹50,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Secure payment gateway</li>
-                    </>
-                  )}
-                  {selectedServer === "QR-TXPay" && (
-                    <>
-                      <li>Use QR-TXPay for secure deposits</li>
-                      <li>Minimum deposit: ₹200</li>
-                      <li>Maximum deposit: ₹50,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Secure payment gateway</li>
-                    </>
-                  )}
-                  {selectedServer === "trustypay" && (
-                    <>
-                      <li>Use Trusty Pay for secure deposits</li>
-                      <li>Minimum deposit: ₹300</li>
-                      <li>Maximum deposit: ₹50,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Secure payment gateway</li>
-                    </>
-                  )}
-                  {selectedServer === "tatapay" && (
-                    <>
-                      <li>Use TataPay for quick UPI deposits</li>
-                      <li>Minimum deposit: ₹200</li>
-                      <li>Maximum deposit: ₹50,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>Reliable UPI payment option</li>
-                    </>
-                  )}
-                  {selectedServer === "timipay" && (
-                    <>
-                      <li>Use TimiPay for secure UPI deposits</li>
-                      <li>Minimum deposit: ₹100</li>
-                      <li>Maximum deposit: ₹100,000</li>
-                      <li>Deposits are credited instantly</li>
-                      <li>High-value transaction support</li>
                     </>
                   )}
                 </ul>
