@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  X,
-  CreditCard,
-  Wallet,
-  Bitcoin,
   DollarSign,
-  Copy,
-  Check,
   IndianRupee,
   AlertCircle,
   ArrowLeft,
@@ -21,7 +15,6 @@ import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { setWallets } from "../slices/walletSlice";
 import { fetchUserWallets } from "../lib/services/WalletServices";
-import { button } from "framer-motion/client";
 import { getAllTransactions } from "../lib/services/transactionService";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../store";
@@ -51,7 +44,8 @@ const DepositPage: React.FC = () => {
     | "tatapay"
     | "QR-TXPay"
     | "trustypay"
-  >("watchpay");
+    | "timipay"
+  >("trustypay");
   const [copied, setCopied] = useState(false);
   const [amount1, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -187,6 +181,12 @@ const DepositPage: React.FC = () => {
     }
     if (server === "novapay_qr" && amount <= 100) {
       return "Minimum deposit amount is 100 INR";
+    }
+    if (server === "timipay" && amount < 100) {
+      return "Minimum deposit amount is 100 INR";
+    }
+    if (server === "timipay" && amount > 100000) {
+      return "Maximum deposit amount is 100,000 INR for TimiPay";
     }
 
     return "";
@@ -378,6 +378,46 @@ const DepositPage: React.FC = () => {
 
         const phone = "9876543210"; // static phone number for watchpay
         window.location.href = `https://sunpay.rollix777.com/watch.php?uid=${uid}&phone=${phone}&amount=${amt}`;
+        return;
+      }
+
+      if (selectedServer === "timipay") {
+        const validationError = validateAmount(amount1, "timipay");
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+
+        const amt = parseFloat(amount1);
+        if (amt < 100 || amt > 100000) {
+          toast.error("Amount must be between ₹100 and ₹100,000 for TimiPay.");
+          return;
+        }
+
+        const uid = localStorage.getItem("userId");
+        if (!uid) {
+          toast.error("Please Login First");
+          return;
+        }
+
+        try {
+          // Make API call to TimiPay
+          const response = await axios.get(
+            `https://payapy.rollix777.com/timipay/?userId=${uid}&amount=${amt}`
+          );
+
+          console.log("TimiPay API Response:", response.data);
+
+          if (response.data.status === "success" && response.data.gateway_response?.payUrl) {
+            // Redirect to the payment URL
+            window.location.href = response.data.gateway_response.payUrl;
+          } else {
+            toast.error("Failed to generate TimiPay payment link. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error calling TimiPay API:", error);
+          toast.error("Failed to process TimiPay payment request. Please try again.");
+        }
         return;
       }
 
@@ -637,6 +677,24 @@ const DepositPage: React.FC = () => {
                     </span>
                   </div>
                 </button>
+                <button
+                  onClick={() => setSelectedServer("timipay")}
+                  className={`p-4 rounded-lg border transition-all ${
+                    selectedServer === "timipay"
+                      ? "bg-green-500/20 border-green-500 text-white"
+                      : "bg-[#1A1A2E] border-green-500/20 text-gray-400 hover:border-green-500/40"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">TimiPay (UPI)</span>
+                    <span className="text-xs">Recommended</span>
+                    <span className="text-xs">₹100 - ₹100K</span>
+                    <span className="text-xs text-green-400">
+                      Fast Processing
+                    </span>
+                  </div>
+                </button>
               </div>
 
               {/* Existing crypto selection */}
@@ -799,6 +857,15 @@ const DepositPage: React.FC = () => {
                       <li>Maximum deposit: ₹50,000</li>
                       <li>Deposits are credited instantly</li>
                       <li>Reliable UPI payment option</li>
+                    </>
+                  )}
+                  {selectedServer === "timipay" && (
+                    <>
+                      <li>Use TimiPay for secure UPI deposits</li>
+                      <li>Minimum deposit: ₹100</li>
+                      <li>Maximum deposit: ₹100,000</li>
+                      <li>Deposits are credited instantly</li>
+                      <li>High-value transaction support</li>
                     </>
                   )}
                 </ul>
