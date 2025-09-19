@@ -1,4 +1,5 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import { fetchUserDetailsData } from "../../lib/services/userService";
 import {
   ArrowDownNarrowWide,
   BarChart,
@@ -18,16 +19,35 @@ import {
   Wallet2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 
 const Account = () => {
-  const user = {
-    name: "Max",
-    uid: "6816732",
-    lastLogin: "2025-09-15 13:39:41",
-    balance: 0.0,
-    safeInterest: 0.1,
-    notifications: 3,
+  const userId = useSelector((state: RootState) => state.auth.user?.id);
+  const [user, setUser] = useState();
+
+  const fetchUserDetails = async () => {
+    try {
+      const respone = await fetchUserDetailsData(userId);
+      console.log(respone, "response");
+      setUser(respone);
+    } catch (error) {
+      console.log(error, "error");
+    }
   };
+
+  useEffect(() => {
+    fetchUserDetails();
+  }, []);
+
+  // const user = {
+  //   name: "Max",
+  //   uid: "6816732",
+  //   lastLogin: "2025-09-15 13:39:41",
+  //   balance: 0.0,
+  //   safeInterest: 0.1,
+  //   notifications: 3,
+  // };
 
   const navigate = useNavigate();
 
@@ -53,15 +73,13 @@ const Account = () => {
             />
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <h1 className="font-bold text-lg text-white">{user.name}</h1>
+                <h1 className="font-bold text-lg text-white">{user?.name}</h1>
                 <span className="bg-gray-200 text-black px-2 py-1 text-xs rounded-full">
                   VIP0
                 </span>
               </div>
-              <p className="text-sm text-white">UID | {user.uid}</p>
-              <p className="text-xs text-white/80">
-                Last login: {user.lastLogin}
-              </p>
+              <p className="text-sm text-white">UID | {user?.id}</p>
+              <p className="text-xs text-white/80">Last login: yesterday</p>
             </div>
           </div>
         </div>
@@ -73,7 +91,8 @@ const Account = () => {
           <div>
             <p className="text-sm text-gray-300">Total balance</p>
             <p className="text-2xl font-bold text-white">
-              ₹{user.balance.toFixed(2)}
+              {/* ₹{user?.balance.toFixed(2) | 0} */}
+              ₹0
             </p>
           </div>
           <button
@@ -121,12 +140,14 @@ const Account = () => {
           <div>
             <p className="font-semibold">Safe</p>
             <p className="text-xs text-gray-300">
-              The daily interest rate is {user.safeInterest}%, and the income is
-              calculated once every 1 minutes.
+              The daily interest rate is 75%, and the income is calculated once
+              every 1 minutes.
             </p>
           </div>
         </div>
-        <p className="text-[#e1910a] font-bold">₹{user.balance.toFixed(2)}</p>
+        <p className="text-[#e1910a] font-bold">
+          {/* ₹{user?.balance.toFixed(2) | 0} */}₹ 0
+        </p>
       </div>
 
       {/* History Section */}
@@ -138,7 +159,10 @@ const Account = () => {
           <p className="text-xs">Game History</p>
           <p className="text-gray-400 text-xs">My game history</p>
         </div>
-        <div className="bg-[#361a06] rounded-xl p-4 flex flex-col items-center">
+        <div
+          className="bg-[#361a06] rounded-xl p-4 flex flex-col items-center"
+          onClick={() => navigate("/transaction-history")}
+        >
           <div className="mb-2 bg-green-500 w-10 h-10 rounded-lg flex items-center justify-center">
             <Wallet className="text-white" />
           </div>
@@ -152,7 +176,10 @@ const Account = () => {
           <p className="text-xs">Deposit</p>
           <p className="text-gray-400 text-xs">My deposit history</p>
         </div>
-        <div className="bg-[#361a06] rounded-xl p-4 flex flex-col items-center">
+        <div
+          className="bg-[#361a06] rounded-xl p-4 flex flex-col items-center"
+          onClick={() => navigate("/withdrawal-history")}
+        >
           <div className="mb-2 bg-orange-500 w-10 h-10 rounded-lg flex items-center justify-center">
             <ArrowDownNarrowWide className="text-white" />
           </div>
@@ -169,13 +196,13 @@ const Account = () => {
           </div>
           <p>Notification</p>
         </div>
-        {user.notifications > 0 && (
+        {/* {user?.notifications > 0 && (
           <div className="bg-red-500 w-6 h-6 rounded-full flex items-center justify-center">
             <span className="text-white text-xs font-bold">
-              {user.notifications}
+              {user?.notifications}
             </span>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Gifts */}
@@ -239,7 +266,10 @@ const Account = () => {
 
       {/* Logout */}
       <div className="mt-4 mb-20">
-        <button className="w-full bg-transparent border border-[#d31c02] text-[#d31c02] py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-[#d31c02] hover:text-[#1f0e0e] transition">
+        <button
+          onClick={() => navigate("/login")}
+          className="w-full bg-transparent border border-[#d31c02] text-[#d31c02] py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-[#d31c02] hover:text-[#1f0e0e] transition"
+        >
           ⏻ Log out
         </button>
       </div>

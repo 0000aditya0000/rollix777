@@ -76,12 +76,52 @@ const getReferralSummary = async (userId) => {
   }
 };
 
+const getCommissionData = async (userId) => {
+  try {
+    const response = await axiosInstance.get(`/api/user/commissions/${userId}`);
+    return response.data;
+  } catch (error) {
+    "Error fetching referral summary:", error.response?.data || error.message;
+  }
+};
+
+export const getSubordinateData = async (
+  userId = "",
+  date = "",
+  limit = 10,
+  searchUserId = "",
+  level = ""
+) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/user/subordinatesByDate/${userId}`,
+      {
+        params: {
+          dateType: date,
+          limit,
+          searchUserId,
+          level,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching Subordinate data:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
 export const referralService = {
   getReferrals,
   getReferralsByDate,
   getTodaySummary,
   getReferralsSorted,
   getReferralSummary,
+  getCommissionData,
+  getSubordinateData,
 };
 
 export default referralService;

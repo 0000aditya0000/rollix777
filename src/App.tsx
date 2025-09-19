@@ -34,7 +34,7 @@ import Wallet from "./components/wallet/Wallet";
 import AgentProgram from "./components/promotions/AgentProgram";
 import TeamReport from "./components/promotions/TeamReport";
 import { HelpCenter } from "./components/HelpCenter";
-import CommissionDetails from "./components/promotions/CommissionDetails";
+// import CommissionDetails from "./components/promotions/CommissionDetails";
 import LatestGames from "./components/LatestGames";
 import Coupon from "./components/coupon/Coupon";
 import KYCVerification from "./pages/KYCVerification";
@@ -47,6 +47,14 @@ import ScrollToTop from "./components/ScrollToTop";
 import Account from "./components/NewUI/Account";
 import HomePage from "./components/NewUI/HomePage";
 import WalletNew from "./components/NewUI/Wallet";
+import PromotionsPage from "./components/NewUI/PromotionsPage";
+import SubordinateData from "./components/NewUI/SubordinateData";
+import InvitationRules from "./components/NewUI/InvitationRules";
+import SignIn from "./components/NewUI/auth/SignIn";
+import CommissionDetails from "./components/NewUI/CommissionDetails";
+import TransactionHistory from "./components/NewUI/TransactionHistory";
+import WithdrawalHistory from "./components/NewUI/WithdrawalHistory";
+import Subordinates from "./components/NewUI/Subordinate";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -63,7 +71,7 @@ const ReferralRedirect: React.FC = () => {
 // Add this new component for conditional routing
 const ConditionalHome: React.FC = () => {
   const userId = localStorage.getItem("userId");
-  return userId ? <HomePage /> : <Home />;
+  return userId ? <HomePage /> : <HomePage />;
 };
 
 // Create a ProtectedRoute component that opens login modal
@@ -237,13 +245,21 @@ function App() {
                         }
                       />
                       <Route
+                        path="/transaction-history"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <TransactionHistory />
+                          </ProtectedRoute>
+                        }
+                      />
+                      {/* <Route
                         path="/dashboard"
                         element={
                           <ProtectedRoute onLoginRequired={handleLoginRequired}>
                             <Dashboard />
                           </ProtectedRoute>
                         }
-                      />
+                      /> */}
                       {/* <Route
                         path="/account"
                         element={
@@ -344,11 +360,43 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
-                      <Route
+                      {/* <Route
                         path="/promotions"
                         element={
                           <ProtectedRoute onLoginRequired={handleLoginRequired}>
                             <AgentProgram />
+                          </ProtectedRoute>
+                        }
+                      /> */}
+                      <Route
+                        path="/promotions"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <PromotionsPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/promotions/subordinates"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Subordinates />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/promotions/team-report-data"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <SubordinateData />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/promotions/invitation-rules"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <InvitationRules />
                           </ProtectedRoute>
                         }
                       />
@@ -361,13 +409,37 @@ function App() {
                         }
                       />
                       <Route
-                        path="/promotions/commission-details"
+                        path="/withdrawal-history"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <WithdrawalHistory />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/login"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <SignIn />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/promotions/commision-details"
                         element={
                           <ProtectedRoute onLoginRequired={handleLoginRequired}>
                             <CommissionDetails />
                           </ProtectedRoute>
                         }
                       />
+                      {/* <Route
+                        path="/promotions/commission-details"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <CommissionDetails />
+                          </ProtectedRoute>
+                        }
+                      /> */}
 
                       {/* Catch all route for undefined routes */}
                       <Route

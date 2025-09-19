@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import {
-  Dice1,
   Dice6,
-  Coins,
-  Smartphone,
-  Gift,
   Zap,
   Crown,
   Gamepad2,
@@ -388,7 +384,8 @@ function HomePage() {
         </div>
         <div className="flex space-x-2">
           <button
-            className="px-4 py-2 rounded-full text-sm font-medium text-black font-semibold transition-colors"
+            onClick={() => navigate("/login")}
+            className="px-4 py-2 rounded-full text-sm font-medium text-black transition-colors"
             style={{
               background:
                 "linear-gradient(120deg, #db6903 0%, #e1910a 40%, #f1a903 70%, #bc9713 100%)",
@@ -399,7 +396,7 @@ function HomePage() {
             Log in
           </button>
           <button
-            className="px-4 py-2 rounded-full text-sm font-medium text-black font-semibold transition-colors"
+            className="px-4 py-2 rounded-full text-sm font-medium text-black transition-colors"
             style={{
               background:
                 "linear-gradient(120deg, #db6903 0%, #e1910a 40%, #f1a903 70%, #bc9713 100%)",
@@ -465,7 +462,7 @@ function HomePage() {
           </div>
         </div>
         <button
-          className="px-4 py-2 rounded-full text-sm font-medium text-black font-semibold transition-colors"
+          className="px-4 py-2 rounded-full text-sm font-medium text-black transition-colors"
           style={{
             background:
               "linear-gradient(120deg, #db6903 0%, #e1910a 40%, #f1a903 70%, #bc9713 100%)",
@@ -984,7 +981,10 @@ function HomePage() {
           </button>
 
           {/* Promotion */}
-          <button className="flex flex-col items-center space-y-1">
+          <button
+            className="flex flex-col items-center space-y-1"
+            onClick={() => navigate("/promotions")}
+          >
             <div className="w-8 h-8 bg-[#160406]/50 rounded-xl flex items-center justify-center">
               <Megaphone className="w-4 h-4 text-[#e1910a]/50" />
             </div>

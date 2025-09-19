@@ -24,6 +24,16 @@ const fetchAllUserData = async (userId) => {
   }
 };
 
+const fetchUserDetails = async (userId) => {
+  try {
+    const response = await axiosInstance.get(`/api/user/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.log("Error fetching user details", error.message);
+    throw error;
+  }
+};
+
 // Update user data
 const updateUser = async (userId, formData) => {
   console.log(formData);
@@ -53,6 +63,7 @@ export const userCouponHistory = async (userId) => {
 };
 
 export const fetchUserData = async (userId) => fetchUsers(userId);
+export const fetchUserDetailsData = async (userId) => fetchUserDetails(userId);
 export const fetchUserAllData = async (userId) => fetchAllUserData(userId);
 export const updateUserData = async (userId, formData) =>
   updateUser(userId, formData);
