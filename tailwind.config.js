@@ -6,13 +6,16 @@ export default {
       keyframes: {
         slideInDown: {
           "0%": { transform: "translateY(-100%) translateX(-50%)" },
-          "100%": { transform: "translateY(0) translateX(-50%)" }
-        }
+          "100%": { transform: "translateY(0) translateX(-50%)" },
+        },
+      },
+      fontFamily: {
+        poppins: ["Poppins", "sans-serif"],
       },
       animation: {
-        slideInDown: "slideInDown 0.3s ease-out"
-      }
-    }
+        slideInDown: "slideInDown 0.3s ease-out",
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };

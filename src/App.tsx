@@ -44,6 +44,10 @@ import AuthModal from "./components/AuthModal"; // Add this import
 import Wingo5dGame from "./components/Wingo5dGame";
 import TRXGame from "./components/TrxGame";
 import ScrollToTop from "./components/ScrollToTop";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Notifications from "./pages/Notifications";
+import Deposit from "./pages/Deposit";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -112,6 +116,11 @@ function App() {
         <Route path="/refer/:referralCode" element={<ReferralRedirect />} />
 
         {/* Admin Routes - Full width */}
+        {/* Main App Routes - Modified for responsive width */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/notification" element={<Notifications />} />
+        <Route path="/deposit" element={<Deposit />} />
 
         {/* Main App Routes - Modified for responsive width */}
         <Route
