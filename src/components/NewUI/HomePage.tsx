@@ -396,6 +396,7 @@ function HomePage() {
             Log in
           </button>
           <button
+            onClick={() => navigate("/register")}
             className="px-4 py-2 rounded-full text-sm font-medium text-black transition-colors"
             style={{
               background:

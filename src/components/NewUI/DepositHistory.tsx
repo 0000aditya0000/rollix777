@@ -1,145 +1,97 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, ArrowLeft } from "lucide-react";
+import { ChevronDown, Copy, ArrowLeft } from "lucide-react";
+import { getDepositHistory } from "../../lib/services/transactionService.js";
 import { useNavigate } from "react-router-dom";
-import { transactionHistory } from "../../lib/services/transactionService.js";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store.js";
 
-interface Transaction {
+interface Deposit {
   id: number;
-  transaction_type: string;
-  detail: string;
-  transaction_date: string;
-  amount: string;
-  isPositive?: boolean;
+  balance: string;
+  type: string;
+  time: string;
+  orderNumber: string;
+  status: string;
 }
 
-const TransactionHistory = () => {
+const DepositHistory = () => {
   const navigate = useNavigate();
-  const today = new Date();
   const userId = useSelector((state: RootState) => state.auth.user?.id);
-  const [selectedFilter, setSelectedFilter] = useState("All");
+  const [selectedFilter, setSelectedFilter] = useState<
+    "all" | "success" | "failed"
+  >("all");
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const today = new Date();
   const [showFilterPopup, setShowFilterPopup] = useState(false);
-  const [tempFilter, setTempFilter] = useState<string | null>(null);
+  const [tempFilter, setTempFilter] = useState<any | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const filters = [
-    "All",
-    "Bets",
-    "Agent Commission",
-    "Win",
-    "Red Envelop",
-    "Deposit",
-    "Withdrawal",
-    "Cancel Withdrawal",
-    "Attendence Bonus",
-    "Agents red envelop",
-    "Withdrawal rejected",
-    "Deposit Gifts",
-    "Mannual Deposit",
-    "Sign up Bonus",
-    "Bonus",
+    { label: "All", value: "all" },
+    { label: "Success", value: "success" },
+    { label: "Failed", value: "failed" },
   ];
 
-  // const transactions = [
-  //   {
-  //     id: 1,
-  //     type: "Agent commission",
-  //     detail: "Agent commission",
-  //     time: "2025-09-19 02:22:03",
-  //     balance: "₹484.08",
-  //     isPositive: true,
-  //   },
-  //   {
-  //     id: 2,
-  //     type: "One-Click rebate",
-  //     detail: "One-Click rebate",
-  //     time: "2025-09-19 01:00:23",
-  //     balance: "₹2.18",
-  //     isPositive: true,
-  //   },
-  //   {
-  //     id: 3,
-  //     type: "Game moved in",
-  //     detail: "Game moved in",
-  //     time: "2025-09-15 12:32:27",
-  //     balance: "₹5,199.73",
-  //     isNegative: true,
-  //   },
-  //   {
-  //     id: 4,
-  //     type: "Withdraw",
-  //     detail: "Withdraw",
-  //     time: "2025-09-15 11:13:38",
-  //     balance: "₹5,000.00",
-  //     isNegative: true,
-  //   },
-  //   {
-  //     id: 5,
-  //     type: "Game moved in",
-  //     detail: "Game moved in",
-  //     time: "2025-09-15 10:08:10",
-  //     balance: "₹411.23",
-  //     isNegative: true,
-  //   },
-  //   {
-  //     id: 6,
-  //     type: "Agent commission",
-  //     detail: "Agent commission",
-  //     time: "2025-09-15 02:47:12",
-  //     balance: "₹409.57",
-  //     isPositive: true,
-  //   },
-  // ];
-
-  const getTransactionColor = (type: any) => {
-    switch (type) {
-      case "Agent commission":
-        return "#e1910a";
-      case "One-Click rebate":
-        return "#e1910a";
-      case "Game moved in":
-        return "#d31c02";
-      case "Withdraw":
-        return "#d31c02";
-      default:
-        return "#e1910a";
-    }
-  };
-
-  console.log(selectedDate, loading);
-
-  const fetchTransactionHistory = async () => {
+  const fetchDepositHistory = async () => {
+    if (!userId) return;
     try {
       setLoading(true);
       setError(null);
-      const response = await transactionHistory(
+      const data = await getDepositHistory(
         userId,
         selectedDate,
-        selectedFilter.toLowerCase()
+        selectedFilter
       );
-      console.log(response?.transactions, "res");
-      setTransactions(response.transactions || []);
+      setDeposits(data.transactions || []);
     } catch (err: any) {
-      setError(err.message || "Failed to fetch transaction history");
+      setError(err.message || "Failed to fetch deposit history");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (userId) {
-      fetchTransactionHistory();
-    }
+    fetchDepositHistory();
   }, [selectedDate, selectedFilter, userId]);
+
+  // const deposits = [
+  //   {
+  //     id: 1,
+  //     balance: "₹500.00",
+  //     type: "LuckyPay - Paytm × QR",
+  //     time: "2025-09-10 01:16:25",
+  //     orderNumber: "RC2025091001162530671700g",
+  //     status: "To Be Paid",
+  //   },
+  //   {
+  //     id: 2,
+  //     balance: "₹1,200.00",
+  //     type: "PhonePe - UPI",
+  //     time: "2025-09-08 18:42:10",
+  //     orderNumber: "RC20250908184210555212yZ",
+  //     status: "Completed",
+  //   },
+  //   {
+  //     id: 3,
+  //     balance: "₹750.00",
+  //     type: "GooglePay - UPI",
+  //     time: "2025-09-05 09:30:45",
+  //     orderNumber: "RC20250905093045222211xA",
+  //     status: "Failed",
+  //   },
+  // ];
+
+  const copyToClipboard = (text: any) => {
+    navigator.clipboard.writeText(text);
+  };
 
   const currentDateString = today.toISOString().split("T")[0];
 
@@ -214,10 +166,8 @@ const TransactionHistory = () => {
     }
   };
 
-  console.log(transactions, "tran");
-
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#160406" }}>
+    <div className="bg-[#220904] min-h-screen text-white">
       {/* Header */}
       <div
         className="flex items-center justify-between p-4"
@@ -229,12 +179,29 @@ const TransactionHistory = () => {
           onClick={() => navigate(-1)}
         />
         <h1 className="text-xl font-semibold" style={{ color: "#f1a903" }}>
-          Transaction history
+          Deposit history
         </h1>
         <div className="w-6"></div>
       </div>
 
-      {/* Filters */}
+      {/* Filter Tabs */}
+      {/* <div className="flex bg-[#1f0e0e] border-b border-[#3d1601]">
+        {filters.map((filter) => (
+          <button
+            key={filter}
+            className={`flex-1 py-3 px-4 text-sm font-medium rounded-t-lg mx-2 mt-2 ${
+              selectedFilter === filter
+                ? "bg-[#db6903] text-white"
+                : "bg-[#2b1b0f] text-[#bc9713] border border-[#4f350e]"
+            }`}
+            onClick={() => setSelectedFilter(filter)}
+          >
+            {filter}
+          </button>
+        ))}
+      </div> */}
+
+      {/* Filter Dropdowns */}
       <div className="flex gap-4 p-4">
         <div className="flex-1">
           <div
@@ -266,76 +233,77 @@ const TransactionHistory = () => {
         </div>
       </div>
 
-      {/* Transaction List */}
+      {/* Deposit List */}
       {loading ? (
-        <div className="p-4 text-center text-yellow-400">Loading...</div>
+        <div className="p-4 text-center text-gray-400">Loading...</div>
+      ) : deposits.length === 0 ? (
+        <div className="p-4 text-center text-gray-400">
+          No transactions available.
+        </div>
       ) : (
-        <div className="px-4 space-y-4">
-          {transactions.length > 0 ? (
-            transactions.map((transaction, index) => (
-              <div key={index} className="overflow-hidden rounded-lg shadow-lg">
-                {/* Transaction Header */}
+        <div className="p-4 space-y-4">
+          {deposits.map((deposit) => (
+            <div
+              key={deposit.id}
+              className="bg-[#2b1b0f] rounded-lg p-4 border border-[#4f350e]"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-[#f97316] text-white px-3 py-1 rounded-full text-sm font-medium">
+                  Deposit
+                </div>
                 <div
-                  className="px-4 py-3"
-                  style={{
-                    backgroundColor: getTransactionColor(transaction.detail),
-                  }}
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    deposit.status === "success"
+                      ? "bg-[#1a5d1a] text-[#4ade80]"
+                      : deposit.status === "failed"
+                      ? "bg-[#7f1d1d] text-red-400"
+                      : "bg-[#b45309] text-yellow-300"
+                  }`}
                 >
-                  <h3 className="text-white font-medium text-lg">
-                    {transaction.detail}
-                  </h3>
+                  {deposit.status}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[#bc9713] text-sm">Balance</span>
+                  <span className="text-[#f1a903] font-semibold text-lg">
+                    {deposit.balance}
+                  </span>
                 </div>
 
-                {/* Transaction Details */}
-                <div
-                  className="p-4 space-y-3"
-                  style={{ backgroundColor: "#2b1b0f" }}
-                >
-                  <div className="flex justify-between items-center">
-                    <span style={{ color: "#bc9713" }} className="text-sm">
-                      Detail
-                    </span>
-                    <span
-                      style={{ color: "#f1a903" }}
-                      className="text-sm font-medium"
-                    >
-                      {transaction.transaction_type}
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#bc9713] text-sm">Type</span>
+                  <span className="text-white font-medium">{deposit.type}</span>
+                </div>
 
-                  <div className="flex justify-between items-center">
-                    <span style={{ color: "#bc9713" }} className="text-sm">
-                      Time
-                    </span>
-                    <span style={{ color: "#cf8904" }} className="text-sm">
-                      {transaction.transaction_date}
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#bc9713] text-sm">Time</span>
+                  <span className="text-[#bc9713] text-sm">{deposit.time}</span>
+                </div>
 
-                  <div className="flex justify-between items-center">
-                    <span style={{ color: "#bc9713" }} className="text-sm">
-                      Balance
+                <div className="flex justify-between items-start">
+                  <span className="text-[#bc9713] text-sm">Order number</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#bc9713] text-sm font-mono break-all max-w-[200px]">
+                      {deposit.orderNumber}
                     </span>
-                    <span
-                      className="text-lg font-semibold"
-                      style={{
-                        color: transaction.ispositive ? "#4ade80" : "#ef4444",
-                      }}
+                    <button
+                      onClick={() => copyToClipboard(deposit.orderNumber)}
+                      className="text-[#f1a903] hover:text-[#e1910a] transition-colors"
                     >
-                      {!transaction.ispositive ? "-" : ""}
-                      {transaction.amount}
-                    </span>
+                      <Copy className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="p-4 text-center text-gray-400">
-              No transactions found
             </div>
-          )}
+          ))}
         </div>
       )}
+
+      {/* Bottom spacing */}
+      <div className="h-20"></div>
 
       {/* Filter Popup */}
       {showFilterPopup && (
@@ -346,12 +314,9 @@ const TransactionHistory = () => {
           />
           <div className="fixed bottom-0 left-0 w-full z-50 animate-slide-up">
             <div className="bg-[#2a2a2a] rounded-t-2xl shadow-2xl max-w-md mx-auto">
-              {/* Handle bar */}
               <div className="flex justify-center py-3">
                 <div className="w-12 h-1.5 bg-gray-500 rounded-full" />
               </div>
-
-              {/* Header */}
               <div className="flex items-center justify-between px-6 pb-4">
                 <button
                   onClick={() => setShowFilterPopup(false)}
@@ -372,21 +337,19 @@ const TransactionHistory = () => {
                   Confirm
                 </button>
               </div>
-
-              {/* Wheel Picker */}
               <div className="relative h-60 overflow-y-auto snap-y snap-mandatory">
                 <div className="flex flex-col items-center">
                   {filters.map((filter) => (
                     <button
-                      key={filter}
-                      onClick={() => setTempFilter(filter)}
+                      key={filter.value}
+                      onClick={() => setTempFilter(filter.value)}
                       className={`snap-center py-3 w-full text-center transition-colors ${
-                        tempFilter === filter
+                        tempFilter === filter.value
                           ? "text-[#f1a903] font-bold text-lg"
                           : "text-gray-400"
                       }`}
                     >
-                      {filter}
+                      {filter.label}
                     </button>
                   ))}
                 </div>
@@ -486,4 +449,4 @@ const TransactionHistory = () => {
   );
 };
 
-export default TransactionHistory;
+export default DepositHistory;

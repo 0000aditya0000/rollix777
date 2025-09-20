@@ -44,7 +44,7 @@ const SignIn: React.FC = () => {
 
   return (
     <div className="w-full h-screen bg-[#220904] flex flex-col">
-      <ArrowLeft className="absolute left-4 top-1/2 -translate-y-1/2" />
+      {/* <ArrowLeft className="absolute left-4 top-1/2 -translate-y-1/2" /> */}
       {/* Gradient Login Section - full width */}
       <div className="bg-gradient-to-r from-[#db6903] to-[#f1a903] text-white px-4 py-4 shadow">
         <h2 className="text-xl font-bold mb-2">Log in</h2>
@@ -147,7 +147,11 @@ const SignIn: React.FC = () => {
           <button className="w-full bg-gradient-to-r from-[#db6903] to-[#f1a903] text-white font-semibold py-3 rounded-full mb-4">
             Log in
           </button>
-          <button className="w-full border border-[#db6903] text-[#db6903] font-semibold py-3 rounded-full">
+          <button
+            type="button"
+            onClick={() => navigate("/register")}
+            className="w-full border border-[#db6903] text-[#db6903] font-semibold py-3 rounded-full"
+          >
             Register
           </button>
           {/* Footer Links */}

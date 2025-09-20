@@ -1,53 +1,66 @@
-import { useState } from "react";
-import {
-  ChevronLeft,
-  ChevronDown,
-  Copy,
-  CreditCard,
-  Smartphone,
-  Banknote,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronDown, Copy, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getWithdrawalHistory } from "../../lib/services/transactionService.js";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store.js";
+
+interface Withdrawal {
+  id: number;
+  balance: string;
+  type: string;
+  time: string;
+  orderNumber: string;
+  status: string;
+}
 
 const WithdrawalHistory = () => {
   const navigate = useNavigate();
-  const [selectedFilter, setSelectedFilter] = useState("All");
-  const [selectedDate, setSelectedDate] = useState("Choose a date");
+  const [selectedFilter, setSelectedFilter] = useState<
+    "all" | 0 | 1 | 2 | 3 | 4
+  >("all");
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const userId = useSelector((state: RootState) => state.auth.user?.id);
   const today = new Date();
   const [showFilterPopup, setShowFilterPopup] = useState(false);
-  const [tempFilter, setTempFilter] = useState<string | null>(null);
+  const [tempFilter, setTempFilter] = useState<any | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const withdrawals = [
-    {
-      id: 1,
-      balance: "₹5,000.00",
-      type: "USDT",
-      time: "2025-09-16 00:34:12",
-      orderNumber: "WD2025091600341208252456c",
-      status: "Completed",
-    },
-    {
-      id: 2,
-      balance: "₹5,000.00",
-      type: "USDT",
-      time: "2025-09-15 11:13:38",
-      orderNumber: "WD20250915111338488421Z0c",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      balance: "₹3,500.00",
-      type: "USDT",
-      time: "2025-09-14 21:31:11",
-      orderNumber: "WD20250914213111264789A1x",
-      status: "Completed",
-    },
+  const fetchWithdrawalHistory = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getWithdrawalHistory(
+        userId,
+        selectedDate || "",
+        selectedFilter
+      );
+      setWithdrawals(data.transactions || []);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch withdrawal history");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWithdrawalHistory();
+  }, [selectedDate, selectedFilter]);
+
+  const filters = [
+    { label: "All", value: "all" },
+    { label: "Pending", value: 0 },
+    { label: "Completed", value: 1 },
+    { label: "Rejected", value: 2 },
+    // { label: "Processing", value: 3 },
   ];
-
-  const filters = ["All", "Pending", "Completed", "Rejected", "Processing"];
 
   const copyToClipboard = (text: any) => {
     navigator.clipboard.writeText(text);
@@ -129,18 +142,23 @@ const WithdrawalHistory = () => {
   return (
     <div className="bg-[#220904] min-h-screen text-white">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-[#160406] border-b border-[#3d1601]">
-        <div className="flex items-center gap-3">
-          <ChevronLeft
-            className="w-6 h-6 text-[#f1a903]"
-            onClick={() => navigate(-1)}
-          />
-          <h1 className="text-lg font-medium text-white">Withdrawal history</h1>
-        </div>
+      <div
+        className="flex items-center justify-between p-4"
+        style={{ backgroundColor: "#220904" }}
+      >
+        <ArrowLeft
+          className="w-6 h-6"
+          style={{ color: "#db6903" }}
+          onClick={() => navigate(-1)}
+        />
+        <h1 className="text-xl font-semibold" style={{ color: "#f1a903" }}>
+          Withdrawal history
+        </h1>
+        <div className="w-6"></div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex bg-[#1f0e0e] border-b border-[#3d1601]">
+      {/* <div className="flex bg-[#1f0e0e] border-b border-[#3d1601]">
         <button
           className={`flex-1 py-3 px-4 text-sm font-medium rounded-t-lg mx-2 mt-2 ${
             selectedFilter === "All"
@@ -200,88 +218,111 @@ const WithdrawalHistory = () => {
             <Banknote className="w-4 h-4" />
           </div>
         </button>
-      </div>
+      </div> */}
 
-      {/* Filter Dropdowns */}
-      <div className="flex gap-4 p-4 bg-[#1f0e0e]">
-        <button
-          className="flex items-center justify-between bg-[#2b1b0f] border border-[#4f350e] rounded-lg px-4 py-3 flex-1"
-          onClick={() => setShowFilterPopup(true)}
-        >
-          <span className="text-[#bc9713] text-sm">All</span>
-          <ChevronDown className="w-4 h-4 text-[#bc9713]" />
-        </button>
-
-        <button
-          className="flex items-center justify-between bg-[#2b1b0f] border border-[#4f350e] rounded-lg px-4 py-3 flex-1"
-          onClick={() => setShowCalendar(true)}
-        >
-          <span className="text-[#bc9713] text-sm">Choose a date</span>
-          <ChevronDown className="w-4 h-4 text-[#bc9713]" />
-        </button>
+      {/* Filters */}
+      <div className="flex gap-4 p-4">
+        <div className="flex-1">
+          <div
+            className="flex items-center justify-between p-3 rounded-lg border"
+            style={{
+              backgroundColor: "#1f0e0e",
+              borderColor: "#4f350e",
+              color: "#bc9713",
+            }}
+            onClick={() => setShowFilterPopup(true)}
+          >
+            <span>
+              {filters.find((f) => f.value === selectedFilter)?.label || "All"}
+            </span>
+            <ChevronDown className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="flex-1">
+          <div
+            className="flex items-center justify-between p-3 rounded-lg border"
+            style={{
+              backgroundColor: "#1f0e0e",
+              borderColor: "#4f350e",
+              color: "#bc9713",
+            }}
+            onClick={() => setShowCalendar(true)}
+          >
+            <span>{selectedDate}</span>
+            <ChevronDown className="w-5 h-5" />
+          </div>
+        </div>
       </div>
 
       {/* Withdrawal List */}
-      <div className="p-4 space-y-4">
-        {withdrawals.map((withdrawal) => (
-          <div
-            key={withdrawal.id}
-            className="bg-[#2b1b0f] rounded-lg p-4 border border-[#4f350e]"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-[#d31c02] text-white px-3 py-1 rounded-full text-sm font-medium">
-                Withdraw
-              </div>
-              <div className="bg-[#1a5d1a] text-[#4ade80] px-3 py-1 rounded-full text-sm font-medium">
-                {withdrawal.status}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-[#bc9713] text-sm">Balance</span>
-                <span className="text-[#f1a903] font-semibold text-lg">
-                  {withdrawal.balance}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-[#bc9713] text-sm">Type</span>
-                <span className="text-white font-medium">
-                  {withdrawal.type}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-[#bc9713] text-sm">Time</span>
-                <span className="text-[#bc9713] text-sm">
-                  {withdrawal.time}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-start">
-                <span className="text-[#bc9713] text-sm">Order number</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[#bc9713] text-sm font-mono break-all max-w-[200px]">
-                    {withdrawal.orderNumber}
-                  </span>
-                  <button
-                    onClick={() => copyToClipboard(withdrawal.orderNumber)}
-                    className="text-[#f1a903] hover:text-[#e1910a] transition-colors"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
+      {loading ? (
+        <div className="p-4 text-center text-gray-400">Loading...</div>
+      ) : withdrawals.length === 0 ? (
+        <div className="p-4 text-center text-gray-400">
+          No transactions available.
+        </div>
+      ) : (
+        <div className="p-4 space-y-4">
+          {withdrawals.map((withdrawal) => (
+            <div
+              key={withdrawal.id}
+              className="bg-[#2b1b0f] rounded-lg p-4 border border-[#4f350e]"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-[#d31c02] text-white px-3 py-1 rounded-full text-sm font-medium">
+                  Withdraw
+                </div>
+                <div className="bg-[#1a5d1a] text-[#4ade80] px-3 py-1 rounded-full text-sm font-medium">
+                  {withdrawal.status}
                 </div>
               </div>
 
-              <div className="flex justify-between items-center">
-                <span className="text-[#bc9713] text-sm">Remarks</span>
-                <span className="text-[#bc9713] text-sm">-</span>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[#bc9713] text-sm">Balance</span>
+                  <span className="text-[#f1a903] font-semibold text-lg">
+                    {withdrawal.balance}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-[#bc9713] text-sm">Type</span>
+                  <span className="text-white font-medium">
+                    {withdrawal.type}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-[#bc9713] text-sm">Time</span>
+                  <span className="text-[#bc9713] text-sm">
+                    {withdrawal.time}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-start">
+                  <span className="text-[#bc9713] text-sm">Order number</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#bc9713] text-sm font-mono break-all max-w-[200px]">
+                      {withdrawal.orderNumber}
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(withdrawal.orderNumber)}
+                      className="text-[#f1a903] hover:text-[#e1910a] transition-colors"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-[#bc9713] text-sm">Remarks</span>
+                  <span className="text-[#bc9713] text-sm">-</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Bottom spacing for mobile navigation */}
       <div className="h-20"></div>
@@ -313,7 +354,7 @@ const WithdrawalHistory = () => {
                 </h2>
                 <button
                   onClick={() => {
-                    if (tempFilter) setSelectedFilter(tempFilter);
+                    if (tempFilter !== null) setSelectedFilter(tempFilter);
                     setShowFilterPopup(false);
                   }}
                   className="text-[#f1a903] font-medium"
@@ -327,15 +368,15 @@ const WithdrawalHistory = () => {
                 <div className="flex flex-col items-center">
                   {filters.map((filter) => (
                     <button
-                      key={filter}
-                      onClick={() => setTempFilter(filter)}
+                      key={filter.value}
+                      onClick={() => setTempFilter(filter.value)}
                       className={`snap-center py-3 w-full text-center transition-colors ${
-                        tempFilter === filter
+                        tempFilter === filter.value
                           ? "text-[#f1a903] font-bold text-lg"
                           : "text-gray-400"
                       }`}
                     >
-                      {filter}
+                      {filter.label}
                     </button>
                   ))}
                 </div>

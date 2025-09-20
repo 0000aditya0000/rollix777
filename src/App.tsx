@@ -55,6 +55,8 @@ import CommissionDetails from "./components/NewUI/CommissionDetails";
 import TransactionHistory from "./components/NewUI/TransactionHistory";
 import WithdrawalHistory from "./components/NewUI/WithdrawalHistory";
 import Subordinates from "./components/NewUI/Subordinate";
+import Register from "./components/NewUI/auth/Register";
+import DepositHistory from "./components/NewUI/DepositHistory";
 
 // Add new ReferralRedirect component
 const ReferralRedirect: React.FC = () => {
@@ -417,6 +419,14 @@ function App() {
                         }
                       />
                       <Route
+                        path="/deposit-history"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <DepositHistory />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="/login"
                         element={
                           <ProtectedRoute onLoginRequired={handleLoginRequired}>
@@ -425,10 +435,26 @@ function App() {
                         }
                       />
                       <Route
+                        path="/register"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <Register />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="/promotions/commision-details"
                         element={
                           <ProtectedRoute onLoginRequired={handleLoginRequired}>
                             <CommissionDetails />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/withdrawal-history"
+                        element={
+                          <ProtectedRoute onLoginRequired={handleLoginRequired}>
+                            <WithdrawalHistory />
                           </ProtectedRoute>
                         }
                       />

@@ -29,7 +29,7 @@ const Account = () => {
   const fetchUserDetails = async () => {
     try {
       const respone = await fetchUserDetailsData(userId);
-      console.log(respone, "response");
+      // console.log(respone, "response");
       setUser(respone);
     } catch (error) {
       console.log(error, "error");
@@ -39,15 +39,6 @@ const Account = () => {
   useEffect(() => {
     fetchUserDetails();
   }, []);
-
-  // const user = {
-  //   name: "Max",
-  //   uid: "6816732",
-  //   lastLogin: "2025-09-15 13:39:41",
-  //   balance: 0.0,
-  //   safeInterest: 0.1,
-  //   notifications: 3,
-  // };
 
   const navigate = useNavigate();
 
@@ -169,7 +160,10 @@ const Account = () => {
           <p className="text-xs">Transaction</p>
           <p className="text-gray-400 text-xs">My transaction history</p>
         </div>
-        <div className="bg-[#361a06] rounded-xl p-4 flex flex-col items-center">
+        <div
+          className="bg-[#361a06] rounded-xl p-4 flex flex-col items-center"
+          onClick={() => navigate("/deposit-history")}
+        >
           <div className="mb-2 bg-red-400 w-10 h-10 rounded-lg flex items-center justify-center">
             <ArrowDownNarrowWide className="text-white" />
           </div>
